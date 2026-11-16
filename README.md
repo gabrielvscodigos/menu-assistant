@@ -173,6 +173,7 @@ Any other Ollama model works by setting `MENU_ASSISTANT_LLM_MODEL` (larger model
 | Format            | `uv run ruff format .`                          |
 | Type check        | `uv run mypy src tests`                         |
 | Evaluate retrieval| `uv run python -m menu_assistant.eval`          |
+| Evaluate answers  | `uv run python -m menu_assistant.eval.answers`  |
 | Run the API       | `uv run uvicorn menu_assistant.api.main:app --reload` |
 
 ## Evaluation
@@ -185,6 +186,19 @@ count that must stay at zero.
 | ----------------------------------------------- | --------: | --------: | ---------: |
 | Baseline (MiniLM-L12, pure vector search)       |     0.750 |     0.783 |          0 |
 | **Current** (multilingual-e5-base + tag boost)  | **0.956** | **0.934** |          0 |
+
+Generated answers are checked separately on 22 questions (with Ollama running) using
+deterministic rules, not an LLM judge:
+
+| Check (llama3.2)                                       | Result |
+| ------------------------------------------------------ | -----: |
+| Cases passing every check                              |    82% |
+| Replies naming a dish retrieval excluded               |      0 |
+| Staff notice present exactly when expected             |   100% |
+| Off-menu requests acknowledged ("not on the menu")     |   100% |
+| Raw replies citing an id the model was not given       |   9%\* |
+
+\* removed by citation verification before the user sees them.
 
 Method, the full experiment grid, remaining misses, and caveats are in
 [docs/evaluation.md](docs/evaluation.md).

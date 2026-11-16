@@ -54,7 +54,7 @@ Two rules shape the whole design:
 | `llm/`       | Provider-agnostic chat interface and the Ollama implementation         | `LLMClient`, `OllamaClient`, `LLMError` |
 | `rag/`       | Restriction detection, prompt building, answer generation and verification | `AnswerService`, `Answer`, `Restrictions` |
 | `api/`       | FastAPI app: request/response schemas, `/health`, `/ask`               | `create_app`, `AskRequest`, `AskResponse` |
-| `eval/`      | Labeled queries and metrics for retrieval quality                      | `evaluate`, `EvalReport` |
+| `eval/`      | Labeled datasets and metrics for retrieval and answer quality          | `evaluate`, `evaluate_answers`, `check_answer` |
 
 ## Ingestion (offline)
 
@@ -147,9 +147,15 @@ actually enforced, and the notice, so every reply can be audited.
 
 ## Evaluation (`eval/`)
 
-Retrieval is evaluated on hand-labeled queries (`data/eval/retrieval_queries.json`) with
-recall@k, MRR and a filter-violation count that must stay at zero. See
-[evaluation.md](evaluation.md).
+- **Retrieval** (`python -m menu_assistant.eval`): hand-labeled queries
+  (`data/eval/retrieval_queries.json`) scored with recall@k, MRR and a filter-violation
+  count that must stay at zero.
+- **Answers** (`python -m menu_assistant.eval.answers`): labeled questions run through the
+  real `AnswerService` and LLM, then scored with deterministic checks (invented citations,
+  dishes named without being retrieved, relevance, notice, "not on the menu"). A
+  `RecordingLLM` wrapper keeps the raw reply so invented ids are counted before clean-up.
+
+See [evaluation.md](evaluation.md).
 
 ## Testing strategy
 

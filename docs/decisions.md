@@ -223,3 +223,21 @@ same "code decides, the LLM only writes" approach as allergens.
 than a near miss from another course. Detection is a word list: "entrée" is left out
 because it means a main in the US and a starter elsewhere, and bare "main" is ignored
 because of phrases like "main ingredient".
+
+## 016 — Answer quality is measured with deterministic checks, not an LLM judge
+
+**Decision:** `python -m menu_assistant.eval.answers` runs labeled questions through the
+real `AnswerService` and scores each reply with rules in code: invented citation ids
+(in the raw output), menu dishes named without being retrieved, at least one relevant
+citation, at most three recommendations, a correct staff notice, and "not on the menu"
+acknowledgement for off-menu questions. Only a notice failure fails the command.
+
+**Why:** the rules mirror the product's promises exactly, cost nothing, and give the same
+score for the same reply. The only available model is a local 3B model, which is not a
+trustworthy judge. Scoring the raw output shows how much the citation verification is
+actually doing.
+
+**Trade-off:** rules cannot judge helpfulness, tone, or the reply's language, and can miss
+invented details inside a sentence. The "unavailable" check is a phrase list. Scores
+depend on a live model, so the evaluation is not part of CI and results vary slightly
+between runs.

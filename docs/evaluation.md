@@ -1,3 +1,8 @@
+# Evaluation
+
+Two evaluations: **retrieval** (are the right dishes found?) and **answer quality**
+(does the generated reply follow the product's rules?).
+
 # Retrieval evaluation
 
 How search quality is measured, and the results so far.
@@ -124,3 +129,72 @@ Chosen configuration, by category:
 
 Next steps when the dataset grows: a held-out split, translating or embedding tags for
 multilingual matching, and adding real user phrasing to the eval set.
+
+# Answer-quality evaluation
+
+```bash
+uv run python -m menu_assistant.eval.answers            # failures only
+uv run python -m menu_assistant.eval.answers --cases    # every answer
+```
+
+Needs an index and a running Ollama. Every question in
+[`data/eval/answer_questions.json`](../data/eval/answer_questions.json) goes through the
+real `AnswerService` (retrieval, prompt, LLM, verification), and each reply is scored
+with deterministic checks in [`eval/answer_checks.py`](../src/menu_assistant/eval/answer_checks.py).
+
+## Method
+
+22 questions in four categories: taste preferences, restricted (allergens, diets,
+explicit filters), multilingual (Portuguese and Spanish), and off-menu (dishes that do
+not exist, prices, impossible combinations). Labels are validated against the menu and
+the filters the system will apply, so a case cannot reward a dish the filters exclude.
+
+| Check     | Passes when                                                          | Applies to |
+| --------- | -------------------------------------------------------------------- | ---------- |
+| `cites`   | the **raw** LLM output cites no id the model was not given            | all        |
+| `noleak`  | the final text names no menu dish that retrieval did not return      | all        |
+| `relev`   | at least one cited dish is labeled relevant                          | cases with relevant dishes |
+| `<=3`     | at most 3 dishes are cited (prompt rule)                             | all        |
+| `notice`  | the staff notice is present exactly when expected                    | all        |
+| `unavail` | the reply says the menu does not have it (EN/PT/ES phrases)          | off-menu   |
+
+`cites` looks at the output *before* citation clean-up, so it measures how often the
+model invents ids even though users never see them. `noleak` checks what users do see.
+The CLI exits with status 1 only if `notice` fails, because the notice is enforced in
+code; the other checks measure model behavior.
+
+**Why rules and not an LLM judge:** the checks are free, fast, reproducible, and test the
+exact rules the product promises. A judge model would add cost, variance, and its own
+errors, and the local 3B model is too weak to judge itself.
+
+## Results (`llama3.2`, temperature 0.2)
+
+| Group        | cases | pass | cites | noleak | relev | <=3  | notice | unavail |
+| ------------ | ----: | ---: | ----: | -----: | ----: | ---: | -----: | ------: |
+| preference   |     6 | 100% |  100% |   100% |  100% | 100% |   100% |     n/a |
+| restricted   |     6 |  67% |   67% |   100% |  100% | 100% |   100% |     n/a |
+| multilingual |     5 |  60% |  100% |   100% |   60% | 100% |   100% |     n/a |
+| off_menu     |     5 | 100% |  100% |   100% |   n/a | 100% |   100% |    100% |
+| **overall**  |    22 |  82% |   91% |   100% |   88% | 100% |   100% |    100% |
+
+Mean latency was ~1.9 s per question with Ollama on the development machine. Results vary a little
+between runs; a first run differed in which restricted cases invented ids.
+
+### Findings
+
+- **Code-side safety holds.** No reply named a dish that retrieval excluded, every notice
+  was correct, and every off-menu question was acknowledged (one by the deterministic
+  "no match" reply, without calling the LLM).
+- **The model invents citation ids** in 2 of 22 replies (`[veggie-stir-fry]`,
+  `[green-curry]`). Citation verification removes them, which is why it exists.
+- **Portuguese is the weakest area.** "Quero algo apimentado com macarrão" retrieved
+  carbonara instead of spicy noodles (tag boost is English-only), and for
+  "alergia a amendoim e gergelim" the model wrongly claimed the safe desserts contain
+  peanuts, confusing *almond flour* with *amendoim*, and recommended nothing.
+
+### Caveats
+
+- 22 cases, written by the same author as the menu; a single run per configuration.
+- Rule-based checks cannot catch every invented detail inside a sentence (e.g. "you can
+  ask for extra chili"), judge tone, or verify the reply's language.
+- The `unavail` phrase list is a heuristic and can miss unusual wording.

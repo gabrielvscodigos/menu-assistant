@@ -1,0 +1,30 @@
+{
+  "description": "Guest questions for answer-quality evaluation against data/menu.json. 'relevant' lists dishes worth citing (at least one must be cited); off-menu cases expect the answer to say the menu does not have it.",
+  "cases": [
+    {"id": "pref-spicy-ramen", "category": "preference", "question": "I like spicy ramen, what else here would I enjoy?", "relevant": ["spicy-miso-ramen", "dan-dan-noodles", "kimchi-fried-rice", "tofu-green-curry", "chana-masala", "beef-birria-tacos"], "expect_notice": false},
+    {"id": "pref-light", "category": "preference", "question": "Something light to start with?", "relevant": ["edamame", "green-papaya-salad", "caesar-salad", "grilled-salmon"], "expect_notice": false},
+    {"id": "pref-chocolate", "category": "preference", "question": "I want a chocolate dessert", "relevant": ["flourless-chocolate-cake"], "expect_notice": false},
+    {"id": "pref-creamy-pasta", "category": "preference", "question": "Something creamy with pasta or rice", "relevant": ["spaghetti-carbonara", "walnut-pesto-gnocchi", "wild-mushroom-risotto"], "expect_notice": false},
+    {"id": "pref-tacos", "category": "preference", "question": "What tacos do you have?", "relevant": ["fish-tacos", "beef-birria-tacos"], "expect_notice": false},
+    {"id": "pref-seafood", "category": "preference", "question": "I'd like some grilled seafood", "relevant": ["grilled-salmon", "garlic-chili-prawns"], "expect_notice": true},
+
+    {"id": "rest-peanut-noodles", "category": "restricted", "question": "I'm allergic to peanuts. Any spicy noodles?", "relevant": ["spicy-miso-ramen", "mushroom-shoyu-ramen"], "expect_notice": true},
+    {"id": "rest-vegan-gf-main", "category": "restricted", "question": "Anything vegan and gluten-free for a main course?", "relevant": ["tofu-green-curry", "chana-masala"], "expect_notice": true},
+    {"id": "rest-celiac-dessert", "category": "restricted", "question": "I'm celiac, what dessert can I have?", "relevant": ["mango-sticky-rice", "flourless-chocolate-cake"], "expect_notice": true},
+    {"id": "rest-no-seafood-spicy", "category": "restricted", "question": "No shellfish or fish please, something spicy", "relevant": ["spicy-miso-ramen", "dan-dan-noodles", "tofu-green-curry", "chana-masala", "beef-birria-tacos", "elote"], "expect_notice": true},
+    {"id": "rest-explicit-filters", "category": "restricted", "question": "Something filling", "exclude_allergens": ["gluten", "milk"], "relevant": ["tofu-green-curry", "chana-masala", "beef-birria-tacos"], "expect_notice": true},
+    {"id": "rest-halal-lamb", "category": "restricted", "question": "Halal options with lamb?", "relevant": ["lamb-kofta"], "expect_notice": true},
+
+    {"id": "multi-pt-vegan-main", "category": "multilingual", "question": "Sou vegano, o que você recomenda de prato principal?", "relevant": ["mushroom-shoyu-ramen", "tofu-green-curry", "chana-masala", "falafel-plate"], "expect_notice": true},
+    {"id": "multi-pt-spicy-noodles", "category": "multilingual", "question": "Quero algo apimentado com macarrão", "relevant": ["spicy-miso-ramen", "dan-dan-noodles"], "expect_notice": false},
+    {"id": "multi-pt-allergy-dessert", "category": "multilingual", "question": "Tenho alergia a amendoim e gergelim, qual sobremesa posso pedir?", "relevant": ["tiramisu", "flourless-chocolate-cake"], "expect_notice": true},
+    {"id": "multi-es-gf-dessert", "category": "multilingual", "question": "¿Qué postre sin gluten tienen?", "relevant": ["mango-sticky-rice", "flourless-chocolate-cake"], "expect_notice": true},
+    {"id": "multi-es-tacos", "category": "multilingual", "question": "Me gustan los tacos picantes", "relevant": ["beef-birria-tacos", "fish-tacos"], "expect_notice": false},
+
+    {"id": "off-lasagna", "category": "off_menu", "question": "Do you have lasagna?", "expect_notice": false, "expect_unavailable": true},
+    {"id": "off-pt-feijoada", "category": "off_menu", "question": "Vocês têm feijoada?", "expect_notice": false, "expect_unavailable": true},
+    {"id": "off-pt-sushi", "category": "off_menu", "question": "Tem sushi?", "expect_notice": false, "expect_unavailable": true},
+    {"id": "off-price", "category": "off_menu", "question": "How much does the spicy miso ramen cost?", "expect_notice": false, "expect_unavailable": true},
+    {"id": "off-vegan-halal", "category": "off_menu", "question": "A vegan halal dish, please", "expect_notice": true, "expect_unavailable": true}
+  ]
+}
