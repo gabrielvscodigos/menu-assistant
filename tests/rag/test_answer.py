@@ -12,6 +12,7 @@ from menu_assistant.rag.answer import (
     NO_MATCH_TEXT,
     SAFETY_NOTICE,
     AnswerService,
+    enforce_list_citations,
     verify_citations,
 )
 from menu_assistant.rag.prompt import SYSTEM_PROMPT, build_user_message, format_dish
@@ -205,3 +206,59 @@ def test_course_alone_does_not_trigger_the_safety_notice(retriever: MenuRetrieve
 
     assert answer.course == Course.DESSERT
     assert answer.notice is None
+
+
+# --- list citations ------------------------------------------------------------
+
+
+@pytest.fixture
+def desserts(sample_menu: Menu) -> list[Dish]:
+    return [d for d in sample_menu.dishes if d.id in {"mango-sticky-rice", "tiramisu"}]
+
+
+def test_list_items_citing_retrieved_dishes_are_kept(desserts: list[Dish]) -> None:
+    text = "Options:\n1. Mango Sticky Rice [mango-sticky-rice] - vegan.\n2. [tiramisu] - creamy."
+
+    assert enforce_list_citations(text, desserts) == (text, [])
+
+
+def test_list_item_naming_a_retrieved_dish_gets_its_citation(desserts: list[Dish]) -> None:
+    text = "- **Mango Sticky Rice** - sweet and vegan."
+
+    cleaned, removed = enforce_list_citations(text, desserts)
+
+    assert cleaned == "- **Mango Sticky Rice** [mango-sticky-rice] - sweet and vegan."
+    assert removed == []
+
+
+def test_invented_list_items_are_removed_and_the_list_renumbered(desserts: list[Dish]) -> None:
+    text = (
+        "I recommend:\n\n"
+        "1. Mango Sticky Rice [mango-sticky-rice] - classic.\n"
+        "2. Coconut Ice Cream - refreshing.\n"
+        "3. Tiramisu [tiramisu] - creamy.\n"
+        "4) Fresh Fruit Salad - light.\n"
+        "  - an indented detail stays\n\n"
+        "Enjoy!"
+    )
+
+    cleaned, removed = enforce_list_citations(text, desserts)
+
+    assert cleaned == (
+        "I recommend:\n\n"
+        "1. Mango Sticky Rice [mango-sticky-rice] - classic.\n"
+        "2. Tiramisu [tiramisu] - creamy.\n"
+        "  - an indented detail stays\n\n"
+        "Enjoy!"
+    )
+    assert removed == ["2. Coconut Ice Cream - refreshing.", "4) Fresh Fruit Salad - light."]
+
+
+def test_answer_drops_invented_dishes_and_records_them(retriever: MenuRetriever) -> None:
+    llm = FakeLLM("1. Mango Sticky Rice - vegan.\n2. Coconut Ice Cream - also vegan.")
+
+    answer = service(retriever, llm).answer("a vegan dessert?")
+
+    assert answer.text == "1. Mango Sticky Rice [mango-sticky-rice] - vegan."
+    assert answer.cited_dish_ids == ["mango-sticky-rice"]
+    assert answer.removed_items == ["2. Coconut Ice Cream - also vegan."]

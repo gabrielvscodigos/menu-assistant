@@ -69,6 +69,7 @@ class AnswerSummary(BaseModel):
     passed: float
     grounded_citations: float | None
     no_leaked_dishes: float | None
+    no_uncited_items: float | None
     cites_dish: float | None
     relevant_cited: float | None
     within_limit: float | None
@@ -96,6 +97,7 @@ class AnswerReport(BaseModel):
             passed=mean([float(c.passed) for c in checks]),
             grounded_citations=_rate([not c.invalid_citations for c in checks]),
             no_leaked_dishes=_rate([not c.leaked_dishes for c in checks]),
+            no_uncited_items=_rate([not c.uncited_items for c in checks]),
             cites_dish=_rate([c.cites_dish for c in checks]),
             relevant_cited=_rate([c.relevant_cited for c in checks]),
             within_limit=_rate([c.within_limit for c in checks]),
@@ -151,6 +153,7 @@ _COLUMNS = (
     ("passed", "pass"),
     ("grounded_citations", "cites"),
     ("no_leaked_dishes", "noleak"),
+    ("no_uncited_items", "items"),
     ("relevant_cited", "relev"),
     ("within_limit", "<=3"),
     ("notice_correct", "notice"),
@@ -174,6 +177,7 @@ def format_answer_report(report: AnswerReport, show_cases: bool = False) -> str:
     lines += [
         "",
         "pass: all checks | cites: no invalid citations | noleak: no unretrieved dish named",
+        "items: no list item without a retrieved dish (removed in code)",
         "relev: cites a relevant dish | notice: staff notice iff expected | "
         "unavail: says it is not on the menu",
     ]
@@ -197,6 +201,8 @@ def _failed_checks(checks: AnswerChecks) -> list[str]:
         failed.append(f"invalid citations {checks.invalid_citations}")
     if checks.leaked_dishes:
         failed.append(f"named unretrieved dishes {checks.leaked_dishes}")
+    if checks.uncited_items:
+        failed.append(f"uncited list items {checks.uncited_items}")
     if checks.cites_dish is False:
         failed.append("cites no dish")
     elif checks.relevant_cited is False:

@@ -69,6 +69,7 @@ class AnswerChecks(BaseModel):
 
     invalid_citations: list[str]
     leaked_dishes: list[str]
+    uncited_items: list[str]
     cites_dish: bool | None
     relevant_cited: bool | None
     within_limit: bool
@@ -80,6 +81,7 @@ class AnswerChecks(BaseModel):
         return (
             not self.invalid_citations
             and not self.leaked_dishes
+            and not self.uncited_items
             and self.cites_dish is not False
             and self.relevant_cited is not False
             and self.within_limit
@@ -128,6 +130,7 @@ def check_answer(
     return AnswerChecks(
         invalid_citations=invalid_citations(raw_text or "", retrieved_ids),
         leaked_dishes=leaked_dishes(answer.text, case.question, menu, retrieved_ids),
+        uncited_items=answer.removed_items,
         cites_dish=bool(cited) if should_cite else None,
         relevant_cited=bool(cited & case.relevant) if should_cite else None,
         within_limit=len(cited) <= MAX_RECOMMENDED,

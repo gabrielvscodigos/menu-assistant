@@ -153,6 +153,7 @@ the filters the system will apply, so a case cannot reward a dish the filters ex
 | --------- | -------------------------------------------------------------------- | ---------- |
 | `cites`   | the **raw** LLM output cites no id the model was not given            | all        |
 | `noleak`  | the final text names no menu dish that retrieval did not return      | all        |
+| `items`   | no list item had to be removed for not naming a retrieved dish        | all        |
 | `relev`   | at least one cited dish is labeled relevant                          | cases with relevant dishes |
 | `<=3`     | at most 3 dishes are cited (prompt rule)                             | all        |
 | `notice`  | the staff notice is present exactly when expected                    | all        |
@@ -169,24 +170,30 @@ errors, and the local 3B model is too weak to judge itself.
 
 ## Results (`llama3.2`, temperature 0.2)
 
-| Group        | cases | pass | cites | noleak | relev | <=3  | notice | unavail |
-| ------------ | ----: | ---: | ----: | -----: | ----: | ---: | -----: | ------: |
-| preference   |     6 | 100% |  100% |   100% |  100% | 100% |   100% |     n/a |
-| restricted   |     6 |  67% |   67% |   100% |  100% | 100% |   100% |     n/a |
-| multilingual |     5 |  60% |  100% |   100% |   60% | 100% |   100% |     n/a |
-| off_menu     |     5 | 100% |  100% |   100% |   n/a | 100% |   100% |    100% |
-| **overall**  |    22 |  82% |   91% |   100% |   88% | 100% |   100% |    100% |
+| Group        | cases | pass | cites | noleak | items | relev | <=3  | notice | unavail |
+| ------------ | ----: | ---: | ----: | -----: | ----: | ----: | ---: | -----: | ------: |
+| preference   |     6 | 100% |  100% |   100% |  100% |  100% | 100% |   100% |     n/a |
+| restricted   |     6 |  67% |   67% |   100% |   67% |  100% | 100% |   100% |     n/a |
+| multilingual |     5 |  60% |  100% |   100% |  100% |   60% | 100% |   100% |     n/a |
+| off_menu     |     5 | 100% |  100% |   100% |  100% |   n/a | 100% |   100% |    100% |
+| **overall**  |    22 |  82% |   91% |   100% |   91% |   88% | 100% |   100% |    100% |
 
-Mean latency was ~1.9 s per question with Ollama on the development machine. Results vary a little
-between runs; a first run differed in which restricted cases invented ids.
+Mean latency was ~2.4 s per question with Ollama on the development machine. Results
+vary a little between runs (temperature 0.2): which restricted cases invent ids changes.
 
 ### Findings
 
 - **Code-side safety holds.** No reply named a dish that retrieval excluded, every notice
   was correct, and every off-menu question was acknowledged (one by the deterministic
   "no match" reply, without calling the LLM).
-- **The model invents citation ids** in 2 of 22 replies (`[veggie-stir-fry]`,
+- **The model invents citation ids** in 2 of 22 replies (`[veggie-biryani]`,
   `[green-curry]`). Citation verification removes them, which is why it exists.
+- **The model lists dishes without citing them.** In the Docker smoke test it followed
+  Mango Sticky Rice with "Coconut Ice Cream" and "Fresh Fruit Salad", which are not on the
+  menu and had no brackets, so citation verification could not see them. List items are
+  now enforced in code (decision 018). In this run they removed "Veggie Biryani" (not on
+  the menu) and, for a guest who excluded gluten, "Spicy Miso Ramen (not listed, but
+  I'll mention it anyway)", a real dish that contains gluten.
 - **Portuguese is the weakest area.** "Quero algo apimentado com macarrão" retrieved
   carbonara instead of spicy noodles (tag boost is English-only), and for
   "alergia a amendoim e gergelim" the model wrongly claimed the safe desserts contain
@@ -196,5 +203,6 @@ between runs; a first run differed in which restricted cases invented ids.
 
 - 22 cases, written by the same author as the menu; a single run per configuration.
 - Rule-based checks cannot catch every invented detail inside a sentence (e.g. "you can
-  ask for extra chili"), judge tone, or verify the reply's language.
+  ask for extra chili") or an invented dish mentioned in running prose rather than a
+  list, judge tone, or verify the reply's language.
 - The `unavail` phrase list is a heuristic and can miss unusual wording.

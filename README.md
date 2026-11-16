@@ -106,7 +106,8 @@ How an answer is produced:
    If nothing passes, a fixed "no match" reply is returned without calling the LLM.
 3. **The LLM writes the reply** from the retrieved dishes only, citing them as `[dish-id]`.
 4. **The output is checked in code.** Citations of dishes that were not retrieved are
-   removed, and cited dish names are mapped to ids. Whenever allergens or diets are
+   removed, cited dish names are mapped to ids, and list items that do not name a
+   retrieved dish (invented suggestions like "Coconut Ice Cream") are dropped. Whenever allergens or diets are
    involved, the staff-confirmation notice is added by code, not by the LLM.
 
 Known limitation of the default 3B model: it sometimes adds suggestions the menu does
@@ -212,8 +213,9 @@ deterministic rules, not an LLM judge:
 | Staff notice present exactly when expected             |   100% |
 | Off-menu requests acknowledged ("not on the menu")     |   100% |
 | Raw replies citing an id the model was not given       |   9%\* |
+| Replies with a listed dish the model was not given     |   9%\* |
 
-\* removed by citation verification before the user sees them.
+\* removed in code before the user sees them.
 
 Method, the full experiment grid, remaining misses, and caveats are in
 [docs/evaluation.md](docs/evaluation.md).

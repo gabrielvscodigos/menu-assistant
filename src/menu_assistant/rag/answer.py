@@ -46,6 +46,7 @@ class Answer(BaseModel):
     restrictions: Restrictions
     course: Course | None = None
     notice: str | None
+    removed_items: list[str] = []
 
     @property
     def cited_dishes(self) -> list[RetrievedDish]:
@@ -81,6 +82,72 @@ def verify_citations(text: str, retrieved: Sequence[Dish]) -> tuple[str, list[st
         return f"{match.group(0)[: -len(match.group(0).lstrip())]}[{dish_id}]"
 
     return _BRACKETED.sub(check, text), cited
+
+
+# A top-level list item: "- x", "* x", "• x", "1. x", "2) x" (indented sub-items excluded).
+_LIST_ITEM = re.compile(r"^(?:[-*•]|(\d+)([.)]))\s+")
+
+
+def enforce_list_citations(text: str, retrieved: Sequence[Dish]) -> tuple[str, list[str]]:
+    """Make every top-level list item point at a retrieved dish, or drop it.
+
+    Small models list extra suggestions without a citation ("3. Coconut Ice Cream"),
+    which is how invented dishes slip past citation checks. For each list item:
+    - with a `[id]` of a retrieved dish: kept;
+    - naming a retrieved dish without a citation: kept, and the citation is added;
+    - anything else: removed (logged), and numbered items are renumbered.
+
+    Returns the new text and the removed items.
+    """
+    removed: list[str] = []
+    kept: list[str] = []
+    for line in text.split("\n"):
+        if _LIST_ITEM.match(line) is None or _cites_retrieved(line, retrieved):
+            kept.append(line)
+            continue
+        dish = next((d for d in retrieved if d.name.casefold() in line.casefold()), None)
+        if dish is not None:
+            kept.append(_add_citation(line, dish))
+        else:
+            logger.warning("removed list item without a retrieved dish: %s", line.strip())
+            removed.append(line.strip())
+    return "\n".join(_renumber(kept) if removed else kept), removed
+
+
+def _cites_retrieved(line: str, retrieved: Sequence[Dish]) -> bool:
+    return any(f"[{dish.id}]" in line for dish in retrieved)
+
+
+def _add_citation(line: str, dish: Dish) -> str:
+    start = line.casefold().index(dish.name.casefold())
+    end = start + len(dish.name)
+    # Keep closing markdown emphasis attached to the name: "**Mango Sticky Rice**".
+    while end < len(line) and line[end] == "*":
+        end += 1
+    return f"{line[:end]} [{dish.id}]{line[end:]}"
+
+
+def _renumber(lines: list[str]) -> list[str]:
+    number = 0
+    result = []
+    for line in lines:
+        match = _LIST_ITEM.match(line)
+        if match is not None and match.group(1) is not None:
+            number += 1
+            line = f"{number}{match.group(2)} {line[match.end() :]}"
+        result.append(line)
+    return result
+
+
+def clean_reply(raw: str, retrieved: Sequence[Dish]) -> tuple[str, list[str], list[str]]:
+    """Verify citations, then enforce them on list items.
+
+    Returns the cleaned text, the cited ids, and the list items that were removed.
+    """
+    text, _ = verify_citations(raw, retrieved)
+    text, removed = enforce_list_citations(text, retrieved)
+    text, cited = verify_citations(text, retrieved)
+    return text, cited, removed
 
 
 class AnswerService:
@@ -133,7 +200,7 @@ class AnswerService:
                 )
             ],
         )
-        text, cited = verify_citations(raw, [item.dish for item in retrieved])
+        text, cited, removed = clean_reply(raw, [item.dish for item in retrieved])
         return Answer(
             question=question,
             text=text,
@@ -142,4 +209,5 @@ class AnswerService:
             restrictions=restrictions,
             course=course,
             notice=notice,
+            removed_items=removed,
         )

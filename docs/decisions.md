@@ -257,3 +257,22 @@ of baked into the image, which keeps the image small and the build fast.
 **Trade-off:** the first start is slow (about 3 GB of downloads), and Ollama runs on CPU
 unless GPU access is configured for the container. Re-ingesting at every start would be
 wasteful for large menus; then ingestion should become a separate job.
+
+## 018 — Every recommended list item must point at a retrieved dish
+
+**Decision:** after citation verification, `enforce_list_citations` checks each top-level
+list item of the reply. Items citing or naming a retrieved dish are kept (a missing
+citation is added); any other item is removed, logged, recorded in
+`Answer.removed_items`, and numbered lists are renumbered. The answer evaluation counts
+these removals (`items`).
+
+**Why:** a Docker smoke test showed `llama3.2` listing "Coconut Ice Cream" and "Fresh
+Fruit Salad", which are not on the menu, without brackets, so citation checks never saw
+them. Recommendations are almost always written as lists, so a list item is the natural
+unit to enforce "never invent dishes" in code. In the evaluation it also removed a real
+dish the guest's gluten restriction had excluded.
+
+**Trade-off:** a top-level bullet that is not a dish (e.g. "- All options are vegan") is
+removed too, and the reply's text may still say "three options" after one is dropped.
+Invented dishes in running prose are not caught; the prompt rule and the `noleak` check
+are the only defenses there.

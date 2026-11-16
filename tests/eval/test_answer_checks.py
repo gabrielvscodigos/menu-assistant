@@ -119,6 +119,17 @@ def test_answer_citing_no_relevant_dish_fails(sample_menu: Menu) -> None:
     assert not checks.passed
 
 
+def test_removed_list_items_fail_the_answer(sample_menu: Menu) -> None:
+    answer = make_answer(
+        sample_menu, "1. [dan-dan-noodles]", ["dan-dan-noodles"], ["dan-dan-noodles"]
+    ).model_copy(update={"removed_items": ["2. Coconut Ice Cream"]})
+
+    checks = check_answer(case(), answer, "1. [dan-dan-noodles]", sample_menu.dishes)
+
+    assert checks.uncited_items == ["2. Coconut Ice Cream"]
+    assert not checks.passed
+
+
 def test_wrong_notice_and_too_many_citations_fail(sample_menu: Menu) -> None:
     ids = ["edamame", "pork-gyoza", "caesar-salad", "dan-dan-noodles"]
     answer = make_answer(sample_menu, "Many.", ids, ids)

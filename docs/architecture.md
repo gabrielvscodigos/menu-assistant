@@ -129,6 +129,10 @@ signature matches the settings (`IndexNotReadyError` / `IndexMismatchError`).
 
 - `verify_citations` keeps `[id]` citations of retrieved dishes, rewrites `[Dish Name]`
   to `[id]`, and removes id-like citations of dishes that were not retrieved.
+- `enforce_list_citations` checks every top-level list item: it must cite a retrieved
+  dish, or name one (the citation is then added). Other items are removed, recorded in
+  `Answer.removed_items`, and the list is renumbered. This catches invented dishes that
+  carry no brackets at all.
 - The staff-confirmation notice is attached in code whenever restrictions were applied or
   the question mentions allergens or diets. It never depends on the LLM's wording.
 
