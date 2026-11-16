@@ -8,8 +8,6 @@ import pytest
 from menu_assistant.ingest import MenuLoadError, load_menu
 from menu_assistant.models import Allergen, Course, DietaryFlag
 
-SAMPLE_MENU = Path(__file__).parents[2] / "data" / "menu.json"
-
 
 def write_menu(tmp_path: Path, content: str) -> Path:
     path = tmp_path / "menu.json"
@@ -57,8 +55,8 @@ def test_schema_violation_names_the_bad_field(tmp_path: Path) -> None:
         load_menu(write_menu(tmp_path, content))
 
 
-def test_sample_menu_is_valid_and_varied() -> None:
-    menu = load_menu(SAMPLE_MENU)
+def test_sample_menu_is_valid_and_varied(sample_menu_path: Path) -> None:
+    menu = load_menu(sample_menu_path)
     dishes = menu.dishes
 
     assert len(dishes) >= 20

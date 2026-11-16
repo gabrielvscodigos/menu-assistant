@@ -7,7 +7,11 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
+    "chromadb>=1.5.9",
     "pydantic>=2.14.3",
+    "pydantic-settings>=2.16.3",
+    "sentence-transformers>=6.3.0",
+    "torch>=2.15.0",
 ]
 
 [build-system]
@@ -47,3 +51,13 @@ python_version = "3.12"
 strict = true
 mypy_path = "src"
 plugins = ["pydantic.mypy"]
+
+# Use CPU-only PyTorch wheels: no GPU is needed for a small embedding model, and the
+# default Linux wheels pull several GB of CUDA libraries.
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }

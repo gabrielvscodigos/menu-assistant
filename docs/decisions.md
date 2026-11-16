@@ -67,3 +67,36 @@ exact vocabulary. Free-form descriptors (`spicy`, `japanese`) stay in open `tags
 them at the root avoids other packages depending on `ingest` internals.
 
 **Trade-off:** one module outside the planned subpackages.
+
+## 007 — One document per dish, allergens only in metadata
+
+**Decision:** each dish is indexed as a single document (name, course, description,
+ingredients, preparation, tags, dietary flags). Allergens are *not* part of the embedded
+text. Every allergen and dietary flag is stored as an explicit boolean metadata key
+(`allergen_peanuts`, `diet_vegan`, ...), and the full dish is stored as JSON.
+
+**Why:**
+- Dishes are short, so splitting them would only fragment context. One document per dish
+  keeps results and citations one-to-one with the menu.
+- Embeddings do not understand negation: with allergens in the text, "no peanuts" would
+  pull peanut dishes *closer*. Exclusion belongs in exact metadata filters.
+- Explicit `False` values mean a filter never depends on a key being absent.
+- Storing the dish JSON lets answers be grounded in exact menu data without re-reading the
+  source file.
+
+**Trade-off:** metadata is larger (one key per allergen and flag), and the index must be
+rebuilt if the vocabulary changes.
+
+## 008 — Local multilingual embedding model on CPU-only PyTorch
+
+**Decision:** embed with `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`
+behind an `Embedder` protocol, computed by our code (Chroma's built-in embedding function
+is disabled). PyTorch is installed from the CPU-only wheel index.
+
+**Why:** the model is small, runs on CPU, needs no API key, and handles questions in
+languages other than the menu's (a Portuguese query finds the right English dish). The
+protocol lets tests use a fake embedder, and lets the model be swapped after evaluation.
+CPU-only wheels avoid several GB of CUDA libraries locally and in CI.
+
+**Trade-off:** first run downloads ~470 MB; ranking quality is modest for a small model
+(to be measured in the evaluation milestone). No GPU acceleration.

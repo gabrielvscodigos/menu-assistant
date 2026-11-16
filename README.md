@@ -8,8 +8,8 @@ from a restaurant menu.
 Ask things like *"I like spicy ramen, what else here would I enjoy?"* and get suggestions
 grounded in each dish's ingredients, preparation, dietary flags, and allergens.
 
-> **Status:** early development. The menu data model and a validated sample menu are in
-> place; indexing, retrieval, and the API are not implemented yet.
+> **Status:** early development. Menus can be validated and indexed into ChromaDB;
+> retrieval, answer generation, and the API are not implemented yet.
 
 ## Design principles
 
@@ -44,6 +44,27 @@ git clone https://github.com/gabrielvscodigos/menu-assistant.git
 cd menu-assistant
 uv sync
 ```
+
+Index the sample menu into the local vector store:
+
+```bash
+uv run python -m menu_assistant.ingest data/menu.json
+```
+
+The first run downloads the embedding model (~470 MB) into the Hugging Face cache.
+Re-running is idempotent: dishes are upserted by id and dishes no longer on the menu are
+removed from the index.
+
+## Configuration
+
+Settings are read from environment variables or a `.env` file. Copy
+[`.env.example`](.env.example) to `.env` to override the defaults:
+
+| Variable                          | Default                                                       |
+| --------------------------------- | ------------------------------------------------------------- |
+| `MENU_ASSISTANT_CHROMA_PATH`      | `.chroma`                                                     |
+| `MENU_ASSISTANT_COLLECTION_NAME`  | `menu`                                                        |
+| `MENU_ASSISTANT_EMBEDDING_MODEL`  | `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` |
 
 ## Development
 
@@ -83,6 +104,7 @@ several cuisines, used for development, tests, and evaluation.
 ```
 src/menu_assistant/
   models.py   menu domain models (Dish, Menu, allergens, dietary flags)
+  config.py   settings from environment variables / .env
   api/        FastAPI app and routes
   ingest/     menu loading, validation, chunking, indexing
   retrieval/  embeddings, vector store, filters, ranking
