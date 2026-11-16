@@ -2,7 +2,7 @@
 
 from collections.abc import Sequence
 
-from menu_assistant.models import Dish
+from menu_assistant.models import Course, Dish
 from menu_assistant.rag.restrictions import Restrictions
 from menu_assistant.retrieval.search import RetrievedDish
 
@@ -53,12 +53,17 @@ def format_restrictions(restrictions: Restrictions) -> str:
 
 
 def build_user_message(
-    question: str, retrieved: Sequence[RetrievedDish], restrictions: Restrictions
+    question: str,
+    retrieved: Sequence[RetrievedDish],
+    restrictions: Restrictions,
+    course: Course | None = None,
 ) -> str:
     """Combine the guest's question with the retrieved dishes, best match first."""
     dishes = "\n\n".join(format_dish(item.dish) for item in retrieved)
+    course_line = f"COURSE REQUESTED: {course} (only this course is listed)\n\n" if course else ""
     return (
         f"MENU DISHES (best matches first):\n\n{dishes}\n\n"
         f"HARD RESTRICTIONS ALREADY APPLIED: {format_restrictions(restrictions)}\n\n"
+        f"{course_line}"
         f"GUEST QUESTION: {question}"
     )

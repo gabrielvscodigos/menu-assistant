@@ -7,7 +7,7 @@ from chromadb.api.models.Collection import Collection
 
 from menu_assistant.ingest.indexer import index_menu
 from menu_assistant.llm import ChatMessage
-from menu_assistant.models import Allergen, DietaryFlag, Dish, Menu
+from menu_assistant.models import Allergen, Course, DietaryFlag, Dish, Menu
 from menu_assistant.rag.answer import (
     NO_MATCH_TEXT,
     SAFETY_NOTICE,
@@ -170,3 +170,38 @@ def test_question_about_allergens_gets_notice_even_without_restrictions(
 
     assert not answer.restrictions
     assert answer.notice == SAFETY_NOTICE
+
+
+# --- course --------------------------------------------------------------------
+
+
+def test_prompt_states_the_requested_course(sample_menu: Menu) -> None:
+    dish = next(d for d in sample_menu.dishes if d.id == "tiramisu")
+    retrieved = [RetrievedDish(dish=dish, similarity=0.9, score=0.9)]
+
+    message = build_user_message("a dessert?", retrieved, Restrictions(), Course.DESSERT)
+
+    assert "COURSE REQUESTED: dessert" in message
+    assert "COURSE REQUESTED" not in build_user_message("a dessert?", retrieved, Restrictions())
+
+
+def test_detected_course_limits_dishes_to_that_course(retriever: MenuRetriever) -> None:
+    answer = service(retriever, FakeLLM("ok")).answer("a vegan dessert, please")
+
+    assert answer.course == Course.DESSERT
+    assert [item.dish.id for item in answer.retrieved] == ["mango-sticky-rice"]
+
+
+def test_explicit_course_overrides_the_detected_one(retriever: MenuRetriever) -> None:
+    answer = service(retriever, FakeLLM("ok")).answer("a dessert", course=Course.STARTER)
+
+    assert answer.course == Course.STARTER
+    assert answer.retrieved
+    assert all(item.dish.course == Course.STARTER for item in answer.retrieved)
+
+
+def test_course_alone_does_not_trigger_the_safety_notice(retriever: MenuRetriever) -> None:
+    answer = service(retriever, FakeLLM("ok")).answer("what desserts do you have?")
+
+    assert answer.course == Course.DESSERT
+    assert answer.notice is None

@@ -68,6 +68,7 @@ def test_ask_combines_explicit_and_detected_restrictions(client: TestClient) -> 
     assert body["applied_restrictions"] == {
         "exclude_allergens": ["peanuts", "soy"],
         "require_flags": ["vegan"],
+        "course": None,
     }
     candidate_ids = {candidate["id"] for candidate in body["candidates"]}
     assert candidate_ids == {"chana-masala", "falafel-plate", "mango-sticky-rice"}
@@ -112,3 +113,21 @@ def test_missing_index_degrades_instead_of_crashing() -> None:
     }
     assert ask.status_code == 503
     assert "run ingestion" in ask.json()["detail"]
+
+
+def test_ask_reports_detected_course(client: TestClient) -> None:
+    body = client.post("/ask", json={"question": "a vegan dessert?"}).json()
+
+    assert body["applied_restrictions"]["course"] == "dessert"
+    assert [candidate["id"] for candidate in body["candidates"]] == ["mango-sticky-rice"]
+
+
+def test_ask_accepts_explicit_course(client: TestClient) -> None:
+    body = client.post("/ask", json={"question": "something light", "course": "starter"}).json()
+
+    assert body["applied_restrictions"]["course"] == "starter"
+    assert {candidate["course"] for candidate in body["candidates"]} == {"starter"}
+
+
+def test_unknown_course_is_rejected(client: TestClient) -> None:
+    assert client.post("/ask", json={"question": "ok", "course": "brunch"}).status_code == 422

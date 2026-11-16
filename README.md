@@ -65,6 +65,7 @@ With the menu indexed and Ollama running:
 uv run python -m menu_assistant.rag "I like spicy ramen, what else here would I enjoy?"
 uv run python -m menu_assistant.rag "I'm allergic to peanuts. Any spicy noodles?"
 uv run python -m menu_assistant.rag "something light" --exclude soy --diet vegan
+uv run python -m menu_assistant.rag "Quero uma sobremesa vegana"   # course: dessert
 ```
 
 Example output:
@@ -85,6 +86,8 @@ How an answer is produced:
 1. **Restrictions are decided in code.** `--exclude` / `--diet` options are combined with
    restrictions detected in the question ("allergic to peanuts", "sou vegano",
    "sin gluten"), using deterministic patterns in English, Portuguese, and Spanish.
+   A requested course ("a vegan dessert", "um prato principal") is detected the same way,
+   or set with `--course`.
 2. **Retrieval applies them as exact filters**, so excluded dishes never reach the LLM.
    If nothing passes, a fixed "no match" reply is returned without calling the LLM.
 3. **The LLM writes the reply** from the retrieved dishes only, citing them as `[dish-id]`.
@@ -92,10 +95,9 @@ How an answer is produced:
    removed, and cited dish names are mapped to ids. Whenever allergens or diets are
    involved, the staff-confirmation notice is added by code, not by the LLM.
 
-Known limitations of the default 3B model: it sometimes adds suggestions the menu does
-not support (e.g. "ask for extra chili") and does not always respect the course asked for
-(a "vegan dessert" request may also list a starter). Safety filtering is unaffected,
-because it never depends on the LLM. Larger models (`qwen2.5:7b`) follow the rules better.
+Known limitation of the default 3B model: it sometimes adds suggestions the menu does
+not support (e.g. "ask for extra chili"). Safety and course filtering are unaffected,
+because they never depend on the LLM. Larger models (`qwen2.5:7b`) follow the rules better.
 
 ## HTTP API
 
@@ -120,12 +122,13 @@ curl -X POST http://127.0.0.1:8000/ask   -H "Content-Type: application/json"   -
   "sources": [{"id": "spicy-miso-ramen", "name": "Spicy Miso Ramen", "course": "main",
                "allergens": ["eggs", "gluten", "sesame", "soy"], "dietary_flags": [], "score": 0.91}],
   "candidates": ["... every dish the LLM was given ..."],
-  "applied_restrictions": {"exclude_allergens": ["peanuts"], "require_flags": []},
+  "applied_restrictions": {"exclude_allergens": ["peanuts"], "require_flags": [], "course": null},
   "notice": "Allergen and dietary information comes from the menu and may be incomplete. ..."
 }
 ```
 
-Unknown allergens or flags are rejected with `422`. If Ollama is unreachable, `/ask`
+An optional `course` (`starter`, `main`, `side`, `dessert`) overrides the course detected
+in the question. Unknown allergens, flags, or courses are rejected with `422`. If Ollama is unreachable, `/ask`
 returns `503` with the reason.
 
 ## Configuration

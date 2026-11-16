@@ -7,7 +7,8 @@ from collections.abc import Sequence
 from pydantic import BaseModel, ConfigDict
 
 from menu_assistant.llm import ChatMessage, LLMClient
-from menu_assistant.models import Dish
+from menu_assistant.models import Course, Dish
+from menu_assistant.rag.course import detect_course
 from menu_assistant.rag.prompt import SYSTEM_PROMPT, build_user_message
 from menu_assistant.rag.restrictions import (
     Restrictions,
@@ -43,6 +44,7 @@ class Answer(BaseModel):
     cited_dish_ids: list[str]
     retrieved: list[RetrievedDish]
     restrictions: Restrictions
+    course: Course | None = None
     notice: str | None
 
     @property
@@ -89,13 +91,21 @@ class AnswerService:
         self._llm = llm
         self._k = k
 
-    def answer(self, question: str, explicit: Restrictions | None = None) -> Answer:
+    def answer(
+        self,
+        question: str,
+        explicit: Restrictions | None = None,
+        course: Course | None = None,
+    ) -> Answer:
+        """Answer `question`; an explicit `course` overrides the one detected in it."""
         restrictions = (explicit or Restrictions()).merge(detect_restrictions(question))
+        course = course or detect_course(question)
         retrieved = self._retriever.search(
             SearchRequest(
                 query=question,
                 exclude_allergens=restrictions.exclude_allergens,
                 require_flags=restrictions.require_flags,
+                course=course,
                 k=self._k,
             )
         )
@@ -110,6 +120,7 @@ class AnswerService:
                 cited_dish_ids=[],
                 retrieved=[],
                 restrictions=restrictions,
+                course=course,
                 notice=notice,
             )
 
@@ -117,7 +128,8 @@ class AnswerService:
             SYSTEM_PROMPT,
             [
                 ChatMessage(
-                    role="user", content=build_user_message(question, retrieved, restrictions)
+                    role="user",
+                    content=build_user_message(question, retrieved, restrictions, course),
                 )
             ],
         )
@@ -128,5 +140,6 @@ class AnswerService:
             cited_dish_ids=cited,
             retrieved=retrieved,
             restrictions=restrictions,
+            course=course,
             notice=notice,
         )

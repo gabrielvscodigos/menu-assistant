@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from menu_assistant.ingest import load_menu
-from menu_assistant.models import Allergen, DietaryFlag, Dish
+from menu_assistant.models import Allergen, Course, DietaryFlag, Dish
 from menu_assistant.rag.__main__ import format_answer, main
 from menu_assistant.rag.answer import SAFETY_NOTICE, Answer
 from menu_assistant.rag.restrictions import Restrictions
@@ -19,6 +19,11 @@ def test_missing_index_exits_with_error(
 
     assert main(["what is good?"]) == 1
     assert "is empty" in capsys.readouterr().err
+
+
+def test_unknown_course_option_is_rejected() -> None:
+    with pytest.raises(SystemExit):
+        main(["q", "--course", "brunch"])
 
 
 def test_unknown_allergen_option_is_rejected() -> None:
@@ -37,13 +42,14 @@ def test_format_answer_shows_sources_restrictions_and_notice(sample_menu_dish: D
             exclude_allergens=frozenset({Allergen.MILK}),
             require_flags=frozenset({DietaryFlag.VEGAN}),
         ),
+        course=Course.STARTER,
         notice=SAFETY_NOTICE,
     )
 
     output = format_answer(answer)
 
     assert "Sources:\n  - Salted Edamame [edamame]" in output
-    assert "Restrictions applied: excludes milk; must be vegan" in output
+    assert "Restrictions applied: excludes milk; must be vegan\nCourse: starter" in output
     assert output.endswith(f"Note: {SAFETY_NOTICE}")
 
 

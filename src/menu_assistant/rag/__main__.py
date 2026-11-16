@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from menu_assistant.config import Settings
 from menu_assistant.llm import LLMError
 from menu_assistant.llm.factory import llm_client_from_settings
-from menu_assistant.models import Allergen, DietaryFlag
+from menu_assistant.models import Allergen, Course, DietaryFlag
 from menu_assistant.rag.answer import Answer, AnswerService
 from menu_assistant.rag.prompt import format_restrictions
 from menu_assistant.rag.restrictions import Restrictions
@@ -37,6 +37,11 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="FLAG",
         help="required dietary flag; repeatable (e.g. --diet vegan)",
     )
+    parser.add_argument(
+        "--course",
+        choices=[c.value for c in Course],
+        help="only suggest dishes of this course (otherwise detected from the question)",
+    )
     return parser
 
 
@@ -49,6 +54,8 @@ def format_answer(answer: Answer) -> str:
         lines.append("Sources: the model cited no dish. Dishes it was given:")
         lines += [f"  - {item.dish.name} [{item.dish.id}]" for item in answer.retrieved]
     lines.append(f"Restrictions applied: {format_restrictions(answer.restrictions)}")
+    if answer.course:
+        lines.append(f"Course: {answer.course}")
     if answer.notice:
         lines += ["", f"Note: {answer.notice}"]
     return "\n".join(lines)
@@ -66,7 +73,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         service = AnswerService(
             retriever_from_settings(settings), llm_client_from_settings(settings)
         )
-        answer = service.answer(args.question, explicit)
+        course = Course(args.course) if args.course else None
+        answer = service.answer(args.question, explicit, course)
     except (IndexNotReadyError, LLMError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 1

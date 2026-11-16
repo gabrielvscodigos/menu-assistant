@@ -20,6 +20,7 @@ class AskRequest(BaseModel):
                     "question": "I like spicy ramen, what else here would I enjoy?",
                     "exclude_allergens": ["peanuts"],
                     "require_flags": [],
+                    "course": None,
                 }
             ]
         },
@@ -28,6 +29,9 @@ class AskRequest(BaseModel):
     question: str = Field(min_length=1, max_length=500)
     exclude_allergens: list[Allergen] = Field(default_factory=list)
     require_flags: list[DietaryFlag] = Field(default_factory=list)
+    course: Course | None = Field(
+        default=None, description="only suggest this course; detected from the question if omitted"
+    )
 
 
 class DishSource(BaseModel):
@@ -57,6 +61,7 @@ class AppliedRestrictions(BaseModel):
 
     exclude_allergens: list[Allergen]
     require_flags: list[DietaryFlag]
+    course: Course | None = None
 
 
 class AskResponse(BaseModel):
@@ -77,6 +82,7 @@ class AskResponse(BaseModel):
             applied_restrictions=AppliedRestrictions(
                 exclude_allergens=sorted(answer.restrictions.exclude_allergens),
                 require_flags=sorted(answer.restrictions.require_flags),
+                course=answer.course,
             ),
             notice=answer.notice,
         )

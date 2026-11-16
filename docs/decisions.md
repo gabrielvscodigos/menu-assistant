@@ -206,3 +206,20 @@ provider is one new module in `llm/` plus a factory branch (see
 **Trade-off:** answer quality is bounded by models that run on a laptop (`llama3.2` 3B
 by default), which follow grounding instructions less reliably than large hosted models.
 The code-side checks in decision 012 exist largely to compensate.
+
+## 015 — Course requests are detected in code and filter retrieval
+
+**Decision:** `rag/course.py` detects an explicitly named course (EN/PT/ES: "dessert",
+"sobremesa", "postre", "main course", "entrada", ...) and passes it to retrieval as an
+exact filter. An explicit `--course` / API `course` wins. Vague words ("something
+sweet"), negations ("no dessert"), and questions naming several courses set no filter.
+The course is not part of `Restrictions`, so it never triggers the safety notice.
+
+**Why:** the 3B model ignored the course asked for ("vegan dessert" also got a starter).
+Filtering before generation means the model only ever sees dishes of that course, the
+same "code decides, the LLM only writes" approach as allergens.
+
+**Trade-off:** an explicit course with nothing matching gives the "no match" reply rather
+than a near miss from another course. Detection is a word list: "entrée" is left out
+because it means a main in the US and a starter elsewhere, and bare "main" is ignored
+because of phrases like "main ingredient".

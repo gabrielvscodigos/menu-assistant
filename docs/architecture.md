@@ -16,7 +16,7 @@ flowchart TD
     index --> chroma[("ChromaDB<br/>.chroma/")]
 
     subgraph online["Online: answering"]
-        question[/"question<br/>(CLI or POST /ask)"/] --> detect["rag: merge explicit +<br/>detected restrictions"]
+        question[/"question<br/>(CLI or POST /ask)"/] --> detect["rag: merge explicit +<br/>detected restrictions and course"]
         detect --> retrieve["retrieval: exact filter,<br/>re-check, tag-boost rank"]
         chroma --> retrieve
         retrieve --> anyMatch{"any dish<br/>passes?"}
@@ -93,12 +93,18 @@ Restrictions come from two sources and are merged:
 
 The result is a `Restrictions` value: allergens to exclude and flags to require.
 
+The requested **course** is decided the same way (`rag/course.py`): an explicit
+`--course` / `course`, otherwise explicit course words in the question ("dessert",
+"sobremesa", "postre", "main course"). Several courses or a negation ("no dessert") mean
+no course filter. The course is kept apart from `Restrictions` because it is a
+preference, not a safety rule: it filters retrieval but does not trigger the notice.
+
 ### 2. Retrieval (`retrieval/search.py`)
 
 `MenuRetriever.search(SearchRequest)`:
 
 1. Embed the query with the `query: ` prefix.
-2. Query ChromaDB with an exact `where` filter built from the restrictions
+2. Query ChromaDB with an exact `where` filter built from the restrictions and course
    (`build_where`), so only allowed dishes are ever candidates. A pool of 20 is fetched.
 3. Re-check every candidate against the full dish data (`satisfies`). A stale index entry
    that disagrees is dropped and logged; it can never reach the LLM.

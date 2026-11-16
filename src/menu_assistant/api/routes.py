@@ -45,7 +45,7 @@ def ask(
         require_flags=frozenset(body.require_flags),
     )
     try:
-        answer = service.answer(body.question, explicit)
+        answer = service.answer(body.question, explicit, body.course)
     except LLMError as error:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=f"LLM unavailable: {error}"
