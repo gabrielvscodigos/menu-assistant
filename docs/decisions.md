@@ -145,8 +145,8 @@ The first provider is a local Ollama server, called directly over HTTP with `htt
 rather than the `ollama` SDK.
 
 **Why:**
-- A one-method protocol is easy to fake in tests and easy to implement for the next
-  provider (Anthropic) without touching retrieval or prompting code.
+- A one-method protocol is easy to fake in tests and easy to implement for another
+  provider without touching retrieval or prompting code.
 - A local model means no API key or cost while developing.
 - Ollama's chat endpoint is a single JSON call; `httpx` (already used by ChromaDB) covers
   it, and an injectable transport makes tests network-free. Failures become an `LLMError`
@@ -192,3 +192,17 @@ calls are blocking, so running them on the event loop would stall every other re
 
 **Trade-off:** fixing the index requires restarting the API after re-ingesting. Requests
 are handled by FastAPI's thread pool, which is fine for a demo but not for heavy traffic.
+
+## 014 — Ollama as the only LLM provider
+
+**Decision:** ship only the local Ollama provider. The original plan named a hosted API
+as the default; it is dropped for now.
+
+**Why:** the project must run end to end with no API key, account, or cost, for the
+author and for anyone cloning it. The `LLMClient` protocol keeps the door open: a hosted
+provider is one new module in `llm/` plus a factory branch (see
+[architecture.md](architecture.md#extending)).
+
+**Trade-off:** answer quality is bounded by models that run on a laptop (`llama3.2` 3B
+by default), which follow grounding instructions less reliably than large hosted models.
+The code-side checks in decision 012 exist largely to compensate.

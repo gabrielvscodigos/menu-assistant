@@ -14,7 +14,7 @@ good documentation over feature count.
 - Vector store: ChromaDB (local, persistent)
 - Embeddings: sentence-transformers (multilingual model)
 - LLM: accessed only through the `LLMClient` interface in `src/menu_assistant/llm/`
-  (default provider: Anthropic API; local alternative via Ollama)
+  (provider: local Ollama; other providers can be added behind the same interface)
 - Tests: pytest | Lint/format: ruff | Types: mypy
 - Config: pydantic-settings + `.env` (never commit `.env`)
 
@@ -24,7 +24,7 @@ good documentation over feature count.
 - Ingest menu: `uv run python -m menu_assistant.ingest data/menu.json`
 - Test: `uv run pytest`
 - Lint/format: `uv run ruff check . && uv run ruff format .`
-- Type check: `uv run mypy src`
+- Type check: `uv run mypy src tests`
 - Evaluate: `uv run python -m menu_assistant.eval`
 
 ## Project structure

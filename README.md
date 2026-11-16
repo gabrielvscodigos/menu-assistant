@@ -21,7 +21,7 @@ grounded in each dish's ingredients, preparation, dietary flags, and allergens.
 - **Staff confirmation notice.** Every answer involving allergens or dietary restrictions
   reminds the user to confirm with restaurant staff.
 - **Provider-agnostic LLM access.** The app depends only on an `LLMClient` interface;
-  provider-specific code (Anthropic API, Ollama) lives in `llm/`.
+  provider-specific code (currently a local Ollama client) lives in `llm/`.
 
 ## Tech stack
 
@@ -31,10 +31,10 @@ grounded in each dish's ingredients, preparation, dietary flags, and allergens.
 | API              | FastAPI                                  |
 | Vector store     | ChromaDB (local, persistent)             |
 | Embeddings       | sentence-transformers (multilingual)     |
-| LLM              | Anthropic API (default) or Ollama        |
+| LLM              | Local model via Ollama (`llama3.2`)      |
 | Quality          | pytest, ruff, mypy (strict)              |
 
-Runtime dependencies are added as each feature lands.
+How the pieces fit together is described in [docs/architecture.md](docs/architecture.md).
 
 ## Getting started
 
