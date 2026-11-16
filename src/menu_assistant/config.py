@@ -1,6 +1,7 @@
 """Application settings loaded from environment variables and an optional `.env` file."""
 
 from pathlib import Path
+from typing import Literal
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -24,6 +25,13 @@ class Settings(BaseSettings):
     embedding_document_prefix: str = "passage: "
     # Ranking bonus per dish tag mentioned in the query; 0 disables tag boosting.
     tag_boost: float = Field(default=0.05, ge=0.0)
+
+    # LLM used to write answers. Provider-specific code lives in `menu_assistant.llm`.
+    llm_provider: Literal["ollama"] = "ollama"
+    llm_model: str = "llama3.2"
+    llm_temperature: float = Field(default=0.2, ge=0.0, le=2.0)
+    llm_timeout_seconds: float = Field(default=120.0, gt=0.0)
+    ollama_base_url: str = "http://localhost:11434"
 
     @property
     def index_signature(self) -> str:

@@ -136,3 +136,21 @@ are not comparable.
 `multilingual-e5-small` with the same boost (0.904 / 0.894) is the lighter fallback. The
 boost weight was tuned on a small set without a held-out split, and tag matching only
 works for English queries.
+
+## 011 — LLM behind a small protocol, Ollama over plain HTTP
+
+**Decision:** the app talks to LLMs only through `LLMClient.generate(system, messages)`
+in `llm/base.py`. Providers live in `llm/` and are chosen in one factory from settings.
+The first provider is a local Ollama server, called directly over HTTP with `httpx`
+rather than the `ollama` SDK.
+
+**Why:**
+- A one-method protocol is easy to fake in tests and easy to implement for the next
+  provider (Anthropic) without touching retrieval or prompting code.
+- A local model means no API key or cost while developing.
+- Ollama's chat endpoint is a single JSON call; `httpx` (already used by ChromaDB) covers
+  it, and an injectable transport makes tests network-free. Failures become an `LLMError`
+  with a fix-it message (start Ollama, `ollama pull <model>`, raise the timeout).
+
+**Trade-off:** we maintain the small request/response mapping ourselves, and the default
+`llama3.2` (3B) is fast but weaker at following grounding instructions than larger models.
