@@ -9,8 +9,8 @@ Ask things like *"I like spicy ramen, what else here would I enjoy?"* and get su
 grounded in each dish's ingredients, preparation, dietary flags, and allergens.
 
 > **Status:** early development. Menus can be validated, indexed into ChromaDB, and
-> searched with deterministic allergen/dietary filters; answer generation and the API are
-> not implemented yet.
+> searched with deterministic allergen/dietary filters, and retrieval quality is
+> measured; answer generation and the API are not implemented yet.
 
 ## Design principles
 
@@ -75,6 +75,15 @@ Settings are read from environment variables or a `.env` file. Copy
 | Lint              | `uv run ruff check .`                           |
 | Format            | `uv run ruff format .`                          |
 | Type check        | `uv run mypy src tests`                         |
+| Evaluate retrieval| `uv run python -m menu_assistant.eval`          |
+
+## Evaluation
+
+Retrieval is measured on 34 hand-labeled queries (taste preferences, allergen/diet
+filters, Portuguese and Spanish questions) with recall@5, MRR, and a filter-violation
+count that must stay at zero. Current baseline: **recall@5 0.750, MRR 0.783,
+0 violations**. Method, per-category results, and observations are in
+[docs/evaluation.md](docs/evaluation.md).
 
 ## Menu data
 

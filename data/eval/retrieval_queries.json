@@ -1,0 +1,41 @@
+{
+  "description": "Hand-labeled retrieval queries for the fictional sample menu (data/menu.json). 'relevant' lists every dish a reasonable server would suggest for the query.",
+  "cases": [
+    {"id": "pref-spicy-ramen", "category": "preference", "query": "I like spicy ramen, what else here would I enjoy?", "relevant": ["spicy-miso-ramen", "dan-dan-noodles", "kimchi-fried-rice", "mushroom-shoyu-ramen"]},
+    {"id": "pref-spicy-noodle-soup", "category": "preference", "query": "spicy noodle soup", "relevant": ["spicy-miso-ramen", "dan-dan-noodles"]},
+    {"id": "pref-creamy-mild", "category": "preference", "query": "something creamy and mild", "relevant": ["chicken-tikka-masala", "wild-mushroom-risotto", "spaghetti-carbonara"]},
+    {"id": "pref-light-starter", "category": "preference", "query": "a light, fresh starter", "relevant": ["edamame", "green-papaya-salad", "caesar-salad"]},
+    {"id": "pref-seafood", "category": "preference", "query": "I love seafood", "relevant": ["grilled-salmon", "garlic-chili-prawns", "fish-tacos", "green-papaya-salad"]},
+    {"id": "pref-chocolate", "category": "preference", "query": "chocolate dessert", "relevant": ["flourless-chocolate-cake"]},
+    {"id": "pref-coffee", "category": "preference", "query": "a dessert with coffee", "relevant": ["tiramisu"]},
+    {"id": "pref-hearty-curry", "category": "preference", "query": "a hearty curry", "relevant": ["chicken-tikka-masala", "chana-masala", "tofu-green-curry"]},
+    {"id": "pref-tacos", "category": "preference", "query": "tacos", "relevant": ["fish-tacos", "beef-birria-tacos"]},
+    {"id": "pref-grilled-skewers", "category": "preference", "query": "grilled meat skewers", "relevant": ["lamb-kofta"]},
+    {"id": "pref-italian-pasta", "category": "preference", "query": "Italian pasta", "relevant": ["spaghetti-carbonara", "walnut-pesto-gnocchi"]},
+    {"id": "pref-mushrooms", "category": "preference", "query": "something with mushrooms", "relevant": ["wild-mushroom-risotto", "mushroom-shoyu-ramen"]},
+    {"id": "pref-dumplings", "category": "preference", "query": "dumplings", "relevant": ["pork-gyoza"]},
+    {"id": "pref-cheesy-pizza", "category": "preference", "query": "pizza with cheese", "relevant": ["margherita-pizza"]},
+    {"id": "pref-crispy-fried", "category": "preference", "query": "crispy fried food", "relevant": ["falafel-plate", "fish-tacos", "pork-gyoza"]},
+    {"id": "pref-fruit-dessert", "category": "preference", "query": "a tropical fruit dessert", "relevant": ["mango-sticky-rice"]},
+
+    {"id": "filt-vegan-main", "category": "filtered", "query": "a filling main course", "require_flags": ["vegan"], "course": "main", "relevant": ["mushroom-shoyu-ramen", "tofu-green-curry", "chana-masala", "falafel-plate"]},
+    {"id": "filt-noodles-no-peanuts", "category": "filtered", "query": "spicy noodles", "exclude_allergens": ["peanuts"], "relevant": ["spicy-miso-ramen"]},
+    {"id": "filt-gluten-free-dessert", "category": "filtered", "query": "something sweet", "require_flags": ["gluten_free"], "course": "dessert", "relevant": ["mango-sticky-rice", "flourless-chocolate-cake"]},
+    {"id": "filt-spicy-main-no-seafood", "category": "filtered", "query": "something spicy", "exclude_allergens": ["fish", "crustaceans", "molluscs"], "course": "main", "relevant": ["spicy-miso-ramen", "dan-dan-noodles", "tofu-green-curry", "chana-masala", "beef-birria-tacos"]},
+    {"id": "filt-halal-meat", "category": "filtered", "query": "a meat dish", "require_flags": ["halal"], "relevant": ["chicken-tikka-masala", "lamb-kofta"]},
+    {"id": "filt-dairy-free-creamy", "category": "filtered", "query": "something creamy", "require_flags": ["dairy_free"], "relevant": ["tofu-green-curry", "mango-sticky-rice"]},
+    {"id": "filt-vegetarian-italian", "category": "filtered", "query": "Italian food", "require_flags": ["vegetarian"], "relevant": ["margherita-pizza", "walnut-pesto-gnocchi", "wild-mushroom-risotto", "tiramisu"]},
+    {"id": "filt-starter-no-gluten", "category": "filtered", "query": "a starter to share", "exclude_allergens": ["gluten"], "course": "starter", "relevant": ["edamame", "green-papaya-salad"]},
+    {"id": "filt-seafood-no-shellfish", "category": "filtered", "query": "seafood", "exclude_allergens": ["crustaceans", "molluscs"], "relevant": ["grilled-salmon", "fish-tacos"]},
+    {"id": "filt-noodles-no-egg-milk", "category": "filtered", "query": "noodles", "exclude_allergens": ["eggs", "milk"], "relevant": ["dan-dan-noodles", "mushroom-shoyu-ramen"]},
+    {"id": "filt-japanese-no-sesame", "category": "filtered", "query": "Japanese food", "exclude_allergens": ["sesame"], "relevant": ["mushroom-shoyu-ramen", "edamame"]},
+
+    {"id": "multi-pt-coconut-sweet", "category": "multilingual", "query": "algo doce com coco", "relevant": ["mango-sticky-rice"]},
+    {"id": "multi-pt-vegan-spicy", "category": "multilingual", "query": "quero um prato vegano e picante", "relevant": ["tofu-green-curry", "chana-masala"]},
+    {"id": "multi-es-spicy-noodles", "category": "multilingual", "query": "fideos picantes", "relevant": ["spicy-miso-ramen", "dan-dan-noodles"]},
+    {"id": "multi-pt-grilled-seafood", "category": "multilingual", "query": "frutos do mar grelhados", "relevant": ["grilled-salmon", "garlic-chili-prawns"]},
+    {"id": "multi-es-chocolate", "category": "multilingual", "query": "postre de chocolate", "relevant": ["flourless-chocolate-cake"]},
+    {"id": "multi-pt-pasta-cheese", "category": "multilingual", "query": "massa italiana com queijo", "relevant": ["spaghetti-carbonara", "walnut-pesto-gnocchi"]},
+    {"id": "multi-pt-gluten-free-dessert", "category": "multilingual", "query": "sobremesa sem glúten", "require_flags": ["gluten_free"], "course": "dessert", "relevant": ["mango-sticky-rice", "flourless-chocolate-cake"]}
+  ]
+}
