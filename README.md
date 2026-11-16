@@ -8,8 +8,8 @@ from a restaurant menu.
 Ask things like *"I like spicy ramen, what else here would I enjoy?"* and get suggestions
 grounded in each dish's ingredients, preparation, dietary flags, and allergens.
 
-> **Status:** early development. The project skeleton and dev tooling are in place;
-> ingestion, retrieval, and the API are not implemented yet.
+> **Status:** early development. The menu data model and a validated sample menu are in
+> place; indexing, retrieval, and the API are not implemented yet.
 
 ## Design principles
 
@@ -54,10 +54,35 @@ uv sync
 | Format            | `uv run ruff format .`                          |
 | Type check        | `uv run mypy src tests`                         |
 
+## Menu data
+
+Menus are JSON files validated against the models in
+[`src/menu_assistant/models.py`](src/menu_assistant/models.py). Each dish has:
+
+| Field           | Description                                                        |
+| --------------- | ------------------------------------------------------------------ |
+| `id`            | Stable slug (`spicy-miso-ramen`), used for indexing and citations  |
+| `name`          | Display name                                                       |
+| `course`        | `starter`, `main`, `side`, or `dessert`                            |
+| `description`   | Short description of the dish                                      |
+| `ingredients`   | Non-empty list of ingredients                                      |
+| `preparation`   | How the dish is made                                               |
+| `tags`          | Free-form lowercase tags (`spicy`, `japanese`, `noodles`, ...)     |
+| `dietary_flags` | `vegan`, `vegetarian`, `gluten_free`, `dairy_free`, `halal`        |
+| `allergens`     | The 14 EU major allergens (`gluten`, `peanuts`, `sesame`, ...)     |
+
+Validation rejects unknown fields, unknown allergens or flags, duplicate ids, and
+contradictions such as a `vegan` dish listing `eggs` or a `gluten_free` dish listing
+`gluten`.
+
+[`data/menu.json`](data/menu.json) is a **fictional** sample menu with 25 dishes across
+several cuisines, used for development, tests, and evaluation.
+
 ## Project structure
 
 ```
 src/menu_assistant/
+  models.py   menu domain models (Dish, Menu, allergens, dietary flags)
   api/        FastAPI app and routes
   ingest/     menu loading, validation, chunking, indexing
   retrieval/  embeddings, vector store, filters, ranking

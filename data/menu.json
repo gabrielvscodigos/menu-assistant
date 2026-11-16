@@ -1,0 +1,280 @@
+{
+  "restaurant": "Lantern Street Kitchen (fictional)",
+  "dishes": [
+    {
+      "id": "spicy-miso-ramen",
+      "name": "Spicy Miso Ramen",
+      "course": "main",
+      "description": "Rich pork broth blended with white miso and house chili oil, topped with slow-braised pork belly and a jammy egg.",
+      "ingredients": ["wheat noodles", "pork bone broth", "white miso", "chili oil", "braised pork belly", "soft-boiled egg", "scallions", "bean sprouts", "toasted sesame seeds"],
+      "preparation": "Broth simmered for 12 hours; pork belly braised in soy and mirin, then torched before serving.",
+      "tags": ["japanese", "noodles", "soup", "spicy", "pork", "umami"],
+      "dietary_flags": [],
+      "allergens": ["gluten", "soy", "eggs", "sesame"]
+    },
+    {
+      "id": "dan-dan-noodles",
+      "name": "Dan Dan Noodles",
+      "course": "main",
+      "description": "Sichuan-style noodles in a numbing, spicy sesame sauce with crispy minced pork and crushed peanuts.",
+      "ingredients": ["wheat noodles", "minced pork", "sichuan peppercorns", "chili oil", "sesame paste", "soy sauce", "preserved mustard greens", "bok choy", "roasted peanuts"],
+      "preparation": "Pork stir-fried until crisp; noodles boiled and tossed with the sauce at the table.",
+      "tags": ["chinese", "sichuan", "noodles", "spicy", "numbing", "pork"],
+      "dietary_flags": [],
+      "allergens": ["gluten", "soy", "sesame", "peanuts", "mustard"]
+    },
+    {
+      "id": "mushroom-shoyu-ramen",
+      "name": "Mushroom Shoyu Ramen",
+      "course": "main",
+      "description": "A clear, savory shiitake and kombu broth seasoned with soy sauce, with roasted tofu and bamboo shoots.",
+      "ingredients": ["wheat noodles", "shiitake and kombu broth", "soy sauce", "roasted tofu", "bamboo shoots", "nori", "scallions"],
+      "preparation": "Dashi steeped cold overnight, then gently warmed; tofu roasted until golden.",
+      "tags": ["japanese", "noodles", "soup", "mushroom", "umami", "mild"],
+      "dietary_flags": ["vegan", "vegetarian", "dairy_free"],
+      "allergens": ["gluten", "soy"]
+    },
+    {
+      "id": "kimchi-fried-rice",
+      "name": "Kimchi Fried Rice",
+      "course": "main",
+      "description": "Wok-fried rice with aged kimchi, gochujang and crispy pork belly, crowned with a fried egg.",
+      "ingredients": ["jasmine rice", "kimchi (with fish sauce)", "gochujang", "pork belly", "fried egg", "scallions", "sesame oil"],
+      "preparation": "Day-old rice fried at high heat in a wok with kimchi and gochujang.",
+      "tags": ["korean", "rice", "spicy", "fermented", "pork"],
+      "dietary_flags": [],
+      "allergens": ["fish", "soy", "gluten", "eggs", "sesame"]
+    },
+    {
+      "id": "tofu-green-curry",
+      "name": "Green Curry with Tofu",
+      "course": "main",
+      "description": "Fragrant Thai green curry with coconut milk, tofu, Thai eggplant and basil, served with jasmine rice.",
+      "ingredients": ["firm tofu", "coconut milk", "green curry paste (no shrimp paste)", "thai eggplant", "bamboo shoots", "thai basil", "jasmine rice"],
+      "preparation": "Curry paste fried in coconut cream before simmering with vegetables and tofu.",
+      "tags": ["thai", "curry", "spicy", "coconut", "rice"],
+      "dietary_flags": ["vegan", "vegetarian", "gluten_free", "dairy_free"],
+      "allergens": ["soy"]
+    },
+    {
+      "id": "chicken-tikka-masala",
+      "name": "Chicken Tikka Masala",
+      "course": "main",
+      "description": "Yogurt-marinated chicken charred in the tandoor and finished in a creamy, mildly spiced tomato sauce.",
+      "ingredients": ["halal chicken thigh", "yogurt", "tomato", "cream", "garam masala", "ginger", "garlic", "basmati rice"],
+      "preparation": "Chicken marinated for 24 hours, cooked in a tandoor oven, then simmered in the sauce.",
+      "tags": ["indian", "curry", "chicken", "creamy", "mild"],
+      "dietary_flags": ["halal", "gluten_free"],
+      "allergens": ["milk"]
+    },
+    {
+      "id": "chana-masala",
+      "name": "Chana Masala",
+      "course": "main",
+      "description": "Chickpeas slow-cooked in a tangy, spicy tomato and onion gravy, served with basmati rice.",
+      "ingredients": ["chickpeas", "tomato", "onion", "ginger", "green chili", "garam masala", "cumin", "cilantro", "basmati rice"],
+      "preparation": "Whole spices tempered in oil, then simmered with chickpeas for two hours.",
+      "tags": ["indian", "curry", "chickpeas", "spicy", "hearty"],
+      "dietary_flags": ["vegan", "vegetarian", "gluten_free", "dairy_free"],
+      "allergens": []
+    },
+    {
+      "id": "lamb-kofta",
+      "name": "Grilled Lamb Kofta",
+      "course": "main",
+      "description": "Spiced lamb skewers grilled over charcoal with tahini sauce, sumac onions and warm flatbread.",
+      "ingredients": ["halal minced lamb", "cumin", "coriander", "parsley", "tahini sauce", "sumac onions", "wheat flatbread"],
+      "preparation": "Hand-shaped skewers grilled over charcoal.",
+      "tags": ["middle-eastern", "grilled", "lamb", "smoky"],
+      "dietary_flags": ["halal", "dairy_free"],
+      "allergens": ["gluten", "sesame"]
+    },
+    {
+      "id": "falafel-plate",
+      "name": "Falafel Plate",
+      "course": "main",
+      "description": "Crispy herb falafel with hummus, tabbouleh, pickled turnips and pita.",
+      "ingredients": ["chickpea falafel", "hummus", "tahini", "bulgur wheat tabbouleh", "pickled turnips", "pita bread"],
+      "preparation": "Falafel made from soaked raw chickpeas and deep-fried to order.",
+      "tags": ["middle-eastern", "chickpeas", "fried", "fresh"],
+      "dietary_flags": ["vegan", "vegetarian", "dairy_free"],
+      "allergens": ["sesame", "gluten"]
+    },
+    {
+      "id": "fish-tacos",
+      "name": "Beer-Battered Fish Tacos",
+      "course": "main",
+      "description": "Crispy beer-battered cod in corn tortillas with chipotle mayo and lime cabbage slaw.",
+      "ingredients": ["cod", "beer batter (wheat flour, beer)", "corn tortillas", "chipotle mayonnaise", "red cabbage slaw", "lime"],
+      "preparation": "Cod battered and deep-fried to order.",
+      "tags": ["mexican", "tacos", "seafood", "fried", "smoky"],
+      "dietary_flags": [],
+      "allergens": ["fish", "gluten", "eggs"]
+    },
+    {
+      "id": "beef-birria-tacos",
+      "name": "Beef Birria Tacos",
+      "course": "main",
+      "description": "Beef braised with guajillo and ancho chilies, folded into crisped corn tortillas with a cup of consommé for dipping.",
+      "ingredients": ["beef chuck", "guajillo chilies", "ancho chilies", "corn tortillas", "white onion", "cilantro", "beef consommé"],
+      "preparation": "Beef braised for six hours; tortillas dipped in the braising fat and griddled.",
+      "tags": ["mexican", "tacos", "beef", "spicy", "slow-cooked"],
+      "dietary_flags": ["gluten_free", "dairy_free"],
+      "allergens": []
+    },
+    {
+      "id": "elote",
+      "name": "Elote",
+      "course": "side",
+      "description": "Charred street corn brushed with mayonnaise, rolled in cotija cheese and dusted with chili and lime.",
+      "ingredients": ["corn on the cob", "mayonnaise", "cotija cheese", "chili powder", "lime"],
+      "preparation": "Corn grilled over open flame, then dressed to order.",
+      "tags": ["mexican", "corn", "spicy", "grilled"],
+      "dietary_flags": ["vegetarian", "gluten_free"],
+      "allergens": ["eggs", "milk"]
+    },
+    {
+      "id": "margherita-pizza",
+      "name": "Margherita Pizza",
+      "course": "main",
+      "description": "Wood-fired pizza with San Marzano tomato sauce, fresh mozzarella and basil.",
+      "ingredients": ["wheat pizza dough", "tomato sauce", "fresh mozzarella", "basil", "olive oil"],
+      "preparation": "Dough fermented for 48 hours, baked for 90 seconds in a wood-fired oven.",
+      "tags": ["italian", "pizza", "cheese", "classic"],
+      "dietary_flags": ["vegetarian"],
+      "allergens": ["gluten", "milk"]
+    },
+    {
+      "id": "spaghetti-carbonara",
+      "name": "Spaghetti Carbonara",
+      "course": "main",
+      "description": "Spaghetti tossed with crispy guanciale, egg yolk, pecorino romano and plenty of black pepper.",
+      "ingredients": ["durum wheat spaghetti", "guanciale (cured pork cheek)", "egg yolks", "pecorino romano", "black pepper"],
+      "preparation": "Sauce emulsified off the heat with pasta water; no cream.",
+      "tags": ["italian", "pasta", "pork", "creamy", "classic"],
+      "dietary_flags": [],
+      "allergens": ["gluten", "eggs", "milk"]
+    },
+    {
+      "id": "walnut-pesto-gnocchi",
+      "name": "Walnut Pesto Gnocchi",
+      "course": "main",
+      "description": "Pan-seared potato gnocchi with basil and walnut pesto and blistered cherry tomatoes.",
+      "ingredients": ["potato gnocchi (potato, wheat flour, egg)", "basil", "walnuts", "vegetarian hard cheese", "olive oil", "cherry tomatoes"],
+      "preparation": "Gnocchi made in house, boiled, then seared in olive oil.",
+      "tags": ["italian", "pasta", "herby", "nutty"],
+      "dietary_flags": ["vegetarian"],
+      "allergens": ["gluten", "eggs", "milk", "tree_nuts"]
+    },
+    {
+      "id": "wild-mushroom-risotto",
+      "name": "Wild Mushroom Risotto",
+      "course": "main",
+      "description": "Creamy arborio risotto with porcini and cremini mushrooms, finished with butter and hard cheese.",
+      "ingredients": ["arborio rice", "porcini mushrooms", "cremini mushrooms", "vegetable stock (with celery)", "white wine", "butter", "vegetarian hard cheese"],
+      "preparation": "Rice toasted, deglazed with white wine and stirred with stock for 18 minutes.",
+      "tags": ["italian", "rice", "mushroom", "creamy", "umami"],
+      "dietary_flags": ["vegetarian", "gluten_free"],
+      "allergens": ["milk", "celery", "sulphites"]
+    },
+    {
+      "id": "grilled-salmon",
+      "name": "Grilled Salmon with Lemon-Dill Butter",
+      "course": "main",
+      "description": "Salmon fillet grilled skin-side down, with lemon-dill butter, roasted potatoes and asparagus.",
+      "ingredients": ["salmon fillet", "butter", "lemon", "dill", "roasted potatoes", "asparagus"],
+      "preparation": "Grilled to medium; butter melted over the fish at the pass.",
+      "tags": ["seafood", "grilled", "fresh", "light"],
+      "dietary_flags": ["gluten_free"],
+      "allergens": ["fish", "milk"]
+    },
+    {
+      "id": "garlic-chili-prawns",
+      "name": "Garlic Chili Prawns",
+      "course": "main",
+      "description": "Prawns sizzled in garlic butter with chili flakes and parsley, served with sourdough to mop up the sauce.",
+      "ingredients": ["prawns", "garlic", "butter", "chili flakes", "parsley", "sourdough bread"],
+      "preparation": "Cooked in a cast-iron pan and served still sizzling.",
+      "tags": ["seafood", "spicy", "garlicky"],
+      "dietary_flags": [],
+      "allergens": ["crustaceans", "milk", "gluten"]
+    },
+    {
+      "id": "green-papaya-salad",
+      "name": "Green Papaya Salad",
+      "course": "starter",
+      "description": "Shredded green papaya pounded with chili, lime, fish sauce, dried shrimp and peanuts.",
+      "ingredients": ["green papaya", "cherry tomatoes", "long beans", "bird's eye chili", "lime", "fish sauce", "dried shrimp", "roasted peanuts", "palm sugar"],
+      "preparation": "Pounded to order in a clay mortar.",
+      "tags": ["thai", "salad", "spicy", "fresh", "sour"],
+      "dietary_flags": ["gluten_free", "dairy_free"],
+      "allergens": ["fish", "crustaceans", "peanuts"]
+    },
+    {
+      "id": "edamame",
+      "name": "Salted Edamame",
+      "course": "starter",
+      "description": "Steamed young soybeans in the pod, finished with flaky sea salt.",
+      "ingredients": ["edamame (young soybeans)", "sea salt"],
+      "preparation": "Steamed to order.",
+      "tags": ["japanese", "light", "snack"],
+      "dietary_flags": ["vegan", "vegetarian", "gluten_free", "dairy_free"],
+      "allergens": ["soy"]
+    },
+    {
+      "id": "pork-gyoza",
+      "name": "Pork Gyoza",
+      "course": "starter",
+      "description": "Pan-fried dumplings filled with pork, cabbage and ginger, with a soy and rice vinegar dipping sauce.",
+      "ingredients": ["wheat dumpling wrappers", "minced pork", "napa cabbage", "ginger", "garlic", "soy sauce", "rice vinegar", "sesame oil"],
+      "preparation": "Folded by hand; pan-fried then steamed for a crisp base.",
+      "tags": ["japanese", "dumplings", "pork", "crispy"],
+      "dietary_flags": [],
+      "allergens": ["gluten", "soy", "sesame"]
+    },
+    {
+      "id": "caesar-salad",
+      "name": "Caesar Salad",
+      "course": "starter",
+      "description": "Crisp romaine with anchovy-garlic dressing, sourdough croutons and shaved parmesan.",
+      "ingredients": ["romaine lettuce", "caesar dressing (egg yolk, anchovy, dijon mustard)", "sourdough croutons", "parmesan"],
+      "preparation": "Dressing emulsified in house daily.",
+      "tags": ["salad", "classic", "fresh"],
+      "dietary_flags": [],
+      "allergens": ["eggs", "fish", "mustard", "gluten", "milk"]
+    },
+    {
+      "id": "tiramisu",
+      "name": "Tiramisu",
+      "course": "dessert",
+      "description": "Espresso-soaked ladyfingers layered with mascarpone cream and dusted with cocoa.",
+      "ingredients": ["ladyfingers (wheat flour, egg)", "mascarpone", "eggs", "espresso", "marsala wine", "cocoa powder"],
+      "preparation": "Assembled the day before and chilled overnight.",
+      "tags": ["italian", "coffee", "creamy", "sweet"],
+      "dietary_flags": ["vegetarian"],
+      "allergens": ["gluten", "eggs", "milk", "sulphites"]
+    },
+    {
+      "id": "mango-sticky-rice",
+      "name": "Mango Sticky Rice",
+      "course": "dessert",
+      "description": "Sweet glutinous rice soaked in salted coconut cream, served with ripe mango and toasted sesame.",
+      "ingredients": ["glutinous rice", "coconut milk", "palm sugar", "ripe mango", "toasted sesame seeds"],
+      "preparation": "Rice steamed, then soaked in warm sweetened coconut milk.",
+      "tags": ["thai", "coconut", "fruity", "sweet"],
+      "dietary_flags": ["vegan", "vegetarian", "gluten_free", "dairy_free"],
+      "allergens": ["sesame"]
+    },
+    {
+      "id": "flourless-chocolate-cake",
+      "name": "Flourless Chocolate Cake",
+      "course": "dessert",
+      "description": "Dense, fudgy dark chocolate cake made with almond flour, served with whipped cream.",
+      "ingredients": ["dark chocolate", "butter", "eggs", "sugar", "almond flour", "whipped cream"],
+      "preparation": "Baked in a water bath and rested for a dense texture.",
+      "tags": ["chocolate", "rich", "sweet"],
+      "dietary_flags": ["vegetarian", "gluten_free"],
+      "allergens": ["milk", "eggs", "tree_nuts"]
+    }
+  ]
+}

@@ -43,3 +43,27 @@ added to `sys.path`, so mirrored test file names across folders cannot clash.
 
 **Trade-off:** test modules cannot import each other directly; shared helpers go in
 `conftest.py` fixtures.
+
+## 005 — Closed vocabularies and consistency checks for menu data
+
+**Decision:** allergens, dietary flags, and courses are enums (allergens follow the 14 EU
+major allergens). Menu validation rejects unknown fields and values, and rejects dishes
+whose flags contradict their allergens (e.g. `vegan` + `eggs`, `gluten_free` + `gluten`).
+`vegan` also requires `vegetarian` and `dairy_free`.
+
+**Why:** allergen filtering is deterministic and safety-relevant. With free-text values, a
+typo like `"glutten"` would silently slip past a filter. Failing loudly at ingestion is far
+safer than a wrong recommendation. Requiring implied flags keeps filters simple: asking
+for vegetarian dishes is a single flag check.
+
+**Trade-off:** adding a new allergen or flag needs a code change, and menus must use the
+exact vocabulary. Free-form descriptors (`spicy`, `japanese`) stay in open `tags`.
+
+## 006 — Domain models at the package root
+
+**Decision:** `Dish` and `Menu` live in `menu_assistant/models.py`, not inside `ingest/`.
+
+**Why:** ingestion, retrieval, prompt building, and the API all use these models. Keeping
+them at the root avoids other packages depending on `ingest` internals.
+
+**Trade-off:** one module outside the planned subpackages.
