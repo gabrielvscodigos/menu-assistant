@@ -14,9 +14,9 @@ from menu_assistant.eval.dataset import find_labeling_errors, load_dataset
 from menu_assistant.eval.report import format_report
 from menu_assistant.eval.runner import evaluate
 from menu_assistant.ingest.loader import load_menu
-from menu_assistant.retrieval.embeddings import embedder_from_settings
-from menu_assistant.retrieval.search import MAX_RESULTS, MenuRetriever
-from menu_assistant.retrieval.vector_store import IndexMismatchError, open_collection
+from menu_assistant.retrieval.factory import retriever_from_settings
+from menu_assistant.retrieval.search import MAX_RESULTS
+from menu_assistant.retrieval.vector_store import IndexNotReadyError
 
 DEFAULT_DATASET = Path("data/eval/retrieval_queries.json")
 DEFAULT_MENU = Path("data/menu.json")
@@ -45,23 +45,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 1
 
     try:
-        collection = open_collection(
-            settings.chroma_path, settings.collection_name, settings.index_signature
-        )
-    except IndexMismatchError as error:
+        retriever = retriever_from_settings(settings)
+    except IndexNotReadyError as error:
         print(f"error: {error}", file=sys.stderr)
         return 1
-    if collection.count() == 0:
-        print(
-            f"error: index at {settings.chroma_path} is empty; "
-            "run `python -m menu_assistant.ingest data/menu.json` first",
-            file=sys.stderr,
-        )
-        return 1
 
-    retriever = MenuRetriever(
-        collection, embedder_from_settings(settings), tag_boost=settings.tag_boost
-    )
     report = evaluate(retriever, dataset, args.k)
 
     print(f"Embedding model: {settings.embedding_model} | tag boost: {settings.tag_boost}")

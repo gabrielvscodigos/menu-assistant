@@ -13,7 +13,11 @@ logger = logging.getLogger(__name__)
 INDEX_SIGNATURE_KEY = "index_signature"
 
 
-class IndexMismatchError(Exception):
+class IndexNotReadyError(Exception):
+    """The index cannot be searched yet; re-running ingestion fixes it."""
+
+
+class IndexMismatchError(IndexNotReadyError):
     """The stored index was built with a different embedding setup than requested."""
 
 

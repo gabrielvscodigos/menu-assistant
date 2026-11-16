@@ -1,0 +1,172 @@
+"""Tests for grounded answering, with a fake LLM and a fake embedder."""
+
+from collections.abc import Sequence
+
+import pytest
+from chromadb.api.models.Collection import Collection
+
+from menu_assistant.ingest.indexer import index_menu
+from menu_assistant.llm import ChatMessage
+from menu_assistant.models import Allergen, DietaryFlag, Dish, Menu
+from menu_assistant.rag.answer import (
+    NO_MATCH_TEXT,
+    SAFETY_NOTICE,
+    AnswerService,
+    verify_citations,
+)
+from menu_assistant.rag.prompt import SYSTEM_PROMPT, build_user_message, format_dish
+from menu_assistant.rag.restrictions import Restrictions
+from menu_assistant.retrieval.embeddings import Embedder
+from menu_assistant.retrieval.search import MenuRetriever, RetrievedDish
+
+
+class FakeLLM:
+    """Returns a scripted reply and records every prompt it receives."""
+
+    def __init__(self, reply: str) -> None:
+        self.reply = reply
+        self.calls: list[tuple[str, list[ChatMessage]]] = []
+
+    def generate(self, system: str, messages: Sequence[ChatMessage]) -> str:
+        self.calls.append((system, list(messages)))
+        return self.reply
+
+    @property
+    def last_prompt(self) -> str:
+        return self.calls[-1][1][-1].content
+
+
+@pytest.fixture
+def retriever(sample_menu: Menu, collection: Collection, fake_embedder: Embedder) -> MenuRetriever:
+    index_menu(sample_menu, collection, fake_embedder)
+    return MenuRetriever(collection, fake_embedder)
+
+
+def service(retriever: MenuRetriever, llm: FakeLLM, k: int = 25) -> AnswerService:
+    return AnswerService(retriever, llm, k=k)
+
+
+# --- verify_citations ----------------------------------------------------------
+
+
+@pytest.fixture
+def dishes(sample_menu: Menu) -> list[Dish]:
+    return [d for d in sample_menu.dishes if d.id in {"edamame", "pork-gyoza"}]
+
+
+def test_verify_citations_keeps_retrieved_ids_in_order(dishes: list[Dish]) -> None:
+    text = "Try Edamame [edamame] or Gyoza [pork-gyoza]. Edamame [edamame] again."
+
+    cleaned, cited = verify_citations(text, dishes)
+
+    assert cleaned == text
+    assert cited == ["edamame", "pork-gyoza"]
+
+
+def test_verify_citations_strips_ids_that_were_not_retrieved(dishes: list[Dish]) -> None:
+    cleaned, cited = verify_citations("Try Lasagna [lasagna] or Edamame [edamame].", dishes)
+
+    assert cleaned == "Try Lasagna or Edamame [edamame]."
+    assert cited == ["edamame"]
+
+
+def test_verify_citations_rewrites_dish_names_to_ids(dishes: list[Dish]) -> None:
+    cleaned, cited = verify_citations("1. [Salted Edamame] is light.", dishes)
+
+    assert cleaned == "1. [edamame] is light."
+    assert cited == ["edamame"]
+
+
+def test_verify_citations_leaves_other_bracketed_text_alone(dishes: list[Dish]) -> None:
+    text = "Ask for sauce [on the side] with Edamame [edamame]."
+
+    assert verify_citations(text, dishes) == (text, ["edamame"])
+
+
+# --- prompt --------------------------------------------------------------------
+
+
+def test_prompt_contains_dish_facts_restrictions_and_question(sample_menu: Menu) -> None:
+    dish = next(d for d in sample_menu.dishes if d.id == "dan-dan-noodles")
+    restrictions = Restrictions(exclude_allergens=frozenset({Allergen.MILK}))
+
+    message = build_user_message(
+        "spicy please?", [RetrievedDish(dish=dish, similarity=0.9, score=0.9)], restrictions
+    )
+
+    assert format_dish(dish) in message
+    assert "Allergens: gluten, mustard, peanuts, sesame, soy" in message
+    assert "HARD RESTRICTIONS ALREADY APPLIED: excludes milk" in message
+    assert message.endswith("GUEST QUESTION: spicy please?")
+
+
+# --- AnswerService -------------------------------------------------------------
+
+
+def test_answer_uses_system_prompt_and_reports_citations(retriever: MenuRetriever) -> None:
+    llm = FakeLLM("You'll love Dan Dan Noodles [dan-dan-noodles]!")
+
+    answer = service(retriever, llm).answer("spicy noodles")
+
+    system, messages = llm.calls[0]
+    assert system == SYSTEM_PROMPT
+    assert [m.role for m in messages] == ["user"]
+    assert answer.cited_dish_ids == ["dan-dan-noodles"]
+    assert [item.dish.id for item in answer.cited_dishes] == ["dan-dan-noodles"]
+    assert answer.notice is None
+
+
+def test_detected_allergy_filters_dishes_before_the_llm_sees_them(
+    retriever: MenuRetriever,
+) -> None:
+    llm = FakeLLM("Try the Dan Dan Noodles [dan-dan-noodles].")
+
+    answer = service(retriever, llm).answer("I'm allergic to peanuts, any noodles?")
+
+    assert answer.restrictions.exclude_allergens == {Allergen.PEANUTS}
+    assert "[dan-dan-noodles]" not in llm.last_prompt
+    assert all(Allergen.PEANUTS not in item.dish.allergens for item in answer.retrieved)
+    # The LLM ignored the rules and cited a filtered-out dish: the citation is removed.
+    assert answer.cited_dish_ids == []
+    assert "[dan-dan-noodles]" not in answer.text
+    assert answer.notice == SAFETY_NOTICE
+
+
+def test_explicit_and_detected_restrictions_are_combined(retriever: MenuRetriever) -> None:
+    llm = FakeLLM("ok")
+    explicit = Restrictions(exclude_allergens=frozenset({Allergen.SOY}))
+
+    answer = service(retriever, llm).answer("anything vegan?", explicit)
+
+    assert answer.restrictions == Restrictions(
+        exclude_allergens=frozenset({Allergen.SOY}), require_flags=frozenset({DietaryFlag.VEGAN})
+    )
+    # Vegan dishes without soy on the sample menu.
+    assert {item.dish.id for item in answer.retrieved} == {
+        "chana-masala",
+        "falafel-plate",
+        "mango-sticky-rice",
+    }
+
+
+def test_no_matching_dish_answers_without_calling_the_llm(retriever: MenuRetriever) -> None:
+    llm = FakeLLM("should not be used")
+    explicit = Restrictions(
+        exclude_allergens=frozenset({Allergen.SESAME}), require_flags=frozenset({DietaryFlag.HALAL})
+    )
+
+    answer = service(retriever, llm).answer("vegan halal food", explicit)
+
+    assert llm.calls == []
+    assert answer.text == NO_MATCH_TEXT
+    assert answer.retrieved == []
+    assert answer.notice == SAFETY_NOTICE
+
+
+def test_question_about_allergens_gets_notice_even_without_restrictions(
+    retriever: MenuRetriever,
+) -> None:
+    answer = service(retriever, FakeLLM("It lists peanuts.")).answer("does the ramen have peanuts?")
+
+    assert not answer.restrictions
+    assert answer.notice == SAFETY_NOTICE

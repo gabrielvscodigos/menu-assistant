@@ -154,3 +154,25 @@ rather than the `ollama` SDK.
 
 **Trade-off:** we maintain the small request/response mapping ourselves, and the default
 `llama3.2` (3B) is fast but weaker at following grounding instructions than larger models.
+
+## 012 — Grounded answering: code decides, the LLM only writes
+
+**Decision:** in `rag/`, everything safety-relevant happens in code around the LLM call:
+- Restrictions come from explicit options plus deterministic pattern detection in the
+  question (EN/PT/ES); the LLM never decides what to filter.
+- If no dish passes the filters, a fixed reply is returned and the LLM is not called.
+- The prompt contains only retrieved dishes, with every fact the model may use, and
+  asks for `[dish-id]` citations.
+- After generation, citations are verified: ids of dishes that were not retrieved are
+  removed, and dish names written in brackets are mapped to ids.
+- The "confirm with staff" notice is attached by code whenever restrictions were applied
+  or the question mentions allergens or diets.
+
+**Why:** the domain rules say allergen filtering must be deterministic, answers must cite
+dishes, and allergen answers must carry a notice. Small local models do not follow
+instructions reliably, so each rule is enforced where it can be tested.
+
+**Trade-off:** pattern detection can miss unusual phrasings (explicit options are the
+reliable path) and is deliberately conservative, so it may exclude a dish the user
+mentioned casually. The LLM can still add unsupported side remarks inside its text;
+measuring that needs an answer-quality evaluation (planned).
