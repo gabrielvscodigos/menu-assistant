@@ -57,6 +57,20 @@ Re-running is idempotent: dishes are upserted by id and dishes no longer on the 
 removed from the index. If the embedding model changes, ingestion rebuilds the index;
 search refuses to use an index built with a different model.
 
+## Run with Docker
+
+The whole stack (API, Ollama, the model download, and menu ingestion) starts with one
+command. Only [Docker](https://docs.docker.com/get-docker/) is needed:
+
+```bash
+docker compose up --build
+```
+
+Then open <http://localhost:8000/docs>. The first start downloads `llama3.2` (~2 GB) and
+the embedding model (~1.1 GB) into named volumes, so it takes a few minutes; later starts
+reuse them. Use another Ollama model with `MENU_ASSISTANT_LLM_MODEL=qwen2.5:7b docker
+compose up`. Everything runs on CPU; `docker compose down -v` removes the volumes.
+
 ## Ask for suggestions
 
 With the menu indexed and Ollama running:

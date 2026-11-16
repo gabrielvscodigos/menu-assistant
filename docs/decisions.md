@@ -241,3 +241,19 @@ actually doing.
 invented details inside a sentence. The "unavailable" check is a phrase list. Scores
 depend on a live model, so the evaluation is not part of CI and results vary slightly
 between runs.
+
+## 017 — Docker Compose for a one-command demo
+
+**Decision:** a multi-stage `Dockerfile` builds the API from `uv.lock` (no dev
+dependencies, CPU-only PyTorch, non-root user). `compose.yaml` runs it next to the
+official Ollama image, with a one-shot service that pulls the model first. The API
+container re-runs ingestion on every start; models and the index live in named volumes.
+
+**Why:** a reviewer can try the project without installing Python, uv, or Ollama.
+Ingesting one menu takes seconds and is idempotent, so doing it at start-up removes a
+manual step and can never leave a stale index. Models are downloaded at run time instead
+of baked into the image, which keeps the image small and the build fast.
+
+**Trade-off:** the first start is slow (about 3 GB of downloads), and Ollama runs on CPU
+unless GPU access is configured for the container. Re-ingesting at every start would be
+wasteful for large menus; then ingestion should become a separate job.

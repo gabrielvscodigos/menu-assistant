@@ -1,0 +1,43 @@
+# Full stack with one command: docker compose up --build
+# Then open http://localhost:8000/docs. The first start downloads the LLM (~2 GB) and the
+# embedding model (~1.1 GB) into named volumes; later starts reuse them.
+
+services:
+  ollama:
+    image: ollama/ollama:0.40.16
+    volumes:
+      - ollama:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # One-shot job: pull the model into the ollama volume, then exit.
+  ollama-pull:
+    image: ollama/ollama:0.40.16
+    environment:
+      OLLAMA_HOST: ollama:11434
+    entrypoint: ["ollama", "pull", "${MENU_ASSISTANT_LLM_MODEL:-llama3.2}"]
+    depends_on:
+      ollama:
+        condition: service_healthy
+
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      MENU_ASSISTANT_OLLAMA_BASE_URL: http://ollama:11434
+      MENU_ASSISTANT_LLM_MODEL: ${MENU_ASSISTANT_LLM_MODEL:-llama3.2}
+    volumes:
+      - hf-cache:/app/.cache/huggingface
+      - chroma:/app/.chroma
+    depends_on:
+      ollama-pull:
+        condition: service_completed_successfully
+
+volumes:
+  ollama:
+  hf-cache:
+  chroma:
