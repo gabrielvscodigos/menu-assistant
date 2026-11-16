@@ -1,5 +1,7 @@
 # menu-assistant
 
+**English** | [Português (Brasil)](README.pt-BR.md)
+
 [![CI](https://github.com/gabrielvscodigos/menu-assistant/actions/workflows/ci.yml/badge.svg)](https://github.com/gabrielvscodigos/menu-assistant/actions/workflows/ci.yml)
 
 A retrieval-augmented generation (RAG) assistant that helps people choose what to eat
@@ -128,7 +130,9 @@ Interactive docs (Swagger UI) are at <http://127.0.0.1:8000/docs>.
 | POST   | `/ask`    | Grounded suggestions for a question                          |
 
 ```bash
-curl -X POST http://127.0.0.1:8000/ask   -H "Content-Type: application/json"   -d '{"question": "Any spicy noodles?", "exclude_allergens": ["peanuts"]}'
+curl -X POST http://127.0.0.1:8000/ask \
+  -H "Content-Type: application/json" \
+  -d '{"question": "Any spicy noodles?", "exclude_allergens": ["peanuts"]}'
 ```
 
 ```json
@@ -252,6 +256,7 @@ several cuisines, used for development, tests, and evaluation.
 src/menu_assistant/
   models.py   menu domain models (Dish, Menu, allergens, dietary flags)
   config.py   settings from environment variables / .env
+  console.py  UTF-8 output for the command-line tools
   api/        FastAPI app and routes
   ingest/     menu loading, validation, chunking, indexing
   retrieval/  embeddings, vector store, filters, tag-boost ranking
