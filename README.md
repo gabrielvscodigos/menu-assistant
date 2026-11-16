@@ -52,20 +52,26 @@ Index the sample menu into the local vector store:
 uv run python -m menu_assistant.ingest data/menu.json
 ```
 
-The first run downloads the embedding model (~470 MB) into the Hugging Face cache.
+The first run downloads the embedding model (~1.1 GB) into the Hugging Face cache.
 Re-running is idempotent: dishes are upserted by id and dishes no longer on the menu are
-removed from the index.
+removed from the index. If the embedding model changes, ingestion rebuilds the index;
+search refuses to use an index built with a different model.
 
 ## Configuration
 
 Settings are read from environment variables or a `.env` file. Copy
 [`.env.example`](.env.example) to `.env` to override the defaults:
 
-| Variable                          | Default                                                       |
-| --------------------------------- | ------------------------------------------------------------- |
-| `MENU_ASSISTANT_CHROMA_PATH`      | `.chroma`                                                     |
-| `MENU_ASSISTANT_COLLECTION_NAME`  | `menu`                                                        |
-| `MENU_ASSISTANT_EMBEDDING_MODEL`  | `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` |
+| Variable                                   | Default                          |
+| ------------------------------------------ | -------------------------------- |
+| `MENU_ASSISTANT_CHROMA_PATH`               | `.chroma`                        |
+| `MENU_ASSISTANT_COLLECTION_NAME`           | `menu`                           |
+| `MENU_ASSISTANT_EMBEDDING_MODEL`           | `intfloat/multilingual-e5-base`  |
+| `MENU_ASSISTANT_EMBEDDING_QUERY_PREFIX`    | `query: `                        |
+| `MENU_ASSISTANT_EMBEDDING_DOCUMENT_PREFIX` | `passage: `                      |
+| `MENU_ASSISTANT_TAG_BOOST`                 | `0.05`                           |
+
+The defaults were chosen by evaluation; see [docs/evaluation.md](docs/evaluation.md).
 
 ## Development
 
@@ -81,8 +87,14 @@ Settings are read from environment variables or a `.env` file. Copy
 
 Retrieval is measured on 34 hand-labeled queries (taste preferences, allergen/diet
 filters, Portuguese and Spanish questions) with recall@5, MRR, and a filter-violation
-count that must stay at zero. Current baseline: **recall@5 0.750, MRR 0.783,
-0 violations**. Method, per-category results, and observations are in
+count that must stay at zero.
+
+| Configuration                                   | recall@5  | MRR       | violations |
+| ----------------------------------------------- | --------: | --------: | ---------: |
+| Baseline (MiniLM-L12, pure vector search)       |     0.750 |     0.783 |          0 |
+| **Current** (multilingual-e5-base + tag boost)  | **0.956** | **0.934** |          0 |
+
+Method, the full experiment grid, remaining misses, and caveats are in
 [docs/evaluation.md](docs/evaluation.md).
 
 ## Menu data
@@ -117,7 +129,7 @@ src/menu_assistant/
   config.py   settings from environment variables / .env
   api/        FastAPI app and routes
   ingest/     menu loading, validation, chunking, indexing
-  retrieval/  embeddings, vector store, filters, ranking
+  retrieval/  embeddings, vector store, filters, tag-boost ranking
   llm/        LLMClient interface and provider implementations
   rag/        prompt building and answer generation
   eval/       evaluation dataset and metrics

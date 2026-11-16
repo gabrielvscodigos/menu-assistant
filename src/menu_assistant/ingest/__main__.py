@@ -8,7 +8,7 @@ from pathlib import Path
 from menu_assistant.config import Settings
 from menu_assistant.ingest.indexer import index_menu
 from menu_assistant.ingest.loader import MenuLoadError, load_menu
-from menu_assistant.retrieval.embeddings import SentenceTransformerEmbedder
+from menu_assistant.retrieval.embeddings import embedder_from_settings
 from menu_assistant.retrieval.vector_store import open_collection
 
 
@@ -31,8 +31,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"error: {error}", file=sys.stderr)
         return 1
 
-    embedder = SentenceTransformerEmbedder(settings.embedding_model)
-    collection = open_collection(settings.chroma_path, settings.collection_name)
+    embedder = embedder_from_settings(settings)
+    # Ingestion is the one place allowed to rebuild an index made with another model.
+    collection = open_collection(
+        settings.chroma_path,
+        settings.collection_name,
+        settings.index_signature,
+        reset_on_mismatch=True,
+    )
     result = index_menu(menu, collection, embedder)
 
     print(

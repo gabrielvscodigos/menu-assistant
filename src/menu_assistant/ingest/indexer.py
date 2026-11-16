@@ -30,7 +30,7 @@ def index_menu(menu: Menu, collection: Collection, embedder: Embedder) -> IndexR
 
     collection.upsert(
         ids=ids,
-        embeddings=embedder.embed(documents),
+        embeddings=embedder.embed_documents(documents),
         documents=documents,
         metadatas=metadatas,
     )

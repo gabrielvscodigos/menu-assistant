@@ -160,7 +160,7 @@ def test_dish_with_wrong_index_metadata_is_still_dropped(
     document = dish_to_document(dish)
     collection.upsert(
         ids=[dish.id],
-        embeddings=fake_embedder.embed([document]),
+        embeddings=fake_embedder.embed_documents([document]),
         documents=[document],
         metadatas=[metadata],
     )
@@ -169,3 +169,48 @@ def test_dish_with_wrong_index_metadata_is_still_dropped(
     request = query_for(sample_menu, dish.id, exclude_allergens=frozenset({Allergen.PEANUTS}))
 
     assert retriever.search(request) == []
+
+
+# --- tag boosting --------------------------------------------------------------
+
+
+def boosted(collection: Collection, embedder: Embedder, tag_boost: float) -> MenuRetriever:
+    return MenuRetriever(collection, embedder, tag_boost=tag_boost)
+
+
+def test_tag_boost_promotes_dishes_with_tags_named_in_the_query(
+    retriever: MenuRetriever, collection: Collection, fake_embedder: Embedder, sample_menu: Menu
+) -> None:
+    # The fake embedder gives arbitrary similarities, so a large boost must dominate.
+    request = SearchRequest(query="spicy", k=5)
+    spicy_dishes = {d.id for d in sample_menu.dishes if "spicy" in d.tags}
+
+    results = boosted(collection, fake_embedder, tag_boost=10.0).search(request)
+
+    assert {r.dish.id for r in results} <= spicy_dishes
+    assert all(r.matched_tags == {"spicy"} for r in results)
+    assert all(r.score == pytest.approx(r.similarity + 10.0) for r in results)
+
+
+def test_tag_boost_never_overrides_filters(
+    retriever: MenuRetriever, collection: Collection, fake_embedder: Embedder
+) -> None:
+    request = SearchRequest(
+        query="spicy sichuan noodles", exclude_allergens=frozenset({Allergen.PEANUTS}), k=25
+    )
+
+    results = boosted(collection, fake_embedder, tag_boost=10.0).search(request)
+
+    assert "dan-dan-noodles" not in {r.dish.id for r in results}
+    assert all(Allergen.PEANUTS not in r.dish.allergens for r in results)
+
+
+def test_without_boost_score_equals_similarity(retriever: MenuRetriever) -> None:
+    results = retriever.search(SearchRequest(query="spicy noodles"))
+
+    assert all(r.score == r.similarity and not r.matched_tags for r in results)
+
+
+def test_negative_tag_boost_is_rejected(collection: Collection, fake_embedder: Embedder) -> None:
+    with pytest.raises(ValueError):
+        MenuRetriever(collection, fake_embedder, tag_boost=-0.1)

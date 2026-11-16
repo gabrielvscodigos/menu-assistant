@@ -20,7 +20,10 @@ class FakeEmbedder:
     def __init__(self, dimensions: int = 16) -> None:
         self.dimensions = dimensions
 
-    def embed(self, texts: Sequence[str]) -> list[Sequence[float]]:
+    def embed_documents(self, texts: Sequence[str]) -> list[Sequence[float]]:
+        return [self._vector(text) for text in texts]
+
+    def embed_queries(self, texts: Sequence[str]) -> list[Sequence[float]]:
         return [self._vector(text) for text in texts]
 
     def _vector(self, text: str) -> list[float]:
@@ -45,4 +48,4 @@ def fake_embedder() -> FakeEmbedder:
 
 @pytest.fixture
 def collection(tmp_path: Path) -> Collection:
-    return open_collection(tmp_path / "chroma", "test-menu")
+    return open_collection(tmp_path / "chroma", "test-menu", index_signature="fake")

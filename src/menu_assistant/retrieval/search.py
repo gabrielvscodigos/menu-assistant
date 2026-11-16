@@ -15,10 +15,13 @@ from pydantic import BaseModel, ConfigDict, Field
 from menu_assistant.models import Allergen, Course, DietaryFlag, Dish, NonEmptyStr
 from menu_assistant.retrieval.embeddings import Embedder
 from menu_assistant.retrieval.metadata import COURSE_KEY, DISH_JSON_KEY, allergen_key, diet_key
+from menu_assistant.retrieval.ranking import matched_tags
 
 logger = logging.getLogger(__name__)
 
 MAX_RESULTS = 25
+# With tag boosting, re-rank a larger pool so boosted dishes outside the top k can rise.
+RERANK_POOL_SIZE = 20
 
 
 class SearchRequest(BaseModel):
@@ -34,11 +37,17 @@ class SearchRequest(BaseModel):
 
 
 class RetrievedDish(BaseModel):
-    """A dish returned by search, with its cosine similarity to the query (higher is closer)."""
+    """A dish returned by search.
+
+    `similarity` is the cosine similarity to the query; `score` adds any tag bonus and
+    is what results are ordered by (higher is better).
+    """
 
     model_config = ConfigDict(frozen=True)
 
     dish: Dish
+    similarity: float
+    matched_tags: frozenset[str] = frozenset()
     score: float
 
 
@@ -70,14 +79,23 @@ def satisfies(dish: Dish, request: SearchRequest) -> bool:
 class MenuRetriever:
     """Finds the dishes closest to a query among those that pass every restriction."""
 
-    def __init__(self, collection: Collection, embedder: Embedder) -> None:
+    def __init__(self, collection: Collection, embedder: Embedder, tag_boost: float = 0.0) -> None:
+        if tag_boost < 0:
+            raise ValueError("tag_boost must not be negative")
         self._collection = collection
         self._embedder = embedder
+        self._tag_boost = tag_boost
 
     def search(self, request: SearchRequest) -> list[RetrievedDish]:
+        pool_size = max(request.k, RERANK_POOL_SIZE) if self._tag_boost else request.k
+        candidates = self._query(request, pool_size)
+        ranked = sorted(candidates, key=lambda candidate: candidate.score, reverse=True)
+        return ranked[: request.k]
+
+    def _query(self, request: SearchRequest, n_results: int) -> list[RetrievedDish]:
         result = self._collection.query(
-            query_embeddings=self._embedder.embed([request.query]),
-            n_results=request.k,
+            query_embeddings=self._embedder.embed_queries([request.query]),
+            n_results=n_results,
             where=build_where(request),
             include=["metadatas", "distances"],
         )
@@ -86,7 +104,7 @@ class MenuRetriever:
         if metadatas is None or distances is None:
             raise RuntimeError("vector store returned no metadata or distances")
 
-        retrieved: list[RetrievedDish] = []
+        candidates: list[RetrievedDish] = []
         for metadata, distance in zip(metadatas[0], distances[0], strict=True):
             dish_json = metadata.get(DISH_JSON_KEY)
             if not isinstance(dish_json, str):
@@ -97,5 +115,14 @@ class MenuRetriever:
                     "dropped dish '%s': index metadata disagrees with dish data", dish.id
                 )
                 continue
-            retrieved.append(RetrievedDish(dish=dish, score=1.0 - distance))
-        return retrieved
+            candidates.append(self._score(dish, 1.0 - distance, request.query))
+        return candidates
+
+    def _score(self, dish: Dish, similarity: float, query: str) -> RetrievedDish:
+        tags = frozenset(matched_tags(query, dish.tags)) if self._tag_boost else frozenset()
+        return RetrievedDish(
+            dish=dish,
+            similarity=similarity,
+            matched_tags=tags,
+            score=similarity + self._tag_boost * len(tags),
+        )

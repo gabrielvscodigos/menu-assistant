@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -17,4 +18,14 @@ class Settings(BaseSettings):
 
     chroma_path: Path = Path(".chroma")
     collection_name: str = "menu"
-    embedding_model: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+    embedding_model: str = "intfloat/multilingual-e5-base"
+    # Instruction prefixes some models expect (E5 uses "query: " and "passage: ").
+    embedding_query_prefix: str = "query: "
+    embedding_document_prefix: str = "passage: "
+    # Ranking bonus per dish tag mentioned in the query; 0 disables tag boosting.
+    tag_boost: float = Field(default=0.05, ge=0.0)
+
+    @property
+    def index_signature(self) -> str:
+        """Identifies how documents were embedded; a different value needs a re-index."""
+        return f"{self.embedding_model}|document_prefix={self.embedding_document_prefix!r}"

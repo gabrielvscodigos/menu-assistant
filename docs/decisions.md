@@ -89,6 +89,8 @@ rebuilt if the vocabulary changes.
 
 ## 008 — Local multilingual embedding model on CPU-only PyTorch
 
+**Status:** model choice superseded by 010; the rest still applies.
+
 **Decision:** embed with `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`
 behind an `Embedder` protocol, computed by our code (Chroma's built-in embedding function
 is disabled). PyTorch is installed from the CPU-only wheel index.
@@ -115,3 +117,22 @@ dish that breaks the user's restrictions.
 
 **Trade-off:** if an index entry is wrong, the search returns fewer than `k` results
 instead of failing loudly. The warning in the logs is the signal to re-run ingestion.
+
+## 010 — multilingual-e5-base with a small tag boost
+
+**Decision:** default to `intfloat/multilingual-e5-base` (with its `query: ` /
+`passage: ` prefixes) and re-rank a pool of 20 filtered candidates with a `+0.05` bonus
+per dish tag named in the query. Each index records the embedding setup it was built
+with; search refuses a mismatched index, and ingestion rebuilds it.
+
+**Why:** measured on the evaluation set (see `docs/evaluation.md`), this raised
+recall@5 from 0.750 to 0.956 and MRR from 0.783 to 0.934 with zero filter violations.
+The model fixes cuisine and multilingual matching; the tag boost fixes attribute words
+like "spicy" that small embedding models underweight. The index signature check stops
+silently wrong results when the model changes, because vectors from different models
+are not comparable.
+
+**Trade-off:** a ~1.1 GB model download and slower embedding than MiniLM;
+`multilingual-e5-small` with the same boost (0.904 / 0.894) is the lighter fallback. The
+boost weight was tuned on a small set without a held-out split, and tag matching only
+works for English queries.

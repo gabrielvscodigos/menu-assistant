@@ -59,7 +59,7 @@ def test_stored_embedding_matches_dish_document(
     edamame = next(dish for dish in sample_menu.dishes if dish.id == "edamame")
 
     result = collection.query(
-        query_embeddings=fake_embedder.embed([dish_to_document(edamame)]),
+        query_embeddings=fake_embedder.embed_queries([dish_to_document(edamame)]),
         n_results=1,
         include=[],
     )
