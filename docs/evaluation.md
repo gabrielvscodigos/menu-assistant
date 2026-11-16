@@ -9,8 +9,9 @@ How search quality is measured, and the results so far.
 
 ## Method
 
-[`data/eval/retrieval_queries.json`](../data/eval/retrieval_queries.json) holds 34
-hand-labeled queries against the sample menu. Each case has a query, optional hard
+[`data/eval/retrieval_queries.json`](../data/eval/retrieval_queries.json) holds 44
+hand-labeled queries against the sample menu (34 original cases plus 10 Brazilian
+Portuguese cases added in the pt-BR experiment below). Each case has a query, optional hard
 restrictions (allergens to exclude, required dietary flags, course), and the set of dishes
 a reasonable server would suggest.
 
@@ -43,7 +44,9 @@ uv run python -m menu_assistant.eval --cases    # plus every query, hits marked 
 | Date       | Configuration                                            | recall@5 | MRR   | violations |
 | ---------- | -------------------------------------------------------- | -------: | ----: | ---------: |
 | 2026-11-16 | Baseline: `paraphrase-multilingual-MiniLM-L12-v2`, cosine |    0.750 | 0.783 |          0 |
-| 2026-11-16 | **Current default:** `multilingual-e5-base` + tag boost 0.05 | **0.956** | **0.934** |      0 |
+| 2026-11-16 | `multilingual-e5-base` + tag boost 0.05 (34 cases)        |    0.956 | 0.934 |          0 |
+| 2026-11-16 | Same, 44 cases (10 pt-BR added)                          |    0.898 | 0.843 |          0 |
+| 2026-11-16 | **Current default:** + Portuguese tag aliases (44 cases) | **0.989** | **0.966** |      0 |
 
 See [Experiment: embedding model × tag boost](#experiment-embedding-model--tag-boost)
 for how the default was chosen.
@@ -130,6 +133,42 @@ Chosen configuration, by category:
 Next steps when the dataset grows: a held-out split, translating or embedding tags for
 multilingual matching, and adding real user phrasing to the eval set.
 
+## Experiment: Brazilian Portuguese
+
+Ten pt-BR retrieval queries and six pt-BR answer questions were added first, and a
+baseline was recorded before changing any code.
+
+The baseline showed that Portuguese *attribute* words got no tag boost, because tags are
+English: "algo apimentado com macarrão", "algo frito e crocante", and "pratos com frango"
+had recall 0. Changes:
+
+- **Tag aliases** (`retrieval/ranking.py`): ~60 accent-free Portuguese words mapped to the
+  English tags they stand for (`apimentado` → `spicy`, `macarrão` → `noodles` + `pasta`,
+  `frango` → `chicken`, ...). Matching now also strips accents.
+- **Detection:** "intolerância à lactose" now requires `dairy_free` like the English
+  phrase, and "pratos principais" sets the main course.
+- **Prompt:** the model is told the Allergens line is complete and that listed dishes
+  already satisfy the restrictions, after it wrongly claimed safe desserts contained
+  peanuts (reading *almond flour* as *amendoim*).
+- **Console:** CLIs write UTF-8, so redirected Portuguese output is no longer garbled on
+  Windows.
+
+| Retrieval (44 cases)  | recall@5 before | after     | MRR before | after     |
+| --------------------- | --------------: | --------: | ---------: | --------: |
+| multilingual (17)     |           0.765 | **1.000** |      0.623 | **0.941** |
+| overall               |           0.898 | **0.989** |      0.843 | **0.966** |
+
+| Answers (28 cases)    | pass before | after   |
+| --------------------- | ----------: | ------: |
+| multilingual (10)     |         60% | **90%** |
+| overall               |         68% | **93%** |
+
+Preference and filtered retrieval scores did not change. `fideos picantes` (Spanish)
+also improved, because `picante` is the same word in both languages. The answer numbers
+come from one run each with a live model, so part of the gain (for example the restricted
+group going from 67% to 100%) is run-to-run variance and the prompt change, not only the
+aliases.
+
 # Answer-quality evaluation
 
 ```bash
@@ -144,7 +183,7 @@ with deterministic checks in [`eval/answer_checks.py`](../src/menu_assistant/eva
 
 ## Method
 
-22 questions in four categories: taste preferences, restricted (allergens, diets,
+28 questions in four categories: taste preferences, restricted (allergens, diets,
 explicit filters), multilingual (Portuguese and Spanish), and off-menu (dishes that do
 not exist, prices, impossible combinations). Labels are validated against the menu and
 the filters the system will apply, so a case cannot reward a dish the filters exclude.
@@ -173,31 +212,29 @@ errors, and the local 3B model is too weak to judge itself.
 | Group        | cases | pass | cites | noleak | items | relev | <=3  | notice | unavail |
 | ------------ | ----: | ---: | ----: | -----: | ----: | ----: | ---: | -----: | ------: |
 | preference   |     6 | 100% |  100% |   100% |  100% |  100% | 100% |   100% |     n/a |
-| restricted   |     6 |  67% |   67% |   100% |   67% |  100% | 100% |   100% |     n/a |
-| multilingual |     5 |  60% |  100% |   100% |  100% |   60% | 100% |   100% |     n/a |
-| off_menu     |     5 | 100% |  100% |   100% |  100% |   n/a | 100% |   100% |    100% |
-| **overall**  |    22 |  82% |   91% |   100% |   91% |   88% | 100% |   100% |    100% |
+| restricted   |     6 | 100% |  100% |   100% |  100% |  100% | 100% |   100% |     n/a |
+| multilingual |    10 |  90% |  100% |   100% |  100% |   90% | 100% |   100% |     n/a |
+| off_menu     |     6 |  83% |  100% |   100% |  100% |   n/a | 100% |   100% |     83% |
+| **overall**  |    28 |  93% |  100% |   100% |  100% |   95% | 100% |   100% |     83% |
 
-Mean latency was ~2.4 s per question with Ollama on the development machine. Results
-vary a little between runs (temperature 0.2): which restricted cases invent ids changes.
+Mean latency was ~1.9 s per question with Ollama on the development machine. Results
+vary between runs (temperature 0.2). Earlier runs on 22 and 28 cases passed 82% and 68%;
+see the pt-BR experiment above.
 
 ### Findings
 
 - **Code-side safety holds.** No reply named a dish that retrieval excluded, every notice
-  was correct, and every off-menu question was acknowledged (one by the deterministic
-  "no match" reply, without calling the LLM).
-- **The model invents citation ids** in 2 of 22 replies (`[veggie-biryani]`,
-  `[green-curry]`). Citation verification removes them, which is why it exists.
-- **The model lists dishes without citing them.** In the Docker smoke test it followed
-  Mango Sticky Rice with "Coconut Ice Cream" and "Fresh Fruit Salad", which are not on the
-  menu and had no brackets, so citation verification could not see them. List items are
-  now enforced in code (decision 018). In this run they removed "Veggie Biryani" (not on
-  the menu) and, for a guest who excluded gluten, "Spicy Miso Ramen (not listed, but
-  I'll mention it anyway)", a real dish that contains gluten.
-- **Portuguese is the weakest area.** "Quero algo apimentado com macarrão" retrieved
-  carbonara instead of spicy noodles (tag boost is English-only), and for
-  "alergia a amendoim e gergelim" the model wrongly claimed the safe desserts contain
-  peanuts, confusing *almond flour* with *amendoim*, and recommended nothing.
+  was correct, and an impossible request (vegan + halal) got the deterministic "no match"
+  reply without calling the LLM.
+- **Invented citation ids and invented list items** appeared in earlier runs
+  (`[veggie-biryani]`, `[green-curry]`, "Coconut Ice Cream" in a Docker smoke test) and
+  are removed in code (decision 018). One removed item was "Spicy Miso Ramen (not
+  listed, but I'll mention it anyway)" for a guest who excluded gluten: a real dish that
+  contains gluten. None appeared in this run.
+- **The model invents prices.** Asked "How much does the spicy miso ramen cost?", it
+  answered "$18". The menu has no prices, and no code check catches this yet.
+- **One pt-BR allergy question still fails:** for "alergia a amendoim e gergelim", the
+  model refuses to recommend the two safe desserts it was given.
 
 ### Caveats
 

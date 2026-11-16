@@ -194,28 +194,30 @@ Any other Ollama model works by setting `MENU_ASSISTANT_LLM_MODEL` (larger model
 
 ## Evaluation
 
-Retrieval is measured on 34 hand-labeled queries (taste preferences, allergen/diet
-filters, Portuguese and Spanish questions) with recall@5, MRR, and a filter-violation
+Retrieval is measured on 44 hand-labeled queries (taste preferences, allergen/diet
+filters, Brazilian Portuguese and Spanish questions) with recall@5, MRR, and a filter-violation
 count that must stay at zero.
 
 | Configuration                                   | recall@5  | MRR       | violations |
 | ----------------------------------------------- | --------: | --------: | ---------: |
 | Baseline (MiniLM-L12, pure vector search)       |     0.750 |     0.783 |          0 |
-| **Current** (multilingual-e5-base + tag boost)  | **0.956** | **0.934** |          0 |
+| multilingual-e5-base + tag boost (34 cases)     |     0.956 |     0.934 |          0 |
+| **Current** (+ Portuguese tag aliases, 44 cases) | **0.989** | **0.966** |          0 |
 
-Generated answers are checked separately on 22 questions (with Ollama running) using
+Generated answers are checked separately on 28 questions (with Ollama running) using
 deterministic rules, not an LLM judge:
 
 | Check (llama3.2)                                       | Result |
 | ------------------------------------------------------ | -----: |
-| Cases passing every check                              |    82% |
+| Cases passing every check                              |    93% |
 | Replies naming a dish retrieval excluded               |      0 |
 | Staff notice present exactly when expected             |   100% |
-| Off-menu requests acknowledged ("not on the menu")     |   100% |
-| Raw replies citing an id the model was not given       |   9%\* |
-| Replies with a listed dish the model was not given     |   9%\* |
+| Off-menu requests acknowledged ("not on the menu")     |    83% |
+| Raw replies citing an id the model was not given       | 0–9%\* |
+| Replies with a listed dish the model was not given     | 0–9%\* |
 
-\* removed in code before the user sees them.
+\* across runs; removed in code before the user sees them. The model also sometimes
+invents prices, which the menu does not have.
 
 Method, the full experiment grid, remaining misses, and caveats are in
 [docs/evaluation.md](docs/evaluation.md).

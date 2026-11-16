@@ -69,6 +69,7 @@ def test_cue_does_not_cross_into_the_next_clause() -> None:
         ("sobremesa sem glúten", {F.GLUTEN_FREE}),
         ("I'm lactose intolerant", {F.DAIRY_FREE}),
         ("algo sin lactosa", {F.DAIRY_FREE}),
+        ("tenho intolerância à lactose", {F.DAIRY_FREE}),
         ("halal meat please", {F.HALAL}),
         ("quero um prato vegano e sem lactose", {F.VEGAN, F.DAIRY_FREE}),
         ("spicy ramen", set()),

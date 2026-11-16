@@ -10,6 +10,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from menu_assistant.config import Settings
+from menu_assistant.console import use_utf8_output
 from menu_assistant.eval.dataset import find_labeling_errors, load_dataset
 from menu_assistant.eval.report import format_report
 from menu_assistant.eval.runner import evaluate
@@ -35,6 +36,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    use_utf8_output()
     args = build_parser().parse_args(argv)
     settings = Settings()
 

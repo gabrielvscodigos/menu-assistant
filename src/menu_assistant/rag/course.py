@@ -30,6 +30,7 @@ COURSE_WORDS: dict[Course, tuple[str, ...]] = {
         "main course",
         "main dish",
         "prato principal",
+        "pratos principais",
         "plato principal",
         "plato fuerte",
     ),

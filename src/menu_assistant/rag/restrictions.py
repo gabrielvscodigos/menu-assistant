@@ -121,8 +121,8 @@ DIET_PATTERNS: dict[DietaryFlag, re.Pattern[str]] = {
         r"\b(?:no|without|sem|sin)\s+gluten\b"
     ),
     DietaryFlag.DAIRY_FREE: re.compile(
-        r"\bdairy[- ]?free\b|\blactose[- ]intolerant\b|\bintolerante a (?:la )?lactos[ae]\b|"
-        r"\b(?:sem|sin)\s+lactos[ae]\b"
+        r"\bdairy[- ]?free\b|\blactose[- ]intolerant\b|"
+        r"\bintoleran(?:te|cia) a (?:la )?lactos[ae]\b|\b(?:sem|sin)\s+lactos[ae]\b"
     ),
     DietaryFlag.HALAL: re.compile(r"\bhalal\b"),
 }

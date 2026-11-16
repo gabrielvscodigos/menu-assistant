@@ -6,6 +6,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from menu_assistant.config import Settings
+from menu_assistant.console import use_utf8_output
 from menu_assistant.ingest.indexer import index_menu
 from menu_assistant.ingest.loader import MenuLoadError, load_menu
 from menu_assistant.retrieval.embeddings import embedder_from_settings
@@ -22,6 +23,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    use_utf8_output()
     args = build_parser().parse_args(argv)
     settings = Settings()
 

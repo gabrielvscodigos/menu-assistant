@@ -16,6 +16,7 @@ from typing import get_args
 from pydantic import BaseModel, ConfigDict
 
 from menu_assistant.config import Settings
+from menu_assistant.console import use_utf8_output
 from menu_assistant.eval.answer_checks import MAX_RECOMMENDED, AnswerChecks, check_answer
 from menu_assistant.eval.answer_dataset import (
     AnswerCase,
@@ -228,6 +229,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    use_utf8_output()
     args = build_parser().parse_args(argv)
     settings = Settings()
 

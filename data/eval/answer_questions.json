@@ -21,6 +21,13 @@
     {"id": "multi-es-gf-dessert", "category": "multilingual", "question": "¿Qué postre sin gluten tienen?", "relevant": ["mango-sticky-rice", "flourless-chocolate-cake"], "expect_notice": true},
     {"id": "multi-es-tacos", "category": "multilingual", "question": "Me gustan los tacos picantes", "relevant": ["beef-birria-tacos", "fish-tacos"], "expect_notice": false},
 
+    {"id": "multi-pt-celiac-main", "category": "multilingual", "question": "Sou celíaca, o que posso comer de prato principal?", "relevant": ["tofu-green-curry", "chicken-tikka-masala", "chana-masala", "beef-birria-tacos", "wild-mushroom-risotto", "grilled-salmon"], "expect_notice": true},
+    {"id": "multi-pt-lactose-spicy", "category": "multilingual", "question": "Tenho intolerância à lactose, alguma sugestão apimentada?", "relevant": ["tofu-green-curry", "chana-masala", "beef-birria-tacos", "green-papaya-salad"], "expect_notice": true},
+    {"id": "multi-pt-mexican", "category": "multilingual", "question": "O que vocês têm de comida mexicana?", "relevant": ["fish-tacos", "beef-birria-tacos", "elote"], "expect_notice": false},
+    {"id": "multi-pt-mushrooms", "category": "multilingual", "question": "Quais pratos vocês têm com cogumelos?", "relevant": ["wild-mushroom-risotto", "mushroom-shoyu-ramen"], "expect_notice": false},
+    {"id": "multi-pt-coffee-dessert", "category": "multilingual", "question": "Quero uma sobremesa com café", "relevant": ["tiramisu"], "expect_notice": false},
+
+    {"id": "off-pt-pao-de-queijo", "category": "off_menu", "question": "Vocês têm pão de queijo?", "expect_notice": true, "expect_unavailable": true},
     {"id": "off-lasagna", "category": "off_menu", "question": "Do you have lasagna?", "expect_notice": false, "expect_unavailable": true},
     {"id": "off-pt-feijoada", "category": "off_menu", "question": "Vocês têm feijoada?", "expect_notice": false, "expect_unavailable": true},
     {"id": "off-pt-sushi", "category": "off_menu", "question": "Tem sushi?", "expect_notice": false, "expect_unavailable": true},

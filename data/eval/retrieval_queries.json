@@ -36,6 +36,16 @@
     {"id": "multi-pt-grilled-seafood", "category": "multilingual", "query": "frutos do mar grelhados", "relevant": ["grilled-salmon", "garlic-chili-prawns"]},
     {"id": "multi-es-chocolate", "category": "multilingual", "query": "postre de chocolate", "relevant": ["flourless-chocolate-cake"]},
     {"id": "multi-pt-pasta-cheese", "category": "multilingual", "query": "massa italiana com queijo", "relevant": ["spaghetti-carbonara", "walnut-pesto-gnocchi"]},
-    {"id": "multi-pt-gluten-free-dessert", "category": "multilingual", "query": "sobremesa sem glúten", "require_flags": ["gluten_free"], "course": "dessert", "relevant": ["mango-sticky-rice", "flourless-chocolate-cake"]}
+    {"id": "multi-pt-gluten-free-dessert", "category": "multilingual", "query": "sobremesa sem glúten", "require_flags": ["gluten_free"], "course": "dessert", "relevant": ["mango-sticky-rice", "flourless-chocolate-cake"]},
+    {"id": "multi-pt-spicy-noodles", "category": "multilingual", "query": "algo apimentado com macarrão", "relevant": ["spicy-miso-ramen", "dan-dan-noodles"]},
+    {"id": "multi-pt-creamy-curry", "category": "multilingual", "query": "um curry cremoso e suave", "relevant": ["chicken-tikka-masala"]},
+    {"id": "multi-pt-mexican-spicy", "category": "multilingual", "query": "comida mexicana apimentada", "relevant": ["beef-birria-tacos", "elote"]},
+    {"id": "multi-pt-japanese-soup", "category": "multilingual", "query": "uma sopa japonesa", "relevant": ["spicy-miso-ramen", "mushroom-shoyu-ramen"]},
+    {"id": "multi-pt-crispy-fried", "category": "multilingual", "query": "algo frito e crocante", "relevant": ["falafel-plate", "fish-tacos", "pork-gyoza"]},
+    {"id": "multi-pt-light-starter", "category": "multilingual", "query": "uma entrada leve e fresca", "course": "starter", "relevant": ["edamame", "green-papaya-salad", "caesar-salad"]},
+    {"id": "multi-pt-chicken", "category": "multilingual", "query": "pratos com frango", "relevant": ["chicken-tikka-masala"]},
+    {"id": "multi-pt-mushrooms", "category": "multilingual", "query": "algo com cogumelos", "relevant": ["wild-mushroom-risotto", "mushroom-shoyu-ramen"]},
+    {"id": "multi-pt-coffee-dessert", "category": "multilingual", "query": "sobremesa com café", "course": "dessert", "relevant": ["tiramisu"]},
+    {"id": "multi-pt-grilled-lamb", "category": "multilingual", "query": "cordeiro grelhado", "relevant": ["lamb-kofta"]}
   ]
 }

@@ -5,6 +5,7 @@ import sys
 from collections.abc import Sequence
 
 from menu_assistant.config import Settings
+from menu_assistant.console import use_utf8_output
 from menu_assistant.llm import LLMError
 from menu_assistant.llm.factory import llm_client_from_settings
 from menu_assistant.models import Allergen, Course, DietaryFlag
@@ -62,6 +63,7 @@ def format_answer(answer: Answer) -> str:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    use_utf8_output()
     args = build_parser().parse_args(argv)
     settings = Settings()
     explicit = Restrictions(

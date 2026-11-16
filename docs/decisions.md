@@ -276,3 +276,21 @@ dish the guest's gluten restriction had excluded.
 removed too, and the reply's text may still say "three options" after one is dropped.
 Invented dishes in running prose are not caught; the prompt rule and the `noleak` check
 are the only defenses there.
+
+## 019 — Brazilian Portuguese through tag aliases, not translated tags
+
+**Decision:** keep menu tags in English and map ~60 common Portuguese words to them in
+`retrieval/ranking.py` (`TAG_ALIASES`). Tag matching strips accents. CLIs force UTF-8
+output.
+
+**Why:** the pt-BR baseline showed that the embedding model handles what a dish *is* in
+Portuguese, but Portuguese attribute words ("apimentado", "crocante", "frango") got no tag
+boost. Aliases raised multilingual recall@5 from 0.765 to 1.000 and MRR from 0.623 to
+0.941 without touching preference or filtered scores. Aliases are code, reviewed and
+tested once, and menus keep a single tag vocabulary. Translating tags per menu or adding
+a translation model would add work for every menu or a heavy dependency.
+
+**Trade-off:** the alias list is hand-written and covers common culinary words only; a
+tag without an alias falls back to plain semantic search. Spanish is only covered where
+words coincide (`picante`). Like the boost weight, the aliases were checked on an eval
+set written by the same author.

@@ -108,7 +108,8 @@ preference, not a safety rule: it filters retrieval but does not trigger the not
    (`build_where`), so only allowed dishes are ever candidates. A pool of 20 is fetched.
 3. Re-check every candidate against the full dish data (`satisfies`). A stale index entry
    that disagrees is dropped and logged; it can never reach the LLM.
-4. Re-rank: score = cosine similarity + `0.05` per dish tag named in the query.
+4. Re-rank: score = cosine similarity + `0.05` per dish tag named in the query, in
+   English or through a Portuguese alias (`apimentado` → `spicy`).
 5. Return the top `k` as `RetrievedDish` (dish, similarity, matched tags, score).
 
 Before any search, the retriever factory checks that the index exists and that its

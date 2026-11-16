@@ -20,6 +20,7 @@ from menu_assistant.rag.course import detect_course
         ("a filling main course", Course.MAIN),
         ("which mains are spicy?", Course.MAIN),
         ("um prato principal vegano", Course.MAIN),
+        ("quais são os pratos principais?", Course.MAIN),
         ("un plato principal picante", Course.MAIN),
         ("a side dish for my curry", Course.SIDE),
         ("um acompanhamento", Course.SIDE),
