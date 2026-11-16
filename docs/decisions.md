@@ -176,3 +176,19 @@ instructions reliably, so each rule is enforced where it can be tested.
 reliable path) and is deliberately conservative, so it may exclude a dish the user
 mentioned casually. The LLM can still add unsupported side remarks inside its text;
 measuring that needs an answer-quality evaluation (planned).
+
+## 013 — API: load once at startup, degrade instead of crashing
+
+**Decision:** `create_app()` builds the `AnswerService` once in the FastAPI lifespan and
+keeps it on `app.state`; routes get it through a dependency. If the index is missing or
+was built with another model, the app still starts: `/health` reports `degraded` with the
+fix, and `/ask` returns `503`. LLM failures also map to `503`. `/ask` is a plain `def`
+handler so FastAPI runs it in a worker thread.
+
+**Why:** loading the embedding model per request would take seconds; a missing index is
+an operator mistake that deserves a clear message, not a crash loop. Embedding and LLM
+calls are blocking, so running them on the event loop would stall every other request.
+`create_app()` takes a service factory, so tests run the real app with fakes.
+
+**Trade-off:** fixing the index requires restarting the API after re-ingesting. Requests
+are handled by FastAPI's thread pool, which is fine for a demo but not for heavy traffic.
