@@ -8,8 +8,9 @@ from a restaurant menu.
 Ask things like *"I like spicy ramen, what else here would I enjoy?"* and get suggestions
 grounded in each dish's ingredients, preparation, dietary flags, and allergens.
 
-> **Status:** early development. Menus can be validated and indexed into ChromaDB;
-> retrieval, answer generation, and the API are not implemented yet.
+> **Status:** early development. Menus can be validated, indexed into ChromaDB, and
+> searched with deterministic allergen/dietary filters; answer generation and the API are
+> not implemented yet.
 
 ## Design principles
 

@@ -5,20 +5,13 @@ one document per dish keeps retrieval results and citations one-to-one with the 
 """
 
 from menu_assistant.models import Allergen, DietaryFlag, Dish
-
-ALLERGEN_KEY_PREFIX = "allergen_"
-DIET_KEY_PREFIX = "diet_"
-DISH_JSON_KEY = "dish_json"
-
-
-def allergen_key(allergen: Allergen) -> str:
-    """Metadata key holding whether a dish contains `allergen`."""
-    return f"{ALLERGEN_KEY_PREFIX}{allergen.value}"
-
-
-def diet_key(flag: DietaryFlag) -> str:
-    """Metadata key holding whether a dish carries the dietary `flag`."""
-    return f"{DIET_KEY_PREFIX}{flag.value}"
+from menu_assistant.retrieval.metadata import (
+    COURSE_KEY,
+    DISH_JSON_KEY,
+    NAME_KEY,
+    allergen_key,
+    diet_key,
+)
 
 
 def dish_to_document(dish: Dish) -> str:
@@ -48,8 +41,8 @@ def dish_to_metadata(dish: Dish) -> dict[str, str | bool]:
     stored as JSON so answers can be grounded in exact menu data.
     """
     metadata: dict[str, str | bool] = {
-        "name": dish.name,
-        "course": dish.course.value,
+        NAME_KEY: dish.name,
+        COURSE_KEY: dish.course.value,
         DISH_JSON_KEY: dish.model_dump_json(),
     }
     for allergen in Allergen:

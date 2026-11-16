@@ -1,13 +1,8 @@
 """Tests for turning dishes into indexable text and filterable metadata."""
 
-from menu_assistant.ingest.documents import (
-    DISH_JSON_KEY,
-    allergen_key,
-    diet_key,
-    dish_to_document,
-    dish_to_metadata,
-)
+from menu_assistant.ingest.documents import dish_to_document, dish_to_metadata
 from menu_assistant.models import Allergen, DietaryFlag, Dish, Menu
+from menu_assistant.retrieval.metadata import DISH_JSON_KEY, allergen_key, diet_key
 
 
 def get_dish(menu: Menu, dish_id: str) -> Dish:

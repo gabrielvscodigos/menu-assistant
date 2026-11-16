@@ -100,3 +100,18 @@ CPU-only wheels avoid several GB of CUDA libraries locally and in CI.
 
 **Trade-off:** first run downloads ~470 MB; ranking quality is modest for a small model
 (to be measured in the evaluation milestone). No GPU acceleration.
+
+## 009 — Restrictions are enforced twice, both in code
+
+**Decision:** a `SearchRequest` carries the query plus hard restrictions (allergens to
+exclude, required dietary flags, course). `build_where()` turns them into an exact
+ChromaDB metadata filter, and every result is then re-checked against the full dish data
+(`satisfies()`) before it is returned. Mismatches are dropped and logged.
+
+**Why:** allergen safety must not depend on a single mechanism. The metadata filter keeps
+search efficient and returns the best *allowed* dishes rather than filtering a top-k
+afterwards; the second check means a stale or corrupted index entry can never surface a
+dish that breaks the user's restrictions.
+
+**Trade-off:** if an index entry is wrong, the search returns fewer than `k` results
+instead of failing loudly. The warning in the logs is the signal to re-run ingestion.
