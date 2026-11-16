@@ -164,8 +164,10 @@ See [evaluation.md](evaluation.md).
   mock transport. No test touches the network or downloads a model.
 - Safety rules (filters, citation verification, notice) are tested directly, because
   they are enforced in code.
-- CI runs ruff, `ruff format --check`, strict mypy on `src` and `tests`, and pytest on
-  every push.
+- CI runs ruff, `ruff format --check`, strict mypy on `src` and `tests`, and pytest with
+  branch coverage on every push (minimum 90%; ~95% today). The report is published in
+  the job summary. The main uncovered code loads the real embedding model, which tests
+  replace with a fake on purpose.
 
 ## Extending
 

@@ -183,6 +183,7 @@ Any other Ollama model works by setting `MENU_ASSISTANT_LLM_MODEL` (larger model
 | Task              | Command                                         |
 | ----------------- | ----------------------------------------------- |
 | Run tests         | `uv run pytest`                                 |
+| Test coverage     | `uv run pytest --cov` (CI fails below 90%)      |
 | Lint              | `uv run ruff check .`                           |
 | Format            | `uv run ruff format .`                          |
 | Type check        | `uv run mypy src tests`                         |

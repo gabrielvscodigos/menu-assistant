@@ -34,5 +34,9 @@ jobs:
       - name: Type check
         run: uv run mypy src tests
 
-      - name: Run tests
-        run: uv run pytest
+      - name: Run tests with coverage
+        run: uv run pytest --cov --cov-report=term
+
+      - name: Publish coverage summary
+        if: always()
+        run: uv run coverage report --format=markdown --skip-covered >> "$GITHUB_STEP_SUMMARY"
