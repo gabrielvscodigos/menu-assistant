@@ -17,6 +17,12 @@ dependencies = [
     "uvicorn>=0.54.0",
 ]
 
+[project.scripts]
+menu-ask = "menu_assistant.rag.__main__:main"
+menu-ingest = "menu_assistant.ingest.__main__:main"
+menu-eval = "menu_assistant.eval.__main__:main"
+menu-eval-answers = "menu_assistant.eval.answers:main"
+
 [build-system]
 requires = ["uv_build>=0.13.8,<0.14.0"]
 build-backend = "uv_build"

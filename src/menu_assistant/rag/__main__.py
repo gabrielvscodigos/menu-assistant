@@ -1,4 +1,4 @@
-"""Command-line entry point: `python -m menu_assistant.rag "your question"`."""
+"""Command-line entry point: `menu-ask "your question"` (or `python -m menu_assistant.rag`)."""
 
 import argparse
 import sys
@@ -18,7 +18,7 @@ from menu_assistant.retrieval.vector_store import IndexNotReadyError
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="python -m menu_assistant.rag",
+        prog="menu-ask",
         description="Ask for dish suggestions grounded in the indexed menu.",
     )
     parser.add_argument("question", help="what you feel like eating, in any language")

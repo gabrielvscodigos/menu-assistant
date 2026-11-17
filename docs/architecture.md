@@ -58,7 +58,7 @@ Two rules shape the whole design:
 
 ## Ingestion (offline)
 
-`python -m menu_assistant.ingest data/menu.json`
+`menu-ingest data/menu.json`
 
 1. **Load and validate** (`ingest/loader.py`). The JSON is parsed into `Menu`. Unknown
    fields, unknown allergens, duplicate ids and contradictions (`vegan` + `eggs`) fail
@@ -77,7 +77,7 @@ Two rules shape the whole design:
 
 ## Answering a question (online)
 
-Entry points: `python -m menu_assistant.rag "<question>"` and `POST /ask`. Both call
+Entry points: `menu-ask "<question>"` and `POST /ask`. Both call
 `AnswerService.answer(question, explicit_restrictions)`.
 
 ### 1. Restrictions (`rag/restrictions.py`)
@@ -152,10 +152,10 @@ actually enforced, and the notice, so every reply can be audited.
 
 ## Evaluation (`eval/`)
 
-- **Retrieval** (`python -m menu_assistant.eval`): hand-labeled queries
+- **Retrieval** (`menu-eval`): hand-labeled queries
   (`data/eval/retrieval_queries.json`) scored with recall@k, MRR and a filter-violation
   count that must stay at zero.
-- **Answers** (`python -m menu_assistant.eval.answers`): labeled questions run through the
+- **Answers** (`menu-eval-answers`): labeled questions run through the
   real `AnswerService` and LLM, then scored with deterministic checks (invented citations,
   dishes named without being retrieved, relevance, notice, "not on the menu"). A
   `RecordingLLM` wrapper keeps the raw reply so invented ids are counted before clean-up.

@@ -57,7 +57,7 @@ uv sync
 Indexe o cardápio de exemplo no banco vetorial local:
 
 ```bash
-uv run python -m menu_assistant.ingest data/menu.json
+uv run menu-ingest data/menu.json
 ```
 
 A primeira execução baixa o modelo de embeddings (~1,1 GB) para o cache do Hugging Face.
@@ -86,10 +86,10 @@ CPU; `docker compose down -v` remove os volumes.
 Com o cardápio indexado e o Ollama rodando:
 
 ```bash
-uv run python -m menu_assistant.rag "Quero uma sobremesa vegana"   # prato: sobremesa
-uv run python -m menu_assistant.rag "Tenho alergia a amendoim. Tem algum macarrão apimentado?"
-uv run python -m menu_assistant.rag "algo leve" --exclude soy --diet vegan
-uv run python -m menu_assistant.rag "I like spicy ramen, what else here would I enjoy?"
+uv run menu-ask "Quero uma sobremesa vegana"   # prato: sobremesa
+uv run menu-ask "Tenho alergia a amendoim. Tem algum macarrão apimentado?"
+uv run menu-ask "algo leve" --exclude soy --diet vegan
+uv run menu-ask "I like spicy ramen, what else here would I enjoy?"
 ```
 
 Exemplo de saída:
@@ -212,8 +212,8 @@ maiores, como `qwen2.5:7b`, seguem as instruções de fundamentação com mais c
 | Lint                | `uv run ruff check .`                                 |
 | Formatação          | `uv run ruff format .`                                |
 | Checagem de tipos   | `uv run mypy src tests`                               |
-| Avaliar a busca     | `uv run python -m menu_assistant.eval`                |
-| Avaliar respostas   | `uv run python -m menu_assistant.eval.answers`        |
+| Avaliar a busca     | `uv run menu-eval`                                    |
+| Avaliar respostas   | `uv run menu-eval-answers`                            |
 | Rodar a API         | `uv run uvicorn menu_assistant.api.main:app --reload` |
 
 ## Avaliação

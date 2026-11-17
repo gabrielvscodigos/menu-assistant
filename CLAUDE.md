@@ -21,11 +21,11 @@ good documentation over feature count.
 ## Commands
 - Install: `uv sync`
 - Run API: `uv run uvicorn menu_assistant.api.main:app --reload`
-- Ingest menu: `uv run python -m menu_assistant.ingest data/menu.json`
+- Ingest menu: `uv run menu-ingest data/menu.json`
 - Test: `uv run pytest`
 - Lint/format: `uv run ruff check . && uv run ruff format .`
 - Type check: `uv run mypy src tests`
-- Evaluate: `uv run python -m menu_assistant.eval`
+- Evaluate: `uv run menu-eval`
 
 ## Project structure
 ```

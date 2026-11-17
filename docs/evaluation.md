@@ -35,8 +35,8 @@ satisfy the case's own restrictions.
 Run it (after indexing the menu):
 
 ```bash
-uv run python -m menu_assistant.eval            # summary
-uv run python -m menu_assistant.eval --cases    # plus every query, hits marked with *
+uv run menu-eval            # summary
+uv run menu-eval --cases    # plus every query, hits marked with *
 ```
 
 ## Results
@@ -172,8 +172,8 @@ aliases.
 # Answer-quality evaluation
 
 ```bash
-uv run python -m menu_assistant.eval.answers            # failures only
-uv run python -m menu_assistant.eval.answers --cases    # every answer
+uv run menu-eval-answers            # failures only
+uv run menu-eval-answers --cases    # every answer
 ```
 
 Needs an index and a running Ollama. Every question in

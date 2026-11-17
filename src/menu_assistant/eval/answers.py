@@ -1,4 +1,4 @@
-"""Answer-quality evaluation: `python -m menu_assistant.eval.answers`.
+"""Answer-quality evaluation: `menu-eval-answers` (or `python -m menu_assistant.eval.answers`).
 
 Runs every labeled question through the real `AnswerService` (index + LLM) and checks
 each answer with the rules in `answer_checks`. Needs an index and a running Ollama.
@@ -219,7 +219,7 @@ def _failed_checks(checks: AnswerChecks) -> list[str]:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="python -m menu_assistant.eval.answers",
+        prog="menu-eval-answers",
         description="Measure answer quality with rule-based checks (needs Ollama running).",
     )
     parser.add_argument("--dataset", type=Path, default=DEFAULT_DATASET)

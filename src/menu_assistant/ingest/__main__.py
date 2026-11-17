@@ -1,4 +1,4 @@
-"""Command-line entry point: `python -m menu_assistant.ingest <menu.json>`."""
+"""Command-line entry point: `menu-ingest <menu.json>` (or `python -m menu_assistant.ingest`)."""
 
 import argparse
 import sys
@@ -15,7 +15,7 @@ from menu_assistant.retrieval.vector_store import open_collection
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="python -m menu_assistant.ingest",
+        prog="menu-ingest",
         description="Validate a menu JSON file and index its dishes into ChromaDB.",
     )
     parser.add_argument("menu_path", type=Path, help="path to the menu JSON file")

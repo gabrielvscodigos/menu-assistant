@@ -25,7 +25,7 @@ DEFAULT_MENU = Path("data/menu.json")
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="python -m menu_assistant.eval",
+        prog="menu-eval",
         description="Measure retrieval quality (recall@k, MRR, filter violations).",
     )
     parser.add_argument("--dataset", type=Path, default=DEFAULT_DATASET)

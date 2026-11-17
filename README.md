@@ -51,7 +51,7 @@ uv sync
 Index the sample menu into the local vector store:
 
 ```bash
-uv run python -m menu_assistant.ingest data/menu.json
+uv run menu-ingest data/menu.json
 ```
 
 The first run downloads the embedding model (~1.1 GB) into the Hugging Face cache.
@@ -78,10 +78,10 @@ compose up`. Everything runs on CPU; `docker compose down -v` removes the volume
 With the menu indexed and Ollama running:
 
 ```bash
-uv run python -m menu_assistant.rag "I like spicy ramen, what else here would I enjoy?"
-uv run python -m menu_assistant.rag "I'm allergic to peanuts. Any spicy noodles?"
-uv run python -m menu_assistant.rag "something light" --exclude soy --diet vegan
-uv run python -m menu_assistant.rag "Quero uma sobremesa vegana"   # course: dessert
+uv run menu-ask "I like spicy ramen, what else here would I enjoy?"
+uv run menu-ask "I'm allergic to peanuts. Any spicy noodles?"
+uv run menu-ask "something light" --exclude soy --diet vegan
+uv run menu-ask "Quero uma sobremesa vegana"   # course: dessert
 ```
 
 Example output:
@@ -192,8 +192,8 @@ Any other Ollama model works by setting `MENU_ASSISTANT_LLM_MODEL` (larger model
 | Lint              | `uv run ruff check .`                           |
 | Format            | `uv run ruff format .`                          |
 | Type check        | `uv run mypy src tests`                         |
-| Evaluate retrieval| `uv run python -m menu_assistant.eval`          |
-| Evaluate answers  | `uv run python -m menu_assistant.eval.answers`  |
+| Evaluate retrieval| `uv run menu-eval`                              |
+| Evaluate answers  | `uv run menu-eval-answers`                      |
 | Run the API       | `uv run uvicorn menu_assistant.api.main:app --reload` |
 
 ## Evaluation
