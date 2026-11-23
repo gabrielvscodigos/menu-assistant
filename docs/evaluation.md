@@ -184,9 +184,11 @@ with deterministic checks in [`eval/answer_checks.py`](../src/menu_assistant/eva
 
 ## Method
 
-28 questions in four categories: taste preferences, restricted (allergens, diets,
-explicit filters), multilingual (Portuguese and Spanish), and off-menu (dishes that do
-not exist, prices, impossible combinations). Labels are validated against the menu and
+29 questions in four categories: taste preferences (including a price question),
+restricted (allergens, diets, explicit filters), multilingual (Portuguese and Spanish),
+and off-menu (dishes that do not exist, facts the menu does not have such as calories,
+impossible combinations). Results recorded before 2026-11-23 used 28 questions: the menu
+had no prices then, and "How much does the spicy miso ramen cost?" was an off-menu case. Labels are validated against the menu and
 the filters the system will apply, so a case cannot reward a dish the filters exclude.
 
 | Check     | Passes when                                                          | Applies to |

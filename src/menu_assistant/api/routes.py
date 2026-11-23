@@ -56,7 +56,14 @@ def ask(
     )
     try:
         history = [ChatMessage(role=turn.role, content=turn.content) for turn in body.history]
-        answer = service.answer(body.question, explicit, body.course, history, body.language)
+        answer = service.answer(
+            body.question,
+            explicit,
+            body.course,
+            history,
+            body.language,
+            exclude_dishes=frozenset(body.exclude_dishes),
+        )
     except LLMError as error:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=f"LLM unavailable: {error}"

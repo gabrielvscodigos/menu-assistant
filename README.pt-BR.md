@@ -203,7 +203,9 @@ use a página `/docs`.
 
 Um `course` opcional (`starter`, `main`, `side`, `dessert`) substitui o tipo de prato
 detectado na pergunta, e um `language` opcional (`en`, `pt`, `es`) define o idioma da
-resposta e do aviso em vez de detectá-lo. Para uma pergunta de continuação, envie os turnos anteriores em
+resposta e do aviso em vez de detectá-lo. `exclude_dishes` (ids de pratos) deixa pratos
+de fora da busca, que é como um cliente pede "outras opções". Cada prato em `sources` e
+`candidates` traz descrição e ingredientes, para o cliente poder mostrar cartões. Para uma pergunta de continuação, envie os turnos anteriores em
 `history` (do mais antigo ao mais novo, até 20); o servidor não guarda estado, e as
 restrições das perguntas anteriores continuam valendo:
 
@@ -283,8 +285,9 @@ contagem de violações de filtro que precisa continuar em zero.
 Os aliases em português (`apimentado` → `spicy`, `macarrão` → `noodles`) elevaram o
 recall@5 das consultas multilíngues de 0.765 para 1.000.
 
-As respostas geradas são verificadas à parte em 28 perguntas (com o Ollama rodando)
-usando regras determinísticas, não um LLM como juiz:
+As respostas geradas são verificadas à parte em 29 perguntas (com o Ollama rodando)
+usando regras determinísticas, não um LLM como juiz. Os resultados abaixo foram medidos no
+conjunto anterior de 28 perguntas, antes de os preços entrarem no cardápio:
 
 | Verificação (llama3.2)                                 | Resultado |
 | ------------------------------------------------------ | --------: |
@@ -314,9 +317,18 @@ Os cardápios são arquivos JSON validados pelos modelos em
 | `description`   | Descrição curta do prato                                           |
 | `ingredients`   | Lista não vazia de ingredientes                                    |
 | `preparation`   | Como o prato é preparado                                           |
+| `price`         | `{"amount": "16.50", "currency": "USD"}`: decimal exato, uma moeda por cardápio |
+| `translations`  | Opcional, por idioma (`pt`): nome, descrição, ingredientes, preparo e preço local (ex.: BRL) |
 | `tags`          | Tags livres em minúsculas e em inglês (`spicy`, `japanese`, `noodles`, ...) |
 | `dietary_flags` | `vegan`, `vegetarian`, `gluten_free`, `dairy_free`, `halal`        |
 | `allergens`     | Os 14 principais alérgenos da UE (`gluten`, `peanuts`, `sesame`, ...) |
+
+As traduções mudam só o que o cliente lê. Alérgenos, restrições, tags e a lista de
+ingredientes em inglês ficam no prato e controlam todos os filtros, então uma tradução
+nunca enfraquece um filtro. Quando a resposta é em português (escolhido ou detectado na
+pergunta), o garçom e os cartões usam o nome, os ingredientes e o preço em R$ em
+português; o cardápio de exemplo está todo traduzido. O espanhol ainda não tem tradução e
+usa a versão em inglês (USD).
 
 A validação rejeita campos desconhecidos, alérgenos ou restrições desconhecidos, ids
 duplicados e contradições, como um prato `vegan` que lista `eggs` ou um prato

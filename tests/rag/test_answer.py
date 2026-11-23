@@ -101,6 +101,7 @@ def test_prompt_contains_dish_facts_restrictions_and_question(sample_menu: Menu)
 
     assert format_dish(dish) in message
     assert "Allergens: gluten, mustard, peanuts, sesame, soy" in message
+    assert "Price: 14.00 USD" in message
     assert "HARD RESTRICTIONS ALREADY APPLIED: excludes milk" in message
     assert message.endswith("GUEST QUESTION: spicy please?")
 
@@ -398,3 +399,34 @@ def test_detected_language_adds_no_reply_language_line(retriever: MenuRetriever)
     service(retriever, llm).answer("something light")
 
     assert "REPLY LANGUAGE" not in llm.last_prompt
+
+
+# --- translated dishes -------------------------------------------------------------
+
+
+def test_portuguese_reply_sees_portuguese_dishes_and_prices(retriever: MenuRetriever) -> None:
+    llm = FakeLLM("Sugiro a [Salada Caesar].")
+
+    answer = service(retriever, llm).answer("something light", language=Language.PT)
+
+    names = {item.dish.name for item in answer.retrieved}
+    assert "Salada Caesar" in names and "Caesar Salad" not in names
+    assert "Price: 32.90 BRL" in llm.last_prompt
+    assert answer.cited_dish_ids == ["caesar-salad"]  # the Portuguese name maps to the id
+    assert "[caesar-salad]" in answer.text
+
+
+def test_english_reply_keeps_the_original_dishes(retriever: MenuRetriever) -> None:
+    llm = FakeLLM("Try the Caesar Salad [caesar-salad].")
+
+    answer = service(retriever, llm).answer("something light", language=Language.EN)
+
+    assert "Caesar Salad" in {item.dish.name for item in answer.retrieved}
+    assert "Price: 10.00 USD" in llm.last_prompt
+
+
+def test_filters_use_canonical_ingredients_in_any_language(retriever: MenuRetriever) -> None:
+    answer = service(retriever, FakeLLM("ok")).answer("algo sem cebola", language=Language.PT)
+
+    retrieved = {item.dish.id for item in answer.retrieved}
+    assert {"chana-masala", "lamb-kofta", "beef-birria-tacos"}.isdisjoint(retrieved)

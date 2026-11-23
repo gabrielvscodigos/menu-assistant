@@ -189,6 +189,16 @@
             ],
             "description": "reply language chosen by the guest (en, pt, es); detected if omitted"
           },
+          "exclude_dishes": {
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Exclude Dishes",
+            "description": "dish ids not to suggest, e.g. ones already shown when asking for others"
+          },
           "history": {
             "items": {
               "$ref": "#/components/schemas/ChatTurn"
@@ -322,6 +332,25 @@
         "title": "DietaryFlag",
         "description": "Dietary suitability declared by the restaurant for a dish."
       },
+      "DishPrice": {
+        "properties": {
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          }
+        },
+        "type": "object",
+        "required": [
+          "amount",
+          "currency"
+        ],
+        "title": "DishPrice",
+        "description": "A price as an exact decimal string (\"14.50\") and an ISO 4217 currency code."
+      },
       "DishSource": {
         "properties": {
           "id": {
@@ -334,6 +363,20 @@
           },
           "course": {
             "$ref": "#/components/schemas/Course"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "ingredients": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Ingredients"
+          },
+          "price": {
+            "$ref": "#/components/schemas/DishPrice"
           },
           "allergens": {
             "items": {
@@ -359,6 +402,9 @@
           "id",
           "name",
           "course",
+          "description",
+          "ingredients",
+          "price",
           "allergens",
           "dietary_flags",
           "score"

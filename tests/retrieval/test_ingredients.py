@@ -1,8 +1,10 @@
 """Tests for matching disliked ingredients against a dish's ingredient list."""
 
+from decimal import Decimal
+
 import pytest
 
-from menu_assistant.models import Course, Dish
+from menu_assistant.models import Course, Dish, Price
 from menu_assistant.retrieval.ingredients import disliked_ingredients
 
 
@@ -14,6 +16,7 @@ def dish_with(*ingredients: str) -> Dish:
         description="A dish for tests.",
         ingredients=list(ingredients),
         preparation="Cooked.",
+        price=Price(amount=Decimal("10.00"), currency="USD"),
     )
 
 

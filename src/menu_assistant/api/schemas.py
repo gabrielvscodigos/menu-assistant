@@ -4,7 +4,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from menu_assistant.models import Allergen, Course, DietaryFlag
+from menu_assistant.models import Allergen, Course, DietaryFlag, DishId
 from menu_assistant.rag.answer import Answer
 from menu_assistant.rag.language import Language
 from menu_assistant.retrieval.ingredients import IngredientTerm
@@ -55,6 +55,11 @@ class AskRequest(BaseModel):
         default=None,
         description="reply language chosen by the guest (en, pt, es); detected if omitted",
     )
+    exclude_dishes: list[DishId] = Field(
+        default_factory=list,
+        max_length=100,
+        description="dish ids not to suggest, e.g. ones already shown when asking for others",
+    )
     history: list[ChatTurn] = Field(
         default_factory=list,
         max_length=MAX_HISTORY_TURNS,
@@ -65,12 +70,22 @@ class AskRequest(BaseModel):
     )
 
 
+class DishPrice(BaseModel):
+    """A price as an exact decimal string ("14.50") and an ISO 4217 currency code."""
+
+    amount: str
+    currency: str
+
+
 class DishSource(BaseModel):
     """A dish the answer is based on, with the facts needed to display it."""
 
     id: str
     name: str
     course: Course
+    description: str
+    ingredients: list[str]
+    price: DishPrice
     allergens: list[Allergen]
     dietary_flags: list[DietaryFlag]
     score: float
@@ -81,6 +96,11 @@ class DishSource(BaseModel):
             id=item.dish.id,
             name=item.dish.name,
             course=item.dish.course,
+            description=item.dish.description,
+            ingredients=list(item.dish.ingredients),
+            price=DishPrice(
+                amount=f"{item.dish.price.amount:.2f}", currency=item.dish.price.currency
+            ),
             allergens=sorted(item.dish.allergens),
             dietary_flags=sorted(item.dish.dietary_flags),
             score=round(item.score, 4),

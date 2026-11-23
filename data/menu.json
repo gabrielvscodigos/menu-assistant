@@ -8,9 +8,19 @@
       "description": "Rich pork broth blended with white miso and house chili oil, topped with slow-braised pork belly and a jammy egg.",
       "ingredients": ["wheat noodles", "pork bone broth", "white miso", "chili oil", "braised pork belly", "soft-boiled egg", "scallions", "bean sprouts", "toasted sesame seeds"],
       "preparation": "Broth simmered for 12 hours; pork belly braised in soy and mirin, then torched before serving.",
+      "price": {"amount": "16.50", "currency": "USD"},
       "tags": ["japanese", "noodles", "soup", "spicy", "pork", "umami"],
       "dietary_flags": [],
-      "allergens": ["gluten", "soy", "eggs", "sesame"]
+      "allergens": ["gluten", "soy", "eggs", "sesame"],
+      "translations": {
+        "pt": {
+          "name": "Lámen de Missô Apimentado",
+          "description": "Caldo encorpado de porco com missô branco e óleo de pimenta da casa, coberto com barriga de porco braseada e ovo de gema mole.",
+          "ingredients": ["macarrão de trigo", "caldo de osso de porco", "missô branco", "óleo de pimenta", "barriga de porco braseada", "ovo cozido de gema mole", "cebolinha", "broto de feijão", "gergelim tostado"],
+          "preparation": "Caldo cozido por 12 horas; barriga de porco braseada no shoyu e mirin e maçaricada antes de servir.",
+          "price": {"amount": "54.90", "currency": "BRL"}
+        }
+      }
     },
     {
       "id": "dan-dan-noodles",
@@ -19,9 +29,19 @@
       "description": "Sichuan-style noodles in a numbing, spicy sesame sauce with crispy minced pork and crushed peanuts.",
       "ingredients": ["wheat noodles", "minced pork", "sichuan peppercorns", "chili oil", "sesame paste", "soy sauce", "preserved mustard greens", "bok choy", "roasted peanuts"],
       "preparation": "Pork stir-fried until crisp; noodles boiled and tossed with the sauce at the table.",
+      "price": {"amount": "14.00", "currency": "USD"},
       "tags": ["chinese", "sichuan", "noodles", "spicy", "numbing", "pork"],
       "dietary_flags": [],
-      "allergens": ["gluten", "soy", "sesame", "peanuts", "mustard"]
+      "allergens": ["gluten", "soy", "sesame", "peanuts", "mustard"],
+      "translations": {
+        "pt": {
+          "name": "Macarrão Dan Dan",
+          "description": "Macarrão ao estilo de Sichuan em molho apimentado de gergelim que adormece a boca, com carne de porco moída crocante e amendoim triturado.",
+          "ingredients": ["macarrão de trigo", "carne de porco moída", "pimenta de Sichuan", "óleo de pimenta", "pasta de gergelim", "shoyu", "mostarda verde em conserva", "acelga chinesa (bok choy)", "amendoim torrado"],
+          "preparation": "Porco salteado até ficar crocante; macarrão cozido e misturado ao molho na mesa.",
+          "price": {"amount": "46.90", "currency": "BRL"}
+        }
+      }
     },
     {
       "id": "mushroom-shoyu-ramen",
@@ -30,9 +50,19 @@
       "description": "A clear, savory shiitake and kombu broth seasoned with soy sauce, with roasted tofu and bamboo shoots.",
       "ingredients": ["wheat noodles", "shiitake and kombu broth", "soy sauce", "roasted tofu", "bamboo shoots", "nori", "scallions"],
       "preparation": "Dashi steeped cold overnight, then gently warmed; tofu roasted until golden.",
+      "price": {"amount": "15.00", "currency": "USD"},
       "tags": ["japanese", "noodles", "soup", "mushroom", "umami", "mild"],
       "dietary_flags": ["vegan", "vegetarian", "dairy_free"],
-      "allergens": ["gluten", "soy"]
+      "allergens": ["gluten", "soy"],
+      "translations": {
+        "pt": {
+          "name": "Lámen Shoyu de Cogumelos",
+          "description": "Caldo claro e saboroso de shiitake e kombu temperado com shoyu, com tofu assado e broto de bambu.",
+          "ingredients": ["macarrão de trigo", "caldo de shiitake e kombu", "shoyu", "tofu assado", "broto de bambu", "alga nori", "cebolinha"],
+          "preparation": "Dashi em infusão a frio durante a noite e aquecido com cuidado; tofu assado até dourar.",
+          "price": {"amount": "49.90", "currency": "BRL"}
+        }
+      }
     },
     {
       "id": "kimchi-fried-rice",
@@ -41,9 +71,19 @@
       "description": "Wok-fried rice with aged kimchi, gochujang and crispy pork belly, crowned with a fried egg.",
       "ingredients": ["jasmine rice", "kimchi (with fish sauce)", "gochujang", "pork belly", "fried egg", "scallions", "sesame oil"],
       "preparation": "Day-old rice fried at high heat in a wok with kimchi and gochujang.",
+      "price": {"amount": "13.50", "currency": "USD"},
       "tags": ["korean", "rice", "spicy", "fermented", "pork"],
       "dietary_flags": [],
-      "allergens": ["fish", "soy", "gluten", "eggs", "sesame"]
+      "allergens": ["fish", "soy", "gluten", "eggs", "sesame"],
+      "translations": {
+        "pt": {
+          "name": "Arroz Frito com Kimchi",
+          "description": "Arroz salteado no wok com kimchi curtido, gochujang e barriga de porco crocante, coroado com ovo frito.",
+          "ingredients": ["arroz jasmim", "kimchi (com molho de peixe)", "gochujang", "barriga de porco", "ovo frito", "cebolinha", "óleo de gergelim"],
+          "preparation": "Arroz do dia anterior frito em fogo alto no wok com kimchi e gochujang.",
+          "price": {"amount": "44.90", "currency": "BRL"}
+        }
+      }
     },
     {
       "id": "tofu-green-curry",
@@ -52,9 +92,19 @@
       "description": "Fragrant Thai green curry with coconut milk, tofu, Thai eggplant and basil, served with jasmine rice.",
       "ingredients": ["firm tofu", "coconut milk", "green curry paste (no shrimp paste)", "thai eggplant", "bamboo shoots", "thai basil", "jasmine rice"],
       "preparation": "Curry paste fried in coconut cream before simmering with vegetables and tofu.",
+      "price": {"amount": "14.50", "currency": "USD"},
       "tags": ["thai", "curry", "spicy", "coconut", "rice"],
       "dietary_flags": ["vegan", "vegetarian", "gluten_free", "dairy_free"],
-      "allergens": ["soy"]
+      "allergens": ["soy"],
+      "translations": {
+        "pt": {
+          "name": "Curry Verde com Tofu",
+          "description": "Curry verde tailandês perfumado com leite de coco, tofu, berinjela tailandesa e manjericão, servido com arroz jasmim.",
+          "ingredients": ["tofu firme", "leite de coco", "pasta de curry verde (sem pasta de camarão)", "berinjela tailandesa", "broto de bambu", "manjericão tailandês", "arroz jasmim"],
+          "preparation": "Pasta de curry frita no creme de coco antes de cozinhar com os legumes e o tofu.",
+          "price": {"amount": "47.90", "currency": "BRL"}
+        }
+      }
     },
     {
       "id": "chicken-tikka-masala",
@@ -63,9 +113,19 @@
       "description": "Yogurt-marinated chicken charred in the tandoor and finished in a creamy, mildly spiced tomato sauce.",
       "ingredients": ["halal chicken thigh", "yogurt", "tomato", "cream", "garam masala", "ginger", "garlic", "basmati rice"],
       "preparation": "Chicken marinated for 24 hours, cooked in a tandoor oven, then simmered in the sauce.",
+      "price": {"amount": "17.00", "currency": "USD"},
       "tags": ["indian", "curry", "chicken", "creamy", "mild"],
       "dietary_flags": ["halal", "gluten_free"],
-      "allergens": ["milk"]
+      "allergens": ["milk"],
+      "translations": {
+        "pt": {
+          "name": "Frango Tikka Masala",
+          "description": "Frango marinado no iogurte, tostado no forno tandoor e finalizado em molho de tomate cremoso e levemente condimentado.",
+          "ingredients": ["sobrecoxa de frango halal", "iogurte", "tomate", "creme de leite", "garam masala", "gengibre", "alho", "arroz basmati"],
+          "preparation": "Frango marinado por 24 horas, assado no forno tandoor e depois cozido no molho.",
+          "price": {"amount": "56.90", "currency": "BRL"}
+        }
+      }
     },
     {
       "id": "chana-masala",
@@ -74,9 +134,19 @@
       "description": "Chickpeas slow-cooked in a tangy, spicy tomato and onion gravy, served with basmati rice.",
       "ingredients": ["chickpeas", "tomato", "onion", "ginger", "green chili", "garam masala", "cumin", "cilantro", "basmati rice"],
       "preparation": "Whole spices tempered in oil, then simmered with chickpeas for two hours.",
+      "price": {"amount": "13.00", "currency": "USD"},
       "tags": ["indian", "curry", "chickpeas", "spicy", "hearty"],
       "dietary_flags": ["vegan", "vegetarian", "gluten_free", "dairy_free"],
-      "allergens": []
+      "allergens": [],
+      "translations": {
+        "pt": {
+          "name": "Chana Masala (Grão-de-Bico ao Curry)",
+          "description": "Grão-de-bico cozido lentamente em molho picante e levemente ácido de tomate e cebola, servido com arroz basmati.",
+          "ingredients": ["grão-de-bico", "tomate", "cebola", "gengibre", "pimenta verde", "garam masala", "cominho", "coentro", "arroz basmati"],
+          "preparation": "Especiarias inteiras douradas no óleo e cozidas com o grão-de-bico por duas horas.",
+          "price": {"amount": "42.90", "currency": "BRL"}
+        }
+      }
     },
     {
       "id": "lamb-kofta",
@@ -85,9 +155,19 @@
       "description": "Spiced lamb skewers grilled over charcoal with tahini sauce, sumac onions and warm flatbread.",
       "ingredients": ["halal minced lamb", "cumin", "coriander", "parsley", "tahini sauce", "sumac onions", "wheat flatbread"],
       "preparation": "Hand-shaped skewers grilled over charcoal.",
+      "price": {"amount": "18.50", "currency": "USD"},
       "tags": ["middle-eastern", "grilled", "lamb", "smoky"],
       "dietary_flags": ["halal", "dairy_free"],
-      "allergens": ["gluten", "sesame"]
+      "allergens": ["gluten", "sesame"],
+      "translations": {
+        "pt": {
+          "name": "Kafta de Cordeiro Grelhada",
+          "description": "Espetinhos de cordeiro temperado grelhados na brasa, com molho tahine, cebola com sumac e pão sírio quentinho.",
+          "ingredients": ["cordeiro moído halal", "cominho", "coentro em grão", "salsinha", "molho tahine", "cebola com sumac", "pão sírio de trigo"],
+          "preparation": "Espetos moldados à mão e grelhados na brasa.",
+          "price": {"amount": "61.90", "currency": "BRL"}
+        }
+      }
     },
     {
       "id": "falafel-plate",
@@ -96,9 +176,19 @@
       "description": "Crispy herb falafel with hummus, tabbouleh, pickled turnips and pita.",
       "ingredients": ["chickpea falafel", "hummus", "tahini", "bulgur wheat tabbouleh", "pickled turnips", "pita bread"],
       "preparation": "Falafel made from soaked raw chickpeas and deep-fried to order.",
+      "price": {"amount": "14.00", "currency": "USD"},
       "tags": ["middle-eastern", "chickpeas", "fried", "fresh"],
       "dietary_flags": ["vegan", "vegetarian", "dairy_free"],
-      "allergens": ["sesame", "gluten"]
+      "allergens": ["sesame", "gluten"],
+      "translations": {
+        "pt": {
+          "name": "Prato de Falafel",
+          "description": "Falafel de ervas crocante com homus, tabule, nabo em conserva e pão pita.",
+          "ingredients": ["falafel de grão-de-bico", "homus", "tahine", "tabule de trigo para quibe", "nabo em conserva", "pão pita"],
+          "preparation": "Falafel feito com grão-de-bico cru demolhado e frito na hora.",
+          "price": {"amount": "46.90", "currency": "BRL"}
+        }
+      }
     },
     {
       "id": "fish-tacos",
@@ -107,9 +197,19 @@
       "description": "Crispy beer-battered cod in corn tortillas with chipotle mayo and lime cabbage slaw.",
       "ingredients": ["cod", "beer batter (wheat flour, beer)", "corn tortillas", "chipotle mayonnaise", "red cabbage slaw", "lime"],
       "preparation": "Cod battered and deep-fried to order.",
+      "price": {"amount": "15.50", "currency": "USD"},
       "tags": ["mexican", "tacos", "seafood", "fried", "smoky"],
       "dietary_flags": [],
-      "allergens": ["fish", "gluten", "eggs"]
+      "allergens": ["fish", "gluten", "eggs"],
+      "translations": {
+        "pt": {
+          "name": "Tacos de Peixe Empanado na Cerveja",
+          "description": "Bacalhau fresco empanado na cerveja e crocante, em tortilhas de milho com maionese de chipotle e salada de repolho com limão.",
+          "ingredients": ["bacalhau fresco", "massa de cerveja (farinha de trigo, cerveja)", "tortilhas de milho", "maionese de chipotle", "salada de repolho roxo", "limão"],
+          "preparation": "Bacalhau empanado e frito na hora.",
+          "price": {"amount": "51.90", "currency": "BRL"}
+        }
+      }
     },
     {
       "id": "beef-birria-tacos",
@@ -118,9 +218,19 @@
       "description": "Beef braised with guajillo and ancho chilies, folded into crisped corn tortillas with a cup of consommé for dipping.",
       "ingredients": ["beef chuck", "guajillo chilies", "ancho chilies", "corn tortillas", "white onion", "cilantro", "beef consommé"],
       "preparation": "Beef braised for six hours; tortillas dipped in the braising fat and griddled.",
+      "price": {"amount": "17.50", "currency": "USD"},
       "tags": ["mexican", "tacos", "beef", "spicy", "slow-cooked"],
       "dietary_flags": ["gluten_free", "dairy_free"],
-      "allergens": []
+      "allergens": [],
+      "translations": {
+        "pt": {
+          "name": "Tacos de Birria de Carne",
+          "description": "Carne braseada com pimentas guajillo e ancho, em tortilhas de milho tostadas, com uma tigela de consomê para molhar.",
+          "ingredients": ["acém bovino", "pimenta guajillo", "pimenta ancho", "tortilhas de milho", "cebola branca", "coentro", "consomê de carne"],
+          "preparation": "Carne braseada por seis horas; tortilhas passadas na gordura do cozimento e tostadas na chapa.",
+          "price": {"amount": "57.90", "currency": "BRL"}
+        }
+      }
     },
     {
       "id": "elote",
@@ -129,9 +239,19 @@
       "description": "Charred street corn brushed with mayonnaise, rolled in cotija cheese and dusted with chili and lime.",
       "ingredients": ["corn on the cob", "mayonnaise", "cotija cheese", "chili powder", "lime"],
       "preparation": "Corn grilled over open flame, then dressed to order.",
+      "price": {"amount": "6.50", "currency": "USD"},
       "tags": ["mexican", "corn", "spicy", "grilled"],
       "dietary_flags": ["vegetarian", "gluten_free"],
-      "allergens": ["eggs", "milk"]
+      "allergens": ["eggs", "milk"],
+      "translations": {
+        "pt": {
+          "name": "Elote (Milho Mexicano)",
+          "description": "Milho tostado na brasa, pincelado com maionese, passado no queijo cotija e polvilhado com pimenta e limão.",
+          "ingredients": ["milho na espiga", "maionese", "queijo cotija", "pimenta em pó", "limão"],
+          "preparation": "Milho grelhado na chama e temperado na hora.",
+          "price": {"amount": "21.90", "currency": "BRL"}
+        }
+      }
     },
     {
       "id": "margherita-pizza",
@@ -140,9 +260,19 @@
       "description": "Wood-fired pizza with San Marzano tomato sauce, fresh mozzarella and basil.",
       "ingredients": ["wheat pizza dough", "tomato sauce", "fresh mozzarella", "basil", "olive oil"],
       "preparation": "Dough fermented for 48 hours, baked for 90 seconds in a wood-fired oven.",
+      "price": {"amount": "15.00", "currency": "USD"},
       "tags": ["italian", "pizza", "cheese", "classic"],
       "dietary_flags": ["vegetarian"],
-      "allergens": ["gluten", "milk"]
+      "allergens": ["gluten", "milk"],
+      "translations": {
+        "pt": {
+          "name": "Pizza Margherita",
+          "description": "Pizza no forno a lenha com molho de tomate San Marzano, muçarela de búfala fresca e manjericão.",
+          "ingredients": ["massa de pizza de trigo", "molho de tomate", "muçarela fresca", "manjericão", "azeite"],
+          "preparation": "Massa fermentada por 48 horas e assada por 90 segundos no forno a lenha.",
+          "price": {"amount": "49.90", "currency": "BRL"}
+        }
+      }
     },
     {
       "id": "spaghetti-carbonara",
@@ -151,9 +281,19 @@
       "description": "Spaghetti tossed with crispy guanciale, egg yolk, pecorino romano and plenty of black pepper.",
       "ingredients": ["durum wheat spaghetti", "guanciale (cured pork cheek)", "egg yolks", "pecorino romano", "black pepper"],
       "preparation": "Sauce emulsified off the heat with pasta water; no cream.",
+      "price": {"amount": "17.00", "currency": "USD"},
       "tags": ["italian", "pasta", "pork", "creamy", "classic"],
       "dietary_flags": [],
-      "allergens": ["gluten", "eggs", "milk"]
+      "allergens": ["gluten", "eggs", "milk"],
+      "translations": {
+        "pt": {
+          "name": "Espaguete à Carbonara",
+          "description": "Espaguete com guanciale crocante, gema de ovo, pecorino romano e bastante pimenta-do-reino.",
+          "ingredients": ["espaguete de trigo duro", "guanciale (bochecha de porco curada)", "gemas de ovo", "pecorino romano", "pimenta-do-reino"],
+          "preparation": "Molho emulsionado fora do fogo com a água do macarrão; sem creme de leite.",
+          "price": {"amount": "56.90", "currency": "BRL"}
+        }
+      }
     },
     {
       "id": "walnut-pesto-gnocchi",
@@ -162,9 +302,19 @@
       "description": "Pan-seared potato gnocchi with basil and walnut pesto and blistered cherry tomatoes.",
       "ingredients": ["potato gnocchi (potato, wheat flour, egg)", "basil", "walnuts", "vegetarian hard cheese", "olive oil", "cherry tomatoes"],
       "preparation": "Gnocchi made in house, boiled, then seared in olive oil.",
+      "price": {"amount": "16.00", "currency": "USD"},
       "tags": ["italian", "pasta", "herby", "nutty"],
       "dietary_flags": ["vegetarian"],
-      "allergens": ["gluten", "eggs", "milk", "tree_nuts"]
+      "allergens": ["gluten", "eggs", "milk", "tree_nuts"],
+      "translations": {
+        "pt": {
+          "name": "Nhoque ao Pesto de Nozes",
+          "description": "Nhoque de batata dourado na frigideira com pesto de manjericão e nozes e tomatinhos tostados.",
+          "ingredients": ["nhoque de batata (batata, farinha de trigo, ovo)", "manjericão", "nozes", "queijo duro vegetariano", "azeite", "tomate-cereja"],
+          "preparation": "Nhoque feito na casa, cozido e depois dourado no azeite.",
+          "price": {"amount": "52.90", "currency": "BRL"}
+        }
+      }
     },
     {
       "id": "wild-mushroom-risotto",
@@ -173,9 +323,19 @@
       "description": "Creamy arborio risotto with porcini and cremini mushrooms, finished with butter and hard cheese.",
       "ingredients": ["arborio rice", "porcini mushrooms", "cremini mushrooms", "vegetable stock (with celery)", "white wine", "butter", "vegetarian hard cheese"],
       "preparation": "Rice toasted, deglazed with white wine and stirred with stock for 18 minutes.",
+      "price": {"amount": "18.00", "currency": "USD"},
       "tags": ["italian", "rice", "mushroom", "creamy", "umami"],
       "dietary_flags": ["vegetarian", "gluten_free"],
-      "allergens": ["milk", "celery", "sulphites"]
+      "allergens": ["milk", "celery", "sulphites"],
+      "translations": {
+        "pt": {
+          "name": "Risoto de Cogumelos Selvagens",
+          "description": "Risoto cremoso de arroz arbóreo com cogumelos porcini e paris, finalizado com manteiga e queijo duro.",
+          "ingredients": ["arroz arbóreo", "cogumelo porcini", "cogumelo paris", "caldo de legumes (com salsão)", "vinho branco", "manteiga", "queijo duro vegetariano"],
+          "preparation": "Arroz tostado, deglaçado com vinho branco e mexido com o caldo por 18 minutos.",
+          "price": {"amount": "59.90", "currency": "BRL"}
+        }
+      }
     },
     {
       "id": "grilled-salmon",
@@ -184,9 +344,19 @@
       "description": "Salmon fillet grilled skin-side down, with lemon-dill butter, roasted potatoes and asparagus.",
       "ingredients": ["salmon fillet", "butter", "lemon", "dill", "roasted potatoes", "asparagus"],
       "preparation": "Grilled to medium; butter melted over the fish at the pass.",
+      "price": {"amount": "24.00", "currency": "USD"},
       "tags": ["seafood", "grilled", "fresh", "light"],
       "dietary_flags": ["gluten_free"],
-      "allergens": ["fish", "milk"]
+      "allergens": ["fish", "milk"],
+      "translations": {
+        "pt": {
+          "name": "Salmão Grelhado com Manteiga de Limão e Endro",
+          "description": "Filé de salmão grelhado com a pele para baixo, com manteiga de limão e endro, batatas assadas e aspargos.",
+          "ingredients": ["filé de salmão", "manteiga", "limão-siciliano", "endro", "batatas assadas", "aspargos"],
+          "preparation": "Grelhado ao ponto; a manteiga derrete sobre o peixe na hora de servir.",
+          "price": {"amount": "79.90", "currency": "BRL"}
+        }
+      }
     },
     {
       "id": "garlic-chili-prawns",
@@ -195,9 +365,19 @@
       "description": "Prawns sizzled in garlic butter with chili flakes and parsley, served with sourdough to mop up the sauce.",
       "ingredients": ["prawns", "garlic", "butter", "chili flakes", "parsley", "sourdough bread"],
       "preparation": "Cooked in a cast-iron pan and served still sizzling.",
+      "price": {"amount": "19.50", "currency": "USD"},
       "tags": ["seafood", "spicy", "garlicky"],
       "dietary_flags": [],
-      "allergens": ["crustaceans", "milk", "gluten"]
+      "allergens": ["crustaceans", "milk", "gluten"],
+      "translations": {
+        "pt": {
+          "name": "Camarões ao Alho e Pimenta",
+          "description": "Camarões chiando na manteiga de alho com pimenta calabresa e salsinha, servidos com pão de fermentação natural para o molho.",
+          "ingredients": ["camarões", "alho", "manteiga", "pimenta calabresa", "salsinha", "pão de fermentação natural"],
+          "preparation": "Feitos na frigideira de ferro e servidos ainda chiando.",
+          "price": {"amount": "64.90", "currency": "BRL"}
+        }
+      }
     },
     {
       "id": "green-papaya-salad",
@@ -206,9 +386,19 @@
       "description": "Shredded green papaya pounded with chili, lime, fish sauce, dried shrimp and peanuts.",
       "ingredients": ["green papaya", "cherry tomatoes", "long beans", "bird's eye chili", "lime", "fish sauce", "dried shrimp", "roasted peanuts", "palm sugar"],
       "preparation": "Pounded to order in a clay mortar.",
+      "price": {"amount": "9.50", "currency": "USD"},
       "tags": ["thai", "salad", "spicy", "fresh", "sour"],
       "dietary_flags": ["gluten_free", "dairy_free"],
-      "allergens": ["fish", "crustaceans", "peanuts"]
+      "allergens": ["fish", "crustaceans", "peanuts"],
+      "translations": {
+        "pt": {
+          "name": "Salada de Mamão Verde",
+          "description": "Mamão verde ralado e socado com pimenta, limão, molho de peixe, camarão seco e amendoim.",
+          "ingredients": ["mamão verde", "tomate-cereja", "feijão-de-metro", "pimenta olho-de-pássaro", "limão", "molho de peixe", "camarão seco", "amendoim torrado", "açúcar de palma"],
+          "preparation": "Socada na hora em pilão de barro.",
+          "price": {"amount": "31.90", "currency": "BRL"}
+        }
+      }
     },
     {
       "id": "edamame",
@@ -217,9 +407,19 @@
       "description": "Steamed young soybeans in the pod, finished with flaky sea salt.",
       "ingredients": ["edamame (young soybeans)", "sea salt"],
       "preparation": "Steamed to order.",
+      "price": {"amount": "5.50", "currency": "USD"},
       "tags": ["japanese", "light", "snack"],
       "dietary_flags": ["vegan", "vegetarian", "gluten_free", "dairy_free"],
-      "allergens": ["soy"]
+      "allergens": ["soy"],
+      "translations": {
+        "pt": {
+          "name": "Edamame com Flor de Sal",
+          "description": "Soja verde na vagem cozida no vapor e finalizada com flor de sal.",
+          "ingredients": ["edamame (soja verde)", "flor de sal"],
+          "preparation": "Cozido no vapor na hora.",
+          "price": {"amount": "18.90", "currency": "BRL"}
+        }
+      }
     },
     {
       "id": "pork-gyoza",
@@ -228,9 +428,19 @@
       "description": "Pan-fried dumplings filled with pork, cabbage and ginger, with a soy and rice vinegar dipping sauce.",
       "ingredients": ["wheat dumpling wrappers", "minced pork", "napa cabbage", "ginger", "garlic", "soy sauce", "rice vinegar", "sesame oil"],
       "preparation": "Folded by hand; pan-fried then steamed for a crisp base.",
+      "price": {"amount": "8.50", "currency": "USD"},
       "tags": ["japanese", "dumplings", "pork", "crispy"],
       "dietary_flags": [],
-      "allergens": ["gluten", "soy", "sesame"]
+      "allergens": ["gluten", "soy", "sesame"],
+      "translations": {
+        "pt": {
+          "name": "Guioza de Porco",
+          "description": "Pastéis japoneses selados na frigideira, recheados com porco, acelga e gengibre, com molho de shoyu e vinagre de arroz.",
+          "ingredients": ["massa de guioza de trigo", "carne de porco moída", "acelga", "gengibre", "alho", "shoyu", "vinagre de arroz", "óleo de gergelim"],
+          "preparation": "Fechados à mão; selados na frigideira e depois cozidos no vapor para a base ficar crocante.",
+          "price": {"amount": "28.90", "currency": "BRL"}
+        }
+      }
     },
     {
       "id": "caesar-salad",
@@ -239,9 +449,19 @@
       "description": "Crisp romaine with anchovy-garlic dressing, sourdough croutons and shaved parmesan.",
       "ingredients": ["romaine lettuce", "caesar dressing (egg yolk, anchovy, dijon mustard)", "sourdough croutons", "parmesan"],
       "preparation": "Dressing emulsified in house daily.",
+      "price": {"amount": "10.00", "currency": "USD"},
       "tags": ["salad", "classic", "fresh"],
       "dietary_flags": [],
-      "allergens": ["eggs", "fish", "mustard", "gluten", "milk"]
+      "allergens": ["eggs", "fish", "mustard", "gluten", "milk"],
+      "translations": {
+        "pt": {
+          "name": "Salada Caesar",
+          "description": "Alface-romana crocante com molho de anchova e alho, croutons de fermentação natural e lascas de parmesão.",
+          "ingredients": ["alface-romana", "molho caesar (gema, anchova, mostarda dijon)", "croutons de fermentação natural", "parmesão"],
+          "preparation": "Molho emulsionado na casa todos os dias.",
+          "price": {"amount": "32.90", "currency": "BRL"}
+        }
+      }
     },
     {
       "id": "tiramisu",
@@ -250,9 +470,19 @@
       "description": "Espresso-soaked ladyfingers layered with mascarpone cream and dusted with cocoa.",
       "ingredients": ["ladyfingers (wheat flour, egg)", "mascarpone", "eggs", "espresso", "marsala wine", "cocoa powder"],
       "preparation": "Assembled the day before and chilled overnight.",
+      "price": {"amount": "8.00", "currency": "USD"},
       "tags": ["italian", "coffee", "creamy", "sweet"],
       "dietary_flags": ["vegetarian"],
-      "allergens": ["gluten", "eggs", "milk", "sulphites"]
+      "allergens": ["gluten", "eggs", "milk", "sulphites"],
+      "translations": {
+        "pt": {
+          "name": "Tiramisù",
+          "description": "Biscoitos champanhe embebidos em espresso, em camadas com creme de mascarpone e polvilhados com cacau.",
+          "ingredients": ["biscoito champanhe (farinha de trigo, ovo)", "mascarpone", "ovos", "espresso", "vinho marsala", "cacau em pó"],
+          "preparation": "Montado no dia anterior e gelado durante a noite.",
+          "price": {"amount": "26.90", "currency": "BRL"}
+        }
+      }
     },
     {
       "id": "mango-sticky-rice",
@@ -261,9 +491,19 @@
       "description": "Sweet glutinous rice soaked in salted coconut cream, served with ripe mango and toasted sesame.",
       "ingredients": ["glutinous rice", "coconut milk", "palm sugar", "ripe mango", "toasted sesame seeds"],
       "preparation": "Rice steamed, then soaked in warm sweetened coconut milk.",
+      "price": {"amount": "7.50", "currency": "USD"},
       "tags": ["thai", "coconut", "fruity", "sweet"],
       "dietary_flags": ["vegan", "vegetarian", "gluten_free", "dairy_free"],
-      "allergens": ["sesame"]
+      "allergens": ["sesame"],
+      "translations": {
+        "pt": {
+          "name": "Arroz Doce Tailandês com Manga",
+          "description": "Arroz glutinoso adocicado no creme de coco com uma pitada de sal, servido com manga madura e gergelim tostado.",
+          "ingredients": ["arroz glutinoso", "leite de coco", "açúcar de palma", "manga madura", "gergelim tostado"],
+          "preparation": "Arroz cozido no vapor e depois embebido em leite de coco morno adoçado.",
+          "price": {"amount": "24.90", "currency": "BRL"}
+        }
+      }
     },
     {
       "id": "flourless-chocolate-cake",
@@ -272,9 +512,19 @@
       "description": "Dense, fudgy dark chocolate cake made with almond flour, served with whipped cream.",
       "ingredients": ["dark chocolate", "butter", "eggs", "sugar", "almond flour", "whipped cream"],
       "preparation": "Baked in a water bath and rested for a dense texture.",
+      "price": {"amount": "8.50", "currency": "USD"},
       "tags": ["chocolate", "rich", "sweet"],
       "dietary_flags": ["vegetarian", "gluten_free"],
-      "allergens": ["milk", "eggs", "tree_nuts"]
+      "allergens": ["milk", "eggs", "tree_nuts"],
+      "translations": {
+        "pt": {
+          "name": "Bolo de Chocolate sem Farinha de Trigo",
+          "description": "Bolo denso e úmido de chocolate amargo feito com farinha de amêndoas, servido com chantilly.",
+          "ingredients": ["chocolate amargo", "manteiga", "ovos", "açúcar", "farinha de amêndoas", "chantilly"],
+          "preparation": "Assado em banho-maria e descansado para ficar com textura densa.",
+          "price": {"amount": "28.90", "currency": "BRL"}
+        }
+      }
     }
   ]
 }

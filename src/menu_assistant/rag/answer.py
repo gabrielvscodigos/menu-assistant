@@ -198,13 +198,15 @@ class AnswerService:
         course: Course | None = None,
         history: Sequence[ChatMessage] = (),
         language: Language | None = None,
+        exclude_dishes: frozenset[str] = frozenset(),
     ) -> Answer:
         """Answer `question`, a follow-up to the earlier turns in `history` if any.
 
         Restrictions from earlier user turns keep applying (see `rag.conversation`). The
         course comes from this question only; an explicit `course` overrides it. An
         explicit `language` (chosen by the guest) overrides the detected one, for the fixed
-        texts and for the LLM's reply.
+        texts and for the LLM's reply. `exclude_dishes` are never retrieved (e.g. dishes
+        already suggested when the guest asks for other options).
         """
         restrictions = (
             (explicit or Restrictions())
@@ -218,6 +220,7 @@ class AnswerService:
                 exclude_allergens=restrictions.exclude_allergens,
                 require_flags=restrictions.require_flags,
                 exclude_ingredients=restrictions.exclude_ingredients,
+                exclude_dishes=exclude_dishes,
                 course=course,
                 k=self._k,
             )
@@ -225,6 +228,12 @@ class AnswerService:
         reply_language = language or detect_language(
             question, default=detect_language(" ".join(user_turns(history)))
         )
+        # Filters ran on the canonical dish data; from here on, the guest sees the dish in
+        # their language (name, ingredients, local price) when the menu has a translation.
+        retrieved = [
+            item.model_copy(update={"dish": item.dish.localized(reply_language)})
+            for item in retrieved
+        ]
         needs_notice = bool(restrictions) or mentions_dietary_topic(question)
         notice = SAFETY_NOTICES[reply_language] if needs_notice else None
 

@@ -41,6 +41,7 @@ def format_dish(dish: Dish) -> str:
             f"Description: {dish.description}",
             f"Ingredients: {', '.join(dish.ingredients)}",
             f"Preparation: {dish.preparation}",
+            f"Price: {dish.price.amount} {dish.price.currency}",
             f"Tags: {', '.join(dish.tags) or 'none'}",
             f"Dietary: {flags}",
             f"Allergens: {allergens}",

@@ -6,6 +6,11 @@ from typing import Literal
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# Version of the dish data stored in the index. Bump it when that data changes shape
+# (2 added prices, 3 added translations), so an old index asks to be rebuilt instead of
+# failing.
+INDEX_FORMAT_VERSION = 3
+
 
 class Settings(BaseSettings):
     """Runtime configuration. Every field can be overridden with a `MENU_ASSISTANT_*` variable."""
@@ -35,5 +40,12 @@ class Settings(BaseSettings):
 
     @property
     def index_signature(self) -> str:
-        """Identifies how documents were embedded; a different value needs a re-index."""
-        return f"{self.embedding_model}|document_prefix={self.embedding_document_prefix!r}"
+        """Identifies how the index was built; a different value needs a re-index.
+
+        Covers how documents were embedded and the format of the dish data stored with
+        them (`INDEX_FORMAT_VERSION`).
+        """
+        return (
+            f"{self.embedding_model}|document_prefix={self.embedding_document_prefix!r}"
+            f"|format={INDEX_FORMAT_VERSION}"
+        )

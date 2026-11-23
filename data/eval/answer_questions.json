@@ -4,6 +4,7 @@
     {"id": "pref-spicy-ramen", "category": "preference", "question": "I like spicy ramen, what else here would I enjoy?", "relevant": ["spicy-miso-ramen", "dan-dan-noodles", "kimchi-fried-rice", "tofu-green-curry", "chana-masala", "beef-birria-tacos"], "expect_notice": false},
     {"id": "pref-light", "category": "preference", "question": "Something light to start with?", "relevant": ["edamame", "green-papaya-salad", "caesar-salad", "grilled-salmon"], "expect_notice": false},
     {"id": "pref-chocolate", "category": "preference", "question": "I want a chocolate dessert", "relevant": ["flourless-chocolate-cake"], "expect_notice": false},
+    {"id": "pref-price", "category": "preference", "question": "How much is the spicy miso ramen?", "relevant": ["spicy-miso-ramen"], "expect_notice": false},
     {"id": "pref-creamy-pasta", "category": "preference", "question": "Something creamy with pasta or rice", "relevant": ["spaghetti-carbonara", "walnut-pesto-gnocchi", "wild-mushroom-risotto"], "expect_notice": false},
     {"id": "pref-tacos", "category": "preference", "question": "What tacos do you have?", "relevant": ["fish-tacos", "beef-birria-tacos"], "expect_notice": false},
     {"id": "pref-seafood", "category": "preference", "question": "I'd like some grilled seafood", "relevant": ["grilled-salmon", "garlic-chili-prawns"], "expect_notice": true},
@@ -31,7 +32,7 @@
     {"id": "off-lasagna", "category": "off_menu", "question": "Do you have lasagna?", "expect_notice": false, "expect_unavailable": true},
     {"id": "off-pt-feijoada", "category": "off_menu", "question": "Vocês têm feijoada?", "expect_notice": false, "expect_unavailable": true},
     {"id": "off-pt-sushi", "category": "off_menu", "question": "Tem sushi?", "expect_notice": false, "expect_unavailable": true},
-    {"id": "off-price", "category": "off_menu", "question": "How much does the spicy miso ramen cost?", "expect_notice": false, "expect_unavailable": true},
+    {"id": "off-calories", "category": "off_menu", "question": "How many calories does the spicy miso ramen have?", "expect_notice": false, "expect_unavailable": true},
     {"id": "off-vegan-halal", "category": "off_menu", "question": "A vegan halal dish, please", "expect_notice": true, "expect_unavailable": true}
   ]
 }

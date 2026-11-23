@@ -27,6 +27,7 @@ def test_load_valid_menu(tmp_path: Path) -> None:
                     "description": "Steamed rice.",
                     "ingredients": ["rice"],
                     "preparation": "Steamed.",
+                    "price": {"amount": "3.00", "currency": "USD"},
                 }
             ],
         }

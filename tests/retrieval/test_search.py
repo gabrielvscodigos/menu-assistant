@@ -257,3 +257,25 @@ def test_ingredient_terms_are_normalized_and_validated() -> None:
     assert request.exclude_ingredients == {"onion"}
     with pytest.raises(ValidationError):
         SearchRequest(query="x", exclude_ingredients=frozenset({"x"}))
+
+
+# --- excluded dishes -------------------------------------------------------------
+
+
+def test_excluded_dishes_are_skipped_and_k_is_still_filled(
+    sample_menu: Menu, retriever: MenuRetriever
+) -> None:
+    shown = frozenset({"chana-masala", "falafel-plate", "tofu-green-curry", "edamame"})
+    request = query_for(sample_menu, "chana-masala", exclude_dishes=shown, k=5)
+
+    results = retriever.search(request)
+
+    assert len(results) == 5
+    assert shown.isdisjoint(r.dish.id for r in results)
+
+
+def test_satisfies_checks_excluded_dishes(sample_menu: Menu) -> None:
+    dish = get_dish(sample_menu, "edamame")
+
+    assert not satisfies(dish, SearchRequest(query="x", exclude_dishes=frozenset({"edamame"})))
+    assert satisfies(dish, SearchRequest(query="x", exclude_dishes=frozenset({"elote"})))

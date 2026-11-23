@@ -1,5 +1,6 @@
 """Domain models for menu data shared across ingestion, retrieval, and answering."""
 
+from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Self
 
@@ -64,6 +65,38 @@ IMPLIED_FLAGS: dict[DietaryFlag, frozenset[DietaryFlag]] = {
 }
 
 
+class Price(BaseModel):
+    """A dish price. Amounts are decimals, never floats, so 14.50 stays exactly 14.50."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    amount: Decimal = Field(gt=0, max_digits=8, decimal_places=2)
+    currency: Annotated[str, StringConstraints(pattern=r"^[A-Z]{3}$")] = Field(
+        description="ISO 4217 code, e.g. USD or BRL"
+    )
+
+
+# A language code for dish translations ("pt"). The menu's own language is English.
+LanguageCode = Annotated[str, StringConstraints(pattern=r"^[a-z]{2}$")]
+
+
+class DishTranslation(BaseModel):
+    """The guest-facing text of a dish in another language, with the local price.
+
+    Only text and price are translated. Allergens, dietary flags, tags, and the canonical
+    (English) ingredient list stay on the dish itself and drive every safety filter, so a
+    translation can never weaken one.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    name: NonEmptyStr
+    description: NonEmptyStr
+    ingredients: list[NonEmptyStr] = Field(min_length=1)
+    preparation: NonEmptyStr
+    price: Price
+
+
 class Dish(BaseModel):
     """A single menu item with the facts the assistant is allowed to rely on."""
 
@@ -75,9 +108,31 @@ class Dish(BaseModel):
     description: NonEmptyStr
     ingredients: list[NonEmptyStr] = Field(min_length=1)
     preparation: NonEmptyStr
+    price: Price
     tags: list[Tag] = Field(default_factory=list)
     dietary_flags: frozenset[DietaryFlag] = frozenset()
     allergens: frozenset[Allergen] = frozenset()
+    translations: dict[LanguageCode, DishTranslation] = Field(default_factory=dict)
+
+    def localized(self, language: str) -> "Dish":
+        """This dish as a guest reading `language` sees it; unchanged if not translated.
+
+        The result keeps the canonical safety data (allergens, flags, tags) and drops the
+        translations, so it is a plain dish in that language.
+        """
+        translation = self.translations.get(language)
+        if translation is None:
+            return self
+        return self.model_copy(
+            update={
+                "name": translation.name,
+                "description": translation.description,
+                "ingredients": translation.ingredients,
+                "preparation": translation.preparation,
+                "price": translation.price,
+                "translations": {},
+            }
+        )
 
     @model_validator(mode="after")
     def check_flags_are_consistent(self) -> Self:
@@ -116,4 +171,17 @@ class Menu(BaseModel):
             seen.add(dish.id)
         if duplicates:
             raise ValueError(f"duplicate dish ids: {', '.join(sorted(duplicates))}")
+        return self
+
+    @model_validator(mode="after")
+    def check_one_currency(self) -> Self:
+        """Reject menus mixing currencies within a language, so prices can be added up."""
+        prices: dict[str, set[str]] = {"": {dish.price.currency for dish in self.dishes}}
+        for dish in self.dishes:
+            for language, translation in dish.translations.items():
+                prices.setdefault(language, set()).add(translation.price.currency)
+        for language, currencies in prices.items():
+            if len(currencies) > 1:
+                where = f" in '{language}' translations" if language else ""
+                raise ValueError(f"menu mixes currencies{where}: {', '.join(sorted(currencies))}")
         return self

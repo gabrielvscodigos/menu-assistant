@@ -1,5 +1,6 @@
 """Tests for the menu domain models and their consistency rules."""
 
+from decimal import Decimal
 from typing import Any
 
 import pytest
@@ -17,6 +18,7 @@ def make_dish_data(**overrides: Any) -> dict[str, Any]:
         "description": "A dish used in tests.",
         "ingredients": ["rice"],
         "preparation": "Boiled.",
+        "price": {"amount": "12.50", "currency": "USD"},
     }
     data.update(overrides)
     return data
@@ -103,3 +105,93 @@ def test_dish_is_immutable() -> None:
 
     with pytest.raises(ValidationError):
         dish.name = "Changed"  # type: ignore[misc]
+
+
+def test_price_keeps_exact_decimal_amounts() -> None:
+    dish = Dish.model_validate(make_dish_data(price={"amount": "14.50", "currency": "BRL"}))
+
+    assert dish.price.amount == Decimal("14.50")
+    assert dish.price.currency == "BRL"
+
+
+@pytest.mark.parametrize(
+    "price",
+    [
+        {"amount": "0", "currency": "USD"},
+        {"amount": "-3.00", "currency": "USD"},
+        {"amount": "9.999", "currency": "USD"},
+        {"amount": "9.00", "currency": "usd"},
+        {"amount": "9.00", "currency": "DOLLAR"},
+        {"amount": "9.00"},
+    ],
+)
+def test_invalid_prices_are_rejected(price: dict[str, str]) -> None:
+    with pytest.raises(ValidationError):
+        Dish.model_validate(make_dish_data(price=price))
+
+
+def test_menu_rejects_mixed_currencies() -> None:
+    dishes = [
+        make_dish_data(id="a", price={"amount": "5.00", "currency": "USD"}),
+        make_dish_data(id="b", price={"amount": "5.00", "currency": "EUR"}),
+    ]
+
+    with pytest.raises(ValidationError, match="mixes currencies: EUR, USD"):
+        Menu.model_validate({"restaurant": "R", "dishes": dishes})
+
+
+PT = {
+    "name": "Prato de Teste",
+    "description": "Um prato para testes.",
+    "ingredients": ["arroz"],
+    "preparation": "Cozido.",
+    "price": {"amount": "39.90", "currency": "BRL"},
+}
+
+
+def test_localized_dish_uses_the_translation_but_keeps_safety_data() -> None:
+    dish = Dish.model_validate(
+        make_dish_data(allergens=["milk"], dietary_flags=["vegetarian"], translations={"pt": PT})
+    )
+
+    localized = dish.localized("pt")
+
+    assert localized.name == "Prato de Teste"
+    assert localized.ingredients == ["arroz"]
+    assert localized.price.amount == Decimal("39.90")
+    assert localized.price.currency == "BRL"
+    assert localized.allergens == dish.allergens
+    assert localized.dietary_flags == dish.dietary_flags
+    assert localized.id == dish.id
+    assert localized.translations == {}
+
+
+def test_dish_without_that_translation_stays_as_is() -> None:
+    dish = Dish.model_validate(make_dish_data(translations={"pt": PT}))
+
+    assert dish.localized("es") is dish
+    assert dish.localized("en") is dish
+
+
+@pytest.mark.parametrize("code", ["pt-BR", "PT", "portuguese"])
+def test_translation_language_codes_are_two_lowercase_letters(code: str) -> None:
+    with pytest.raises(ValidationError):
+        Dish.model_validate(make_dish_data(translations={code: PT}))
+
+
+def test_menu_rejects_mixed_currencies_within_a_translation() -> None:
+    usd_pt = {**PT, "price": {"amount": "9.00", "currency": "USD"}}
+    dishes = [
+        make_dish_data(id="a", translations={"pt": PT}),
+        make_dish_data(id="b", translations={"pt": usd_pt}),
+    ]
+
+    with pytest.raises(ValidationError, match="in 'pt' translations: BRL, USD"):
+        Menu.model_validate({"restaurant": "R", "dishes": dishes})
+
+
+def test_sample_menu_is_translated_to_portuguese_in_reais(sample_menu: Menu) -> None:
+    for dish in sample_menu.dishes:
+        translation = dish.translations.get("pt")
+        assert translation is not None, f"{dish.id} has no Portuguese translation"
+        assert translation.price.currency == "BRL"

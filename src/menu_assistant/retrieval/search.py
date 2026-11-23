@@ -15,7 +15,7 @@ from chromadb.api.models.Collection import Collection
 from chromadb.api.types import Where
 from pydantic import BaseModel, ConfigDict, Field
 
-from menu_assistant.models import Allergen, Course, DietaryFlag, Dish, NonEmptyStr
+from menu_assistant.models import Allergen, Course, DietaryFlag, Dish, DishId, NonEmptyStr
 from menu_assistant.retrieval.embeddings import Embedder
 from menu_assistant.retrieval.ingredients import IngredientTerm, disliked_ingredients
 from menu_assistant.retrieval.metadata import COURSE_KEY, DISH_JSON_KEY, allergen_key, diet_key
@@ -37,6 +37,8 @@ class SearchRequest(BaseModel):
     exclude_allergens: frozenset[Allergen] = frozenset()
     require_flags: frozenset[DietaryFlag] = frozenset()
     exclude_ingredients: frozenset[IngredientTerm] = Field(default=frozenset(), max_length=10)
+    # Dishes not to return, e.g. ones already suggested when the guest asks for others.
+    exclude_dishes: frozenset[DishId] = Field(default=frozenset(), max_length=100)
     course: Course | None = None
     k: int = Field(default=5, ge=1, le=MAX_RESULTS)
 
@@ -74,8 +76,10 @@ def build_where(request: SearchRequest) -> Where | None:
 
 def satisfies(dish: Dish, request: SearchRequest) -> bool:
     """Check every restriction of the request against the dish data itself."""
-    return _passes_metadata_filter(dish, request) and not disliked_ingredients(
-        dish, request.exclude_ingredients
+    return (
+        _passes_metadata_filter(dish, request)
+        and dish.id not in request.exclude_dishes
+        and not disliked_ingredients(dish, request.exclude_ingredients)
     )
 
 
@@ -100,7 +104,7 @@ class MenuRetriever:
 
     def search(self, request: SearchRequest) -> list[RetrievedDish]:
         pool_size = max(request.k, RERANK_POOL_SIZE) if self._tag_boost else request.k
-        if request.exclude_ingredients:
+        if request.exclude_ingredients or request.exclude_dishes:
             # Any number of the closest dishes may be dropped below; menus are small.
             pool_size = max(pool_size, self._collection.count())
         candidates = self._query(request, pool_size)
@@ -130,7 +134,9 @@ class MenuRetriever:
                     "dropped dish '%s': index metadata disagrees with dish data", dish.id
                 )
                 continue
-            if disliked_ingredients(dish, request.exclude_ingredients):
+            if dish.id in request.exclude_dishes or disliked_ingredients(
+                dish, request.exclude_ingredients
+            ):
                 continue
             candidates.append(self._score(dish, 1.0 - distance, request.query))
         return candidates

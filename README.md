@@ -184,7 +184,9 @@ curl -X POST http://127.0.0.1:8000/ask \
 
 An optional `course` (`starter`, `main`, `side`, `dessert`) overrides the course detected
 in the question, and an optional `language` (`en`, `pt`, `es`) sets the language of the
-reply and the notice instead of detecting it. For a follow-up question, send the earlier turns in `history` (oldest
+reply and the notice instead of detecting it. `exclude_dishes` (dish ids) leaves dishes out
+of the search, which is how a client asks for "other options". Each dish in `sources` and
+`candidates` includes its description and ingredients, so a client can show dish cards. For a follow-up question, send the earlier turns in `history` (oldest
 first, up to 20); the server keeps no state, and restrictions from earlier questions keep
 applying:
 
@@ -260,8 +262,9 @@ count that must stay at zero.
 | + Portuguese tag aliases (44 cases)             |     0.989 |     0.966 |          0 |
 | **Current** (+ 5 ingredient-dislike cases, 49)  | **0.990** | **0.969** |          0 |
 
-Generated answers are checked separately on 28 questions (with Ollama running) using
-deterministic rules, not an LLM judge:
+Generated answers are checked separately on 29 questions (with Ollama running) using
+deterministic rules, not an LLM judge. The results below were measured on the earlier
+28-question set, before prices were added to the menu:
 
 | Check (llama3.2)                                       | Result |
 | ------------------------------------------------------ | -----: |
@@ -291,9 +294,17 @@ Menus are JSON files validated against the models in
 | `description`   | Short description of the dish                                      |
 | `ingredients`   | Non-empty list of ingredients                                      |
 | `preparation`   | How the dish is made                                               |
+| `price`         | `{"amount": "16.50", "currency": "USD"}`: exact decimal, one currency per menu |
 | `tags`          | Free-form lowercase tags (`spicy`, `japanese`, `noodles`, ...)     |
 | `dietary_flags` | `vegan`, `vegetarian`, `gluten_free`, `dairy_free`, `halal`        |
 | `allergens`     | The 14 EU major allergens (`gluten`, `peanuts`, `sesame`, ...)     |
+| `translations`  | Optional, per language (`pt`): name, description, ingredients, preparation, and a local price (e.g. BRL) |
+
+Translations change only what the guest reads. Allergens, dietary flags, tags, and the
+English ingredient list stay on the dish and drive every filter, so a translation can
+never weaken one. When the reply is in Portuguese (chosen, or detected from the question),
+the waiter and the cards use the Portuguese name, ingredients, and price in R$; the sample
+menu is fully translated. Spanish has no translation yet and falls back to English (USD).
 
 Validation rejects unknown fields, unknown allergens or flags, duplicate ids, and
 contradictions such as a `vegan` dish listing `eggs` or a `gluten_free` dish listing
