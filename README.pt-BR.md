@@ -4,159 +4,171 @@
 
 [![CI](https://github.com/gabrielvscodigos/menu-assistant/actions/workflows/ci.yml/badge.svg)](https://github.com/gabrielvscodigos/menu-assistant/actions/workflows/ci.yml)
 
-Um assistente de geração aumentada por recuperação (RAG) que ajuda as pessoas a escolher
-o que comer a partir do cardápio de um restaurante.
+Um garçom com IA que ajuda o cliente a escolher o que comer no cardápio de um
+restaurante. Pergunte *"Tenho alergia a amendoim, tem algum macarrão apimentado?"* e ele
+sugere pratos só desse cardápio, tira o que você precisa evitar, mostra cada prato com
+ingredientes, alérgenos e preço, e deixa você fazer o pedido. Ele fala português, inglês e
+espanhol, e roda inteiramente na sua própria máquina.
 
-Pergunte coisas como *"Gosto de lámen apimentado, o que mais eu curtiria aqui?"* e receba
-sugestões fundamentadas nos ingredientes, no preparo, nas restrições alimentares e nos
-alérgenos de cada prato.
+<p align="center">
+  <img src="docs/images/chat-pt.png" alt="O chat no celular: o garçom sugere três massas como cartões com ingredientes, alérgenos e preços em reais; dois estão selecionados e uma barra de pedido mostra o total" width="320">
+</p>
 
-> **Status:** funcionando de ponta a ponta: os cardápios são validados e indexados, a
-> busca é filtrada e avaliada, e respostas fundamentadas de um LLM local (Ollama) estão
-> disponíveis pela linha de comando e por uma API HTTP.
+## 1. O Problema
 
-> A documentação técnica em [`docs/`](docs/) está em inglês.
+Escolher no cardápio é mais difícil do que parece, e o custo cai sobre o cliente e sobre o
+restaurante:
 
-## Princípios de design
+- **Cardápios descrevem pratos, não pessoas.** Quem quer "algo parecido com um lámen
+  apimentado" ou "uma entrada leve e vegana" precisa ler o cardápio inteiro e adivinhar.
+  Nomes desconhecidos (*birria*, *dan dan*, *guioza*) pioram, e ler em outro idioma também.
+- **Alergias e dietas dependem de perguntar à equipe.** Quem tem alergia, intolerância ou
+  dieta precisa perguntar sobre cada prato. A equipe está ocupada, a informação passa de
+  boca em boca, e uma resposta errada pode fazer alguém passar mal.
+- **O tempo da equipe vai para perguntas repetidas.** "Isso tem castanha?", "O que é
+  vegano?", "O que você recomenda?" se repetem em toda mesa. Esse tempo não vai para o
+  atendimento, os pedidos demoram mais e as mesas giram mais devagar.
+- **Chatbots genéricos não são seguros aqui.** Uma IA de uso geral inventa sem problema um
+  prato que o restaurante não serve, chuta um alérgeno ou cita um preço que não existe. Com
+  comida, uma resposta errada e confiante é pior do que nenhuma resposta.
 
-- **Somente respostas fundamentadas.** O LLM responde exclusivamente com base nos dados
-  recuperados do cardápio e cita os pratos que usou. Se algo não está no cardápio, ele
-  diz isso.
-- **Filtros de segurança determinísticos.** A filtragem de alérgenos e de restrições
-  alimentares é feita com filtros de metadados no código, nunca delegada ao LLM.
-  Ingredientes que a pessoa não quer ("sem cebola", "no cilantro") também são filtrados no
-  código, pela lista de ingredientes de cada prato.
-- **Aviso para confirmar com a equipe.** Toda resposta que envolve alérgenos ou
-  restrições alimentares lembra o usuário de confirmar com a equipe do restaurante, no
-  idioma da pergunta (inglês, português ou espanhol).
-- **Acesso ao LLM independente de provedor.** A aplicação depende apenas da interface
-  `LLMClient`; o código específico de provedor (hoje, um cliente Ollama local) fica em
-  `llm/`.
+O resultado: atendimento mais lento, clientes inseguros que pedem menos ou sempre a mesma
+coisa, erros evitáveis com alergias e um cardápio que não ajuda o cliente a descobri-lo.
 
-## Stack
+## 2. A Solução Proposta
 
-| Aspecto          | Escolha                                   |
-| ---------------- | ----------------------------------------- |
-| Linguagem        | Python 3.12, gerenciado com [uv]          |
-| API              | FastAPI                                   |
-| Banco vetorial   | ChromaDB (local, persistente)             |
-| Embeddings       | sentence-transformers (multilíngue)       |
-| LLM              | Modelo local via Ollama (`llama3.2`)      |
-| Qualidade        | pytest, ruff, mypy (strict)               |
+Um garçom virtual que conhece **o cardápio deste restaurante e nada mais**, disponível no
+celular do cliente:
 
-Como as peças se encaixam está descrito em [docs/architecture.md](docs/architecture.md)
-(em inglês).
+- **Conversar em vez de procurar.** O cliente descreve o que está com vontade, com as
+  próprias palavras e no próprio idioma, e continua a conversa naturalmente ("e uma
+  sobremesa?", "outras opções").
+- **Só respostas fundamentadas.** Toda sugestão vem dos dados do cardápio e é citada; se
+  algo não está no cardápio, o garçom diz isso em vez de inventar.
+- **Segurança garantida no código, não deixada para a IA.** Alergias, dietas e
+  ingredientes indesejados ("sem amendoim", "sou vegano", "sin cebolla") são detectados e
+  filtrados com regras determinísticas antes de a IA ver qualquer prato, e continuam
+  valendo durante toda a conversa. Toda resposta sobre alérgenos lembra o cliente de
+  confirmar com a equipe.
+- **Cartões claros e pedido.** As sugestões aparecem como cartões com ingredientes, alertas
+  de alérgenos, tags de dieta e preço; o cliente seleciona os pratos e faz o pedido pelo
+  chat.
+- **Idioma e preços locais.** Português (com nomes dos pratos e preços em R$), inglês e
+  espanhol.
+- **Privado e barato de rodar.** O modelo de linguagem roda localmente pelo Ollama, na CPU:
+  nenhum dado do cliente sai da máquina e não há custo de API por pergunta.
 
-## Primeiros passos
+Para o restaurante isso significa menos perguntas repetidas, pedidos mais rápidos e
+seguros, menos erros com alergias e um cardápio que os clientes realmente exploram.
 
-Pré-requisito: [uv] instalado. O uv baixa o Python 3.12 automaticamente, se necessário.
+## 3. Como Funciona
 
-```bash
-git clone https://github.com/gabrielvscodigos/menu-assistant.git
-cd menu-assistant
-uv sync
+O cardápio do restaurante é um arquivo JSON validado. Ele é indexado uma vez; depois, toda
+pergunta passa por regras garantidas no código, por uma busca filtrada, pelo modelo de
+linguagem local e por verificações na saída do modelo antes de chegar ao cliente.
+
+```mermaid
+flowchart LR
+    guest(("Cliente<br/>(celular ou navegador)"))
+
+    subgraph app["menu-assistant"]
+        web["Front end do chat<br/>React + TypeScript<br/>(nginx)"]
+        api["API HTTP<br/>FastAPI"]
+        rules["Regras no código<br/>alérgenos, dietas, ingredientes,<br/>tipo de prato, idioma"]
+        search["Busca filtrada<br/>embeddings + filtros exatos"]
+        checks["Verificações da saída<br/>citações, aviso à equipe"]
+        index[("Índice vetorial<br/>ChromaDB")]
+    end
+
+    llm["LLM local<br/>Ollama"]
+    menu[/"Arquivo do cardápio<br/>pratos, alérgenos,<br/>preços, traduções"/]
+
+    guest --> web
+    web -- "pergunta + histórico + idioma" --> api
+    api --> rules --> search
+    search --> index
+    search -- "só pratos permitidos" --> llm
+    llm --> checks --> api
+    api -- "resposta + cartões + aviso" --> web
+    menu -- "validar + indexar (menu-ingest)" --> index
 ```
 
-Indexe o cardápio de exemplo no banco vetorial local:
+O que acontece quando o cliente faz uma pergunta:
 
-```bash
-uv run menu-ingest data/menu.json
+```mermaid
+sequenceDiagram
+    actor Cliente
+    participant UI as Front end do chat
+    participant API as API
+    participant Regras as Regras no código
+    participant Indice as Índice vetorial
+    participant LLM as LLM local
+
+    Cliente->>UI: "Tenho alergia a amendoim. Tem macarrão apimentado?"
+    UI->>API: POST /ask (pergunta, turnos anteriores, idioma)
+    API->>Regras: detecta restrições na pergunta e no histórico
+    Regras-->>API: excluir amendoim
+    API->>Indice: busca "macarrão apimentado", sem amendoim
+    Indice-->>API: pratos permitidos mais próximos
+    API->>LLM: pratos em português + regras ("use só estes, cite-os")
+    LLM-->>API: rascunho da resposta
+    API->>API: remove citações de pratos que não recebeu, adiciona o aviso
+    API-->>UI: resposta, cartões (ingredientes, alérgenos, preço em R$), aviso
+    UI-->>Cliente: resposta do garçom com cartões para selecionar e pedir
 ```
 
-A primeira execução baixa o modelo de embeddings (~1,1 GB) para o cache do Hugging Face.
-Executar de novo é idempotente: os pratos são atualizados pelo id e os pratos que saíram
-do cardápio são removidos do índice. Se o modelo de embeddings mudar, a ingestão
-reconstrói o índice; a busca se recusa a usar um índice criado com outro modelo.
+**Passos para usar em um restaurante**
 
-## Rodar com Docker
+1. **Descreva o cardápio** em `data/menu.json`: cada prato com ingredientes, alérgenos (os
+   14 principais alérgenos da UE), restrições alimentares, preço e traduções opcionais. A
+   validação rejeita contradições, como um prato "vegano" que lista ovos.
+2. **Suba tudo** com `docker compose up --build`: a API, o front end do chat, o Ollama e o
+   download do modelo. O cardápio é indexado na inicialização.
+3. **Compartilhe o chat**, por exemplo com um QR code na mesa apontando para o front end.
 
-A stack inteira (API, Ollama, download do modelo e ingestão do cardápio) sobe com um
-único comando. Só é preciso ter o [Docker](https://docs.docker.com/get-docker/):
+**Ferramentas e integrações:** Python 3.12, FastAPI, ChromaDB, um modelo multilíngue do
+sentence-transformers, Ollama (`llama3.2` por padrão), React + TypeScript, Docker Compose.
+O modelo de linguagem fica atrás de uma interface pequena, `LLMClient`, então um provedor
+hospedado pode ser adicionado sem mexer no resto; por enquanto os pedidos ficam no chat e
+são o ponto natural para conectar o sistema de pedidos do restaurante.
+
+**Por que é confiável:** os filtros rodam no código e são conferidos de novo contra os
+dados do prato; a busca é medida em 49 perguntas rotuladas (recall@5 0,990, zero violações
+de filtro); as respostas são verificadas com regras determinísticas; o código tem mais de
+360 testes no backend e um front end tipado e testado. Detalhes (em inglês):
+[docs/architecture.md](docs/architecture.md), [docs/evaluation.md](docs/evaluation.md) e
+as decisões de design em [docs/decisions.md](docs/decisions.md).
+
+## Início rápido com Docker
+
+Só é preciso o [Docker](https://docs.docker.com/get-docker/):
 
 ```bash
 docker compose up --build
 ```
 
-Depois abra <http://localhost:8000/docs>. A primeira inicialização baixa o `llama3.2`
-(~2 GB) e o modelo de embeddings (~1,1 GB) para volumes nomeados, então leva alguns
-minutos; as próximas reaproveitam os downloads. Espere a linha
-`Uvicorn running on http://0.0.0.0:8000` no log antes de acessar a API. Para usar outro
-modelo do Ollama: `MENU_ASSISTANT_LLM_MODEL=qwen2.5:7b docker compose up`. Tudo roda na
-CPU; `docker compose down -v` remove os volumes.
+Depois abra o chat em <http://localhost:8080> (a documentação da API fica em
+<http://localhost:8000/docs>). A primeira inicialização baixa o `llama3.2` (~2 GB) e o
+modelo de embeddings (~1,1 GB) para volumes nomeados, então leva alguns minutos; as
+próximas reaproveitam tudo. Para usar outro modelo do Ollama:
+`MENU_ASSISTANT_LLM_MODEL=qwen2.5:7b docker compose up`. Tudo roda na CPU;
+`docker compose down -v` remove os volumes.
 
-## Pedir sugestões
+## Rodar localmente
 
-Com o cardápio indexado e o Ollama rodando:
+Pré-requisitos: [uv] (ele instala o Python 3.12 se precisar), [Ollama](https://ollama.com)
+e, para o front end, Node.js 22.13+ com pnpm 10.
 
 ```bash
-uv run menu-ask "Quero uma sobremesa vegana"   # prato: sobremesa
-uv run menu-ask "Tenho alergia a amendoim. Tem algum macarrão apimentado?"
-uv run menu-ask "algo leve" --exclude soy --diet vegan
-uv run menu-ask "tacos sem coentro"            # evita coentro (cilantro e coriander)
-uv run menu-ask "um curry encorpado" --without onion --without garlic
-uv run menu-ask "I like spicy ramen, what else here would I enjoy?"
+git clone https://github.com/gabrielvscodigos/menu-assistant.git
+cd menu-assistant
+uv sync
+ollama pull llama3.2
+uv run menu-ingest data/menu.json      # valida e indexa o cardápio
+uv run uvicorn menu_assistant.api.main:app --reload
 ```
 
-Exemplo de saída:
-
-```text
-Eu recomendo o Mango Sticky Rice [mango-sticky-rice]: uma sobremesa tailandesa clássica
-de arroz glutinoso com coco e manga, totalmente vegana.
-
-Sources:
-  - Mango Sticky Rice [mango-sticky-rice]
-Restrictions applied: must be vegan
-Course: dessert
-
-Note: As informações sobre alérgenos e restrições alimentares vêm do cardápio e podem estar incompletas. Confirme com a equipe do restaurante antes de pedir.
-```
-
-O modelo responde no idioma da pergunta, e o aviso de segurança e a resposta de "nenhum
-prato atende" também. Os rótulos da saída (`Sources`, `Note`) continuam em inglês.
-
-Como uma resposta é produzida:
-
-1. **As restrições são decididas no código.** As opções `--exclude` / `--diet` /
-   `--without` são combinadas com restrições detectadas na pergunta ("sou alérgico a
-   amendoim", "sou vegano", "sem glúten", "sem cebola"), usando padrões determinísticos em inglês, português e
-   espanhol. Um tipo de prato pedido ("uma sobremesa vegana", "um prato principal") é
-   detectado da mesma forma, ou definido com `--course`.
-2. **A busca aplica as restrições como filtros exatos**, então pratos excluídos nunca
-   chegam ao LLM. Se nada passar, uma resposta fixa de "nenhum prato encontrado" é
-   devolvida sem chamar o LLM.
-3. **O LLM escreve a resposta** usando apenas os pratos recuperados, citando-os como
-   `[id-do-prato]`.
-4. **A saída é verificada no código.** Citações de pratos que não foram recuperados são
-   removidas, nomes de pratos citados são convertidos em ids, e itens de lista que não
-   correspondem a um prato recuperado (sugestões inventadas como "Sorvete de coco") são
-   descartados. Sempre que há alérgenos ou dietas envolvidos, o aviso para confirmar com
-   a equipe é adicionado pelo código, não pelo LLM.
-
-Limitação conhecida do modelo padrão de 3B: às vezes ele acrescenta sugestões que o
-cardápio não sustenta (por exemplo, "peça pimenta extra") ou inventa preços, que o
-cardápio não tem. A filtragem de segurança e de tipo de prato não é afetada, porque nunca
-depende do LLM. Modelos maiores (`qwen2.5:7b`) seguem melhor as regras.
-
-### Perguntas de continuação
-
-`--chat` mantém a conversa; uma linha vazia ou `sair` encerra. Restrições ditas uma vez
-continuam valendo nas perguntas seguintes:
-
-```text
-$ uv run menu-ask --chat "Tenho alergia a amendoim, tem algum macarrão apimentado?"
-...
-Restrictions applied: excludes peanuts
-
-> e uma sobremesa?
-...
-Restrictions applied: excludes peanuts
-Course: dessert
-```
-
-## Front end do chat
-
-Um chat no navegador em que um garçom mascote responde, em inglês, português ou espanhol
-(escolhido nos botões EN / PT / ES). Com a API rodando:
+Em um segundo terminal, o front end do chat:
 
 ```bash
 cd frontend
@@ -164,32 +176,85 @@ pnpm install
 pnpm dev        # http://localhost:5173
 ```
 
-É um app React + TypeScript; veja [frontend/README.md](frontend/README.md).
+A primeira indexação baixa o modelo de embeddings (~1,1 GB). Rodar de novo é idempotente:
+os pratos são atualizados pelo id e pratos que saíram do cardápio são removidos. Se o
+modelo de embeddings ou o formato dos dados mudar, a indexação reconstrói o índice, e a API
+recusa um índice desatualizado com uma mensagem clara.
+
+## O chat
+
+- Pergunte em português, inglês ou espanhol; os botões EN / PT / ES definem o idioma da
+  interface, das respostas, dos nomes dos pratos e dos preços (R$ em português).
+- Os pratos sugeridos aparecem como cartões abaixo da resposta: ingredientes, alertas de
+  alérgenos, tags de dieta e preço. "Outras opções" pede pratos diferentes.
+- Selecione pratos de várias respostas e toque em "Pedir agora": o pedido (com o total)
+  entra no chat com um lembrete sobre alergias. Por enquanto os pedidos ficam no navegador.
+- Restrições ditas uma vez continuam valendo durante toda a conversa.
+
+Detalhes (em inglês) em [frontend/README.md](frontend/README.md).
+
+## Linha de comando
+
+Com o cardápio indexado e o Ollama rodando:
+
+```bash
+uv run menu-ask "Quero uma sobremesa vegana"   # tipo de prato: sobremesa, preços em R$
+uv run menu-ask "Tenho alergia a amendoim. Tem algum macarrão apimentado?"
+uv run menu-ask "algo leve" --exclude soy --diet vegan
+uv run menu-ask "um curry encorpado" --without onion --without garlic
+uv run menu-ask "I like spicy ramen, what else here would I enjoy?"
+uv run menu-ask --chat                          # perguntas de continuação; linha vazia sai
+```
+
+Como uma resposta é produzida:
+
+1. **As restrições são decididas no código.** As opções `--exclude` / `--diet` /
+   `--without` são combinadas com restrições detectadas na pergunta e nos turnos
+   anteriores ("sou alérgico a amendoim", "sou vegano", "sem glúten", "sem cebola"), usando
+   padrões determinísticos em português, inglês e espanhol. Um tipo de prato pedido ("uma
+   sobremesa vegana") é detectado da mesma forma, ou definido com `--course`.
+2. **A busca aplica as restrições como filtros exatos**, então pratos excluídos nunca
+   chegam ao LLM. Se nada passar, uma resposta fixa de "nenhum prato encontrado" é
+   devolvida sem chamar o LLM.
+3. **O LLM escreve a resposta** só com os pratos recuperados (no idioma do cliente, com
+   nomes traduzidos e preços locais), citando-os como `[id-do-prato]`.
+4. **A saída é verificada no código.** Citações de pratos que não foram recuperados são
+   removidas, nomes de pratos viram ids, e itens de lista que não nomeiam um prato
+   recuperado são descartados. Sempre que há alérgenos ou dietas envolvidos, o aviso para
+   confirmar com a equipe é adicionado pelo código, no idioma do cliente.
+
+Limitação conhecida do modelo padrão de 3B: o texto pode ser impreciso (por exemplo,
+descrever um ingrediente de forma errada). Os pratos que ele pode sugerir são sempre
+seguros, porque a filtragem nunca depende do LLM; modelos maiores (`qwen2.5:7b`) seguem
+melhor as regras.
 
 ## API HTTP
 
-```bash
-uv run uvicorn menu_assistant.api.main:app --reload
-```
-
 A documentação interativa (Swagger UI) fica em <http://127.0.0.1:8000/docs>.
 
-| Método | Caminho   | Descrição                                                              |
-| ------ | --------- | ---------------------------------------------------------------------- |
-| GET    | `/health` | `ok`, ou `degraded` com uma mensagem de como corrigir se o índice não estiver pronto ou o LLM estiver indisponível |
-| POST   | `/ask`    | Sugestões fundamentadas para uma pergunta                              |
+| Método | Caminho   | Descrição                                                                        |
+| ------ | --------- | -------------------------------------------------------------------------------- |
+| GET    | `/health` | `ok`, ou `degraded` com uma mensagem de como corrigir se o índice ou o LLM não estiver pronto |
+| POST   | `/ask`    | Sugestões fundamentadas para uma pergunta                                        |
+
+No PowerShell, use `curl.exe` e escape as aspas do JSON (`'{\"question\": \"...\"}'`), ou
+use a página `/docs`.
 
 ```bash
 curl -X POST http://127.0.0.1:8000/ask \
   -H "Content-Type: application/json" \
-  -d '{"question": "Tem macarrão apimentado?", "exclude_allergens": ["peanuts"]}'
+  -d '{"question": "Tem macarrão apimentado?", "exclude_allergens": ["peanuts"], "language": "pt"}'
 ```
 
 ```json
 {
-  "answer": "... Spicy Miso Ramen [spicy-miso-ramen] ...",
-  "sources": [{"id": "spicy-miso-ramen", "name": "Spicy Miso Ramen", "course": "main",
-               "allergens": ["eggs", "gluten", "sesame", "soy"], "dietary_flags": [], "score": 0.91}],
+  "answer": "... Lámen de Missô Apimentado [spicy-miso-ramen] ...",
+  "sources": [{"id": "spicy-miso-ramen", "name": "Lámen de Missô Apimentado", "course": "main",
+               "description": "Caldo encorpado de porco com missô branco ...",
+               "ingredients": ["macarrão de trigo", "caldo de osso de porco", "..."],
+               "price": {"amount": "54.90", "currency": "BRL"},
+               "allergens": ["eggs", "gluten", "sesame", "soy"], "dietary_flags": [],
+               "score": 0.91}],
   "candidates": ["... todos os pratos que o LLM recebeu ..."],
   "applied_restrictions": {"exclude_allergens": ["peanuts"], "require_flags": [],
                            "exclude_ingredients": [], "course": null},
@@ -198,34 +263,26 @@ curl -X POST http://127.0.0.1:8000/ask \
 }
 ```
 
-No PowerShell, use `curl.exe` e escape as aspas do JSON (`'{\"question\": \"...\"}'`), ou
-use a página `/docs`.
+Campos opcionais da requisição:
 
-Um `course` opcional (`starter`, `main`, `side`, `dessert`) substitui o tipo de prato
-detectado na pergunta, e um `language` opcional (`en`, `pt`, `es`) define o idioma da
-resposta e do aviso em vez de detectá-lo. `exclude_dishes` (ids de pratos) deixa pratos
-de fora da busca, que é como um cliente pede "outras opções". Cada prato em `sources` e
-`candidates` traz descrição e ingredientes, para o cliente poder mostrar cartões. Para uma pergunta de continuação, envie os turnos anteriores em
-`history` (do mais antigo ao mais novo, até 20); o servidor não guarda estado, e as
-restrições das perguntas anteriores continuam valendo:
+| Campo                 | Significado                                                              |
+| --------------------- | ------------------------------------------------------------------------ |
+| `exclude_allergens`   | Alérgenos a evitar (`peanuts`, `gluten`, ...)                             |
+| `require_flags`       | Dietas exigidas (`vegan`, `gluten_free`, ...)                             |
+| `exclude_ingredients` | Ingredientes a evitar (`onion`; palavras comuns em português/espanhol são mapeadas) |
+| `course`              | `starter`, `main`, `side` ou `dessert`; detectado na pergunta se omitido  |
+| `language`            | `en`, `pt` ou `es`: idioma da resposta, do aviso, dos nomes e dos preços  |
+| `exclude_dishes`      | Ids de pratos a não sugerir, por exemplo para pedir "outras opções"       |
+| `history`             | Turnos anteriores, do mais antigo ao mais novo (até 20); as restrições deles continuam valendo |
 
-```json
-{
-  "question": "e uma sobremesa?",
-  "history": [
-    {"role": "user", "content": "Tenho alergia a amendoim, tem algum macarrão apimentado?"},
-    {"role": "assistant", "content": "... Spicy Miso Ramen [spicy-miso-ramen] ..."}
-  ]
-}
-```
-
- Alérgenos, restrições ou tipos de prato desconhecidos são
-rejeitados com `422`. Se o Ollama estiver inacessível, `/ask` retorna `503` com o motivo.
+O servidor não guarda estado: envie os turnos anteriores em `history` para uma pergunta de
+continuação. Valores inválidos são rejeitados com `422`; se o Ollama estiver inacessível,
+`/ask` retorna `503` com o motivo.
 
 ## Configuração
 
 As configurações vêm de variáveis de ambiente ou de um arquivo `.env`. Copie
-[`.env.example`](.env.example) para `.env` para mudar os valores padrão:
+[`.env.example`](.env.example) para `.env` para mudar os padrões:
 
 | Variável                                   | Padrão                           |
 | ------------------------------------------ | -------------------------------- |
@@ -242,122 +299,106 @@ As configurações vêm de variáveis de ambiente ou de um arquivo `.env`. Copie
 | `MENU_ASSISTANT_OLLAMA_BASE_URL`           | `http://localhost:11434`         |
 
 Os padrões da busca foram escolhidos por avaliação; veja
-[docs/evaluation.md](docs/evaluation.md).
-
-### LLM local (Ollama)
-
-As respostas são geradas por um modelo local via [Ollama](https://ollama.com). Instale-o
-e baixe o modelo padrão:
-
-```bash
-ollama pull llama3.2
-```
-
-Qualquer outro modelo do Ollama funciona definindo `MENU_ASSISTANT_LLM_MODEL` (modelos
-maiores, como `qwen2.5:7b`, seguem as instruções de fundamentação com mais confiabilidade).
-
-## Desenvolvimento
-
-| Tarefa              | Comando                                               |
-| ------------------- | ----------------------------------------------------- |
-| Rodar os testes     | `uv run pytest`                                       |
-| Cobertura de testes | `uv run pytest --cov` (o CI falha abaixo de 90%)      |
-| Lint                | `uv run ruff check .`                                 |
-| Formatação          | `uv run ruff format .`                                |
-| Checagem de tipos   | `uv run mypy src tests`                               |
-| Avaliar a busca     | `uv run menu-eval`                                    |
-| Avaliar respostas   | `uv run menu-eval-answers`                            |
-| Rodar a API         | `uv run uvicorn menu_assistant.api.main:app --reload` |
+[docs/evaluation.md](docs/evaluation.md). Qualquer modelo do Ollama funciona via
+`MENU_ASSISTANT_LLM_MODEL`.
 
 ## Avaliação
 
-A busca é medida em 49 consultas rotuladas à mão (preferências de sabor, filtros de
-alérgenos, dietas e ingredientes, perguntas em português do Brasil e espanhol) com recall@5, MRR e uma
-contagem de violações de filtro que precisa continuar em zero.
+A busca é medida em 49 consultas rotuladas à mão (preferências de sabor; filtros de
+alérgenos, dietas e ingredientes; perguntas em português do Brasil e espanhol) com
+recall@5, MRR e uma contagem de violações de filtro que precisa continuar em zero.
 
 | Configuração                                       | recall@5  | MRR       | violações |
 | -------------------------------------------------- | --------: | --------: | --------: |
-| Base (MiniLM-L12, busca vetorial pura)             |     0.750 |     0.783 |         0 |
-| multilingual-e5-base + bônus por tag (34 casos)    |     0.956 |     0.934 |         0 |
-| + aliases de tags em português (44 casos)          |     0.989 |     0.966 |         0 |
-| **Atual** (+ 5 casos de ingredientes evitados, 49) | **0.990** | **0.969** |         0 |
+| Base (MiniLM-L12, busca vetorial pura)             |     0,750 |     0,783 |         0 |
+| multilingual-e5-base + bônus por tag (34 casos)    |     0,956 |     0,934 |         0 |
+| + aliases de tags em português (44 casos)          |     0,989 |     0,966 |         0 |
+| **Atual** (+ 5 casos de ingredientes evitados, 49) | **0,990** | **0,969** |         0 |
 
-Os aliases em português (`apimentado` → `spicy`, `macarrão` → `noodles`) elevaram o
-recall@5 das consultas multilíngues de 0.765 para 1.000.
-
-As respostas geradas são verificadas à parte em 29 perguntas (com o Ollama rodando)
-usando regras determinísticas, não um LLM como juiz. Os resultados abaixo foram medidos no
+As respostas geradas são verificadas à parte em 29 perguntas (com o Ollama rodando) usando
+regras determinísticas, não um LLM como juiz. Os resultados abaixo foram medidos no
 conjunto anterior de 28 perguntas, antes de os preços entrarem no cardápio:
 
-| Verificação (llama3.2)                                 | Resultado |
-| ------------------------------------------------------ | --------: |
-| Casos que passam em todas as verificações              |       93% |
-| Respostas que citam um prato excluído pela busca       |         0 |
-| Aviso para a equipe presente exatamente quando esperado |     100% |
-| Pedidos fora do cardápio reconhecidos ("não temos")    |       83% |
+| Verificação (llama3.2)                                  | Resultado |
+| ------------------------------------------------------- | --------: |
+| Casos que passam em todas as verificações               |       93% |
+| Respostas que citam um prato excluído pela busca        |         0 |
+| Aviso para a equipe presente exatamente quando esperado |      100% |
+| Pedidos fora do cardápio reconhecidos ("não está no cardápio") | 83% |
 | Respostas brutas citando um id que o modelo não recebeu |   0–9%\* |
 | Respostas com um prato listado que o modelo não recebeu |   0–9%\* |
 
-\* entre execuções; removidos no código antes de o usuário vê-los. O modelo às vezes
-também inventa preços, que o cardápio não tem.
+\* entre execuções; removidos no código antes de o cliente ver.
 
-Método, a grade completa de experimentos, os erros restantes e as ressalvas estão em
+O método, a grade completa de experimentos, os erros restantes e as ressalvas estão em
 [docs/evaluation.md](docs/evaluation.md) (em inglês).
 
 ## Dados do cardápio
 
-Os cardápios são arquivos JSON validados pelos modelos em
+Os cardápios são arquivos JSON validados contra os modelos em
 [`src/menu_assistant/models.py`](src/menu_assistant/models.py). Cada prato tem:
 
 | Campo           | Descrição                                                          |
 | --------------- | ------------------------------------------------------------------ |
-| `id`            | Identificador estável (`spicy-miso-ramen`), usado no índice e nas citações |
+| `id`            | Identificador estável (`spicy-miso-ramen`), usado na indexação e nas citações |
 | `name`          | Nome exibido                                                       |
 | `course`        | `starter`, `main`, `side` ou `dessert`                             |
 | `description`   | Descrição curta do prato                                           |
 | `ingredients`   | Lista não vazia de ingredientes                                    |
 | `preparation`   | Como o prato é preparado                                           |
 | `price`         | `{"amount": "16.50", "currency": "USD"}`: decimal exato, uma moeda por cardápio |
-| `translations`  | Opcional, por idioma (`pt`): nome, descrição, ingredientes, preparo e preço local (ex.: BRL) |
 | `tags`          | Tags livres em minúsculas e em inglês (`spicy`, `japanese`, `noodles`, ...) |
 | `dietary_flags` | `vegan`, `vegetarian`, `gluten_free`, `dairy_free`, `halal`        |
 | `allergens`     | Os 14 principais alérgenos da UE (`gluten`, `peanuts`, `sesame`, ...) |
+| `translations`  | Opcional, por idioma (`pt`): nome, descrição, ingredientes, preparo e preço local (ex.: BRL) |
 
 As traduções mudam só o que o cliente lê. Alérgenos, restrições, tags e a lista de
 ingredientes em inglês ficam no prato e controlam todos os filtros, então uma tradução
-nunca enfraquece um filtro. Quando a resposta é em português (escolhido ou detectado na
-pergunta), o garçom e os cartões usam o nome, os ingredientes e o preço em R$ em
-português; o cardápio de exemplo está todo traduzido. O espanhol ainda não tem tradução e
-usa a versão em inglês (USD).
+nunca enfraquece um filtro. O espanhol ainda não tem tradução e usa a versão em inglês
+(USD).
 
 A validação rejeita campos desconhecidos, alérgenos ou restrições desconhecidos, ids
-duplicados e contradições, como um prato `vegan` que lista `eggs` ou um prato
-`gluten_free` que lista `gluten`.
+duplicados, moedas misturadas e contradições, como um prato `vegan` que lista `eggs` ou um
+prato `gluten_free` que lista `gluten`. [`data/menu.json`](data/menu.json) é um cardápio de
+exemplo **fictício** com 25 pratos de várias cozinhas, todo traduzido para o português.
 
-[`data/menu.json`](data/menu.json) é um cardápio de exemplo **fictício**, em inglês, com
-25 pratos de várias cozinhas, usado no desenvolvimento, nos testes e na avaliação.
+## Desenvolvimento
+
+| Tarefa                      | Comando                                                   |
+| --------------------------- | --------------------------------------------------------- |
+| Rodar os testes do backend  | `uv run pytest` (`--cov`: o CI falha abaixo de 90%)       |
+| Lint / formatação           | `uv run ruff check .` / `uv run ruff format .`            |
+| Checagem de tipos           | `uv run mypy src tests`                                   |
+| Avaliar a busca             | `uv run menu-eval`                                        |
+| Avaliar respostas           | `uv run menu-eval-answers` (precisa do Ollama)            |
+| Exportar o schema da API    | `uv run python -m menu_assistant.api.openapi`             |
+| Verificações do front end   | `pnpm lint`, `pnpm typecheck`, `pnpm test` (em `frontend/`) |
+
+O CI roda as verificações do Python e do front end, incluindo uma checagem de que os tipos
+TypeScript do front end batem com o schema da API.
 
 ## Estrutura do projeto
 
 ```
 src/menu_assistant/
-  models.py   modelos de domínio do cardápio (Dish, Menu, alérgenos, restrições)
-  config.py   configurações via variáveis de ambiente / .env
-  console.py  saída UTF-8 para as linhas de comando
-  api/        app FastAPI e rotas
-  ingest/     carga, validação e indexação do cardápio
-  retrieval/  embeddings, banco vetorial, filtros, ranking com bônus por tag
+  models.py   modelos do cardápio (Dish, Menu, preços, traduções, alérgenos)
+  config.py   configurações de variáveis de ambiente / .env
+  console.py  saída UTF-8 para as ferramentas de linha de comando
+  api/        app FastAPI, rotas e exportação do schema OpenAPI
+  ingest/     carregamento, validação e indexação do cardápio
+  retrieval/  embeddings, índice vetorial, filtros, ingredientes, ranqueamento
   llm/        interface LLMClient e implementações de provedores
-  rag/        detecção de restrições e de tipo de prato, prompt, respostas fundamentadas
-  eval/       conjuntos de avaliação e métricas (busca e respostas)
-data/         dados de cardápio de exemplo (fictícios)
+  rag/        detecção de restrições, tipo de prato e idioma; prompts; respostas
+  eval/       conjuntos de avaliação, métricas e relatórios
+data/         cardápio de exemplo (fictício) e conjuntos de avaliação
 tests/        espelha a estrutura de src/
-docs/         notas de arquitetura e decisões (em inglês)
-frontend/     front end do chat com o mascote (React + TypeScript, veja frontend/README.md)
+docs/         arquitetura, avaliação, decisões, registro de melhorias, imagens (em inglês)
+frontend/     front end do chat com o garçom mascote (React + TypeScript)
 ```
 
-As decisões de design e seus trade-offs estão registrados em
-[docs/decisions.md](docs/decisions.md) (em inglês).
+Para saber mais (em inglês): [docs/architecture.md](docs/architecture.md) (como as peças se
+encaixam), [docs/decisions.md](docs/decisions.md) (decisões de design e trade-offs) e
+[docs/improvements.md](docs/improvements.md) (o registro de melhorias).
 
 ## Licença
 
