@@ -171,6 +171,19 @@ actually enforced, and the notice, so every reply can be audited.
   thread pool instead of on the event loop.
 - Tests pass a factory that returns a service with a fake embedder and a scripted LLM.
 
+## Chat front end and deployment
+
+`frontend/` is a React + TypeScript single-page app (see its README). It calls `POST /ask`
+through `/api`, keeps the conversation in the browser, and sends the earlier turns,
+the restrictions the last answer applied, the chosen language, and the dishes already
+suggested (for "other options") with each question. Its TypeScript types are generated
+from the API's OpenAPI schema, and both sides check that they match.
+
+`docker compose up` runs four services: `ollama`, `ollama-pull` (downloads the model, then
+exits), `api` (indexes the menu on start, then serves FastAPI on port 8000), and `web`
+(nginx with the built front end on port 8080, forwarding `/api/*` to `api`). The browser
+only ever talks to `web`, so no CORS configuration is needed.
+
 ## Evaluation (`eval/`)
 
 - **Retrieval** (`menu-eval`): hand-labeled queries

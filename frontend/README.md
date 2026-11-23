@@ -4,8 +4,6 @@ A chat interface for menu-assistant, where a mascot talks with the guest. It cal
 FastAPI backend (`POST /ask`) and keeps the conversation in the browser, since the API is
 stateless.
 
-> Work in progress: serving the front end from Docker Compose comes next.
-
 ## Features
 
 - Chat with the waiter in English, Portuguese, or Spanish. The EN / PT / ES buttons set
@@ -102,12 +100,17 @@ pnpm install
 pnpm dev        # then open http://localhost:5173
 ```
 
+With Docker, `docker compose up --build` from the repository root builds this app and
+serves it at <http://localhost:8080> (see [Dockerfile](Dockerfile) and
+[nginx.conf](nginx.conf)).
+
 ## Talking to the API
 
 Start the API first (`uv run uvicorn menu_assistant.api.main:app --reload` from the
 repository root). In development, Vite proxies `/api/*` to `http://127.0.0.1:8000`, so
 the browser sees a single origin and the API needs no CORS settings. Set `API_URL` to
-point the proxy elsewhere.
+point the proxy elsewhere. In Docker, nginx plays the same role: it serves the built files
+and forwards `/api/*` to the `api` service.
 
 ## API types
 

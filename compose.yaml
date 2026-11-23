@@ -1,6 +1,7 @@
 # Full stack with one command: docker compose up --build
-# Then open http://localhost:8000/docs. The first start downloads the LLM (~2 GB) and the
-# embedding model (~1.1 GB) into named volumes; later starts reuse them.
+# Then open http://localhost:8080 for the chat (or http://localhost:8000/docs for the API).
+# The first start downloads the LLM (~2 GB) and the embedding model (~1.1 GB) into named
+# volumes; later starts reuse them.
 
 services:
   ollama:
@@ -36,6 +37,16 @@ services:
     depends_on:
       ollama-pull:
         condition: service_completed_successfully
+
+  # The chat front end: static files behind nginx, which forwards /api to the api service.
+  web:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      # Started, not healthy: the page loads right away and explains while the API warms up.
+      api:
+        condition: service_started
 
 volumes:
   ollama:
