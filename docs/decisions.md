@@ -400,3 +400,21 @@ proxy gives the browser one origin, so the API needs no CORS settings.
 current jsdom major (30+) needs Node 22.22 or newer, so jsdom is pinned to 29 to support
 the Node 22.13 used locally; moving to a newer Node lifts that pin. A static single-page
 app has no server-side rendering, which a chat behind an interactive UI does not need.
+
+## 025 — The OpenAPI schema is the contract between API and front end
+
+**Decision:** `python -m menu_assistant.api.openapi` writes the API's OpenAPI schema to
+`frontend/openapi.json`, which is committed. The front end generates its TypeScript types
+from it with openapi-typescript (`pnpm gen:api`). A Python test fails when the committed
+schema differs from the API, and CI fails when the generated types differ from the schema.
+
+**Why:** the front end and back end live in one repository but in two languages. With
+hand-written TypeScript types, a renamed or added field would only show up as a runtime
+bug in the browser. Generating the types makes the compiler catch it, and the two checks
+make it impossible to change one side and forget the other. Committing the schema keeps
+type generation independent of a running server.
+
+**Trade-off:** changing the API means running two commands. openapi-typescript still
+needs the TypeScript 5 compiler API, which TypeScript 7 (used by the app) no longer
+provides, so it runs through `pnpm dlx` with pinned versions instead of being a project
+dependency; that downloads it on first use.

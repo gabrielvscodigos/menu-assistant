@@ -12,7 +12,8 @@
     "lint": "biome check .",
     "format": "biome check --write .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "gen:api": "pnpm dlx --package=openapi-typescript@7.13.0 --package=typescript@5.9.3 openapi-typescript openapi.json -o src/api/schema.d.ts"
   },
   "dependencies": {
     "react": "^19.3.1",

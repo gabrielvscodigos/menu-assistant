@@ -1,0 +1,461 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "menu-assistant",
+    "summary": "Grounded dish suggestions from a restaurant menu.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health",
+        "description": "Liveness plus readiness: `degraded` means `/ask` would fail, and `detail` says why.\n\nChecks the index (once, at startup) and the LLM (on every call, with a short\ntimeout), so starting Ollama or pulling the model is picked up without a restart.",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ask": {
+      "post": {
+        "summary": "Ask",
+        "description": "Suggest dishes for a question, grounded in the menu and its restrictions.\n\nDeclared as a plain `def` so FastAPI runs it in a worker thread: embedding and\nLLM calls are blocking and must not stall the event loop.",
+        "operationId": "ask_ask_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AskRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AskResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Index not ready or LLM unavailable"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Allergen": {
+        "type": "string",
+        "enum": [
+          "celery",
+          "crustaceans",
+          "eggs",
+          "fish",
+          "gluten",
+          "lupin",
+          "milk",
+          "molluscs",
+          "mustard",
+          "peanuts",
+          "sesame",
+          "soy",
+          "sulphites",
+          "tree_nuts"
+        ],
+        "title": "Allergen",
+        "description": "The 14 major allergens defined by EU Regulation 1169/2011."
+      },
+      "AppliedRestrictions": {
+        "properties": {
+          "exclude_allergens": {
+            "items": {
+              "$ref": "#/components/schemas/Allergen"
+            },
+            "type": "array",
+            "title": "Exclude Allergens"
+          },
+          "require_flags": {
+            "items": {
+              "$ref": "#/components/schemas/DietaryFlag"
+            },
+            "type": "array",
+            "title": "Require Flags"
+          },
+          "exclude_ingredients": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Exclude Ingredients"
+          },
+          "course": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Course"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "exclude_allergens",
+          "require_flags",
+          "exclude_ingredients"
+        ],
+        "title": "AppliedRestrictions",
+        "description": "Explicit and detected restrictions combined, as enforced by retrieval."
+      },
+      "AskRequest": {
+        "properties": {
+          "question": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Question"
+          },
+          "exclude_allergens": {
+            "items": {
+              "$ref": "#/components/schemas/Allergen"
+            },
+            "type": "array",
+            "title": "Exclude Allergens"
+          },
+          "require_flags": {
+            "items": {
+              "$ref": "#/components/schemas/DietaryFlag"
+            },
+            "type": "array",
+            "title": "Require Flags"
+          },
+          "exclude_ingredients": {
+            "items": {
+              "type": "string",
+              "maxLength": 40,
+              "minLength": 2
+            },
+            "type": "array",
+            "maxItems": 10,
+            "title": "Exclude Ingredients",
+            "description": "ingredients to avoid, e.g. onion, cilantro (common pt/es words are mapped)"
+          },
+          "course": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Course"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "only suggest this course; detected from the question if omitted"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Language"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "reply language chosen by the guest (en, pt, es); detected if omitted"
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/ChatTurn"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "History",
+            "description": "earlier turns, oldest first, for follow-up questions; restrictions stated in earlier questions keep applying"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "question"
+        ],
+        "title": "AskRequest",
+        "description": "A guest question plus restrictions selected explicitly (e.g. in a UI).",
+        "examples": [
+          {
+            "exclude_allergens": [
+              "peanuts"
+            ],
+            "exclude_ingredients": [
+              "cilantro"
+            ],
+            "question": "I like spicy ramen, what else here would I enjoy?",
+            "require_flags": []
+          }
+        ]
+      },
+      "AskResponse": {
+        "properties": {
+          "answer": {
+            "type": "string",
+            "title": "Answer"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/DishSource"
+            },
+            "type": "array",
+            "title": "Sources",
+            "description": "dishes the answer cites"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/DishSource"
+            },
+            "type": "array",
+            "title": "Candidates",
+            "description": "all dishes the LLM was given"
+          },
+          "applied_restrictions": {
+            "$ref": "#/components/schemas/AppliedRestrictions"
+          },
+          "language": {
+            "$ref": "#/components/schemas/Language",
+            "description": "language of the notice and reply: the chosen one, else detected (en, pt, es)"
+          },
+          "notice": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notice",
+            "description": "staff-confirmation notice, if required, in the question's language"
+          }
+        },
+        "type": "object",
+        "required": [
+          "answer",
+          "sources",
+          "candidates",
+          "applied_restrictions",
+          "language",
+          "notice"
+        ],
+        "title": "AskResponse",
+        "description": "A grounded answer: cited sources, every candidate considered, and the notice."
+      },
+      "ChatTurn": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "assistant"
+            ],
+            "title": "Role"
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Content"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "title": "ChatTurn",
+        "description": "One earlier turn: a question the guest asked, or the answer they got."
+      },
+      "Course": {
+        "type": "string",
+        "enum": [
+          "starter",
+          "main",
+          "side",
+          "dessert"
+        ],
+        "title": "Course",
+        "description": "Where a dish sits in a meal."
+      },
+      "DietaryFlag": {
+        "type": "string",
+        "enum": [
+          "vegan",
+          "vegetarian",
+          "gluten_free",
+          "dairy_free",
+          "halal"
+        ],
+        "title": "DietaryFlag",
+        "description": "Dietary suitability declared by the restaurant for a dish."
+      },
+      "DishSource": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "course": {
+            "$ref": "#/components/schemas/Course"
+          },
+          "allergens": {
+            "items": {
+              "$ref": "#/components/schemas/Allergen"
+            },
+            "type": "array",
+            "title": "Allergens"
+          },
+          "dietary_flags": {
+            "items": {
+              "$ref": "#/components/schemas/DietaryFlag"
+            },
+            "type": "array",
+            "title": "Dietary Flags"
+          },
+          "score": {
+            "type": "number",
+            "title": "Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "course",
+          "allergens",
+          "dietary_flags",
+          "score"
+        ],
+        "title": "DishSource",
+        "description": "A dish the answer is based on, with the facts needed to display it."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "degraded"
+            ],
+            "title": "Status"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "HealthResponse"
+      },
+      "Language": {
+        "type": "string",
+        "enum": [
+          "en",
+          "pt",
+          "es"
+        ],
+        "title": "Language"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
