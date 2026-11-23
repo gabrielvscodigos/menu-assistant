@@ -1,5 +1,5 @@
 import type { AskResponse, Language } from '../api/client'
-import { type Inline, parseAnswer } from '../chat/answerText'
+import { type Inline, parseAnswer, withoutCardItems } from '../chat/answerText'
 import { LABELS } from '../i18n/labels'
 import { MESSAGES } from '../i18n/messages'
 
@@ -8,11 +8,15 @@ interface AssistantAnswerProps {
   language: Language
 }
 
-/** One reply: the text with dish chips, what was avoided, and the staff notice. */
+/** One reply: the text (with dish chips), what was avoided, and the staff notice. */
 export function AssistantAnswer({ response, language }: AssistantAnswerProps) {
   const text = MESSAGES[language]
   const labels = LABELS[language]
-  const blocks = parseAnswer(response.answer, response.candidates)
+  // Dishes shown as cards below are left out of the text's lists (no double listing).
+  const blocks = withoutCardItems(
+    parseAnswer(response.answer, response.candidates),
+    new Set(response.sources.map((dish) => dish.id)),
+  )
   const restrictions = response.applied_restrictions
   const avoiding = [
     ...restrictions.exclude_allergens.map((allergen) => labels.allergens[allergen]),
@@ -72,7 +76,7 @@ export function AssistantAnswer({ response, language }: AssistantAnswerProps) {
       {response.notice && (
         <p
           role="note"
-          className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100"
+          className="rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-sm text-orange-900 dark:border-orange-800 dark:bg-orange-950 dark:text-orange-100"
         >
           <strong>{text.notice}:</strong> {response.notice}
         </p>
@@ -95,12 +99,12 @@ function InlinePart({ part }: { part: Inline }) {
     case 'dish':
       // A dish named in the text gets a small marker; a bare citation shows the name.
       return part.named ? (
-        <span title={part.name} className="text-amber-600" aria-hidden="true">
+        <span title={part.name} className="text-red-700" aria-hidden="true">
           {' '}
           ●
         </span>
       ) : (
-        <span className="rounded-md bg-amber-100 px-1.5 py-0.5 font-medium text-amber-900 dark:bg-amber-900 dark:text-amber-100">
+        <span className="rounded-md bg-red-100 px-1.5 py-0.5 font-medium text-red-900 dark:bg-red-900 dark:text-red-100">
           {part.name}
         </span>
       )

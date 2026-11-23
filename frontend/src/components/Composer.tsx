@@ -36,12 +36,12 @@ export function Composer({ placeholder, sendLabel, disabled, onSend }: ComposerP
         aria-label={placeholder}
         rows={1}
         maxLength={500}
-        className="max-h-40 min-h-11 flex-1 resize-none rounded-2xl border border-stone-300 bg-white px-4 py-2.5 text-stone-900 shadow-sm outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100 dark:focus:ring-amber-800"
+        className="max-h-40 min-h-11 flex-1 resize-none rounded-2xl border border-stone-300 bg-white px-4 py-2.5 text-stone-900 shadow-sm outline-none focus:border-red-600 focus:ring-2 focus:ring-red-200 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100 dark:focus:ring-red-800"
       />
       <button
         type="submit"
         disabled={!canSend}
-        className="h-11 rounded-2xl bg-amber-500 px-5 font-semibold text-white shadow-sm transition-colors hover:bg-amber-600 disabled:cursor-not-allowed disabled:bg-stone-300 dark:disabled:bg-stone-700"
+        className="h-11 rounded-2xl bg-red-600 px-5 font-semibold text-white shadow-sm transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-stone-300 dark:disabled:bg-stone-700"
       >
         {sendLabel}
       </button>

@@ -22,6 +22,20 @@ export interface Messages {
   serverError: string
   degraded: string
   languageLabel: string
+  mascotLabel: string
+  contains: string
+  noAllergens: string
+  otherOptions: string
+  otherOptionsHint: string
+  otherOptionsQuestion: string
+  selectDish: string
+  selectedCount: (count: number) => string
+  total: string
+  orderNow: string
+  clearSelection: string
+  yourOrder: string
+  orderConfirmed: string
+  orderNotice: string
 }
 
 export const MESSAGES: Record<Language, Messages> = {
@@ -43,6 +57,20 @@ export const MESSAGES: Record<Language, Messages> = {
     serverError: 'Something went wrong in the kitchen:',
     degraded: 'The assistant is not fully ready:',
     languageLabel: 'Language',
+    mascotLabel: 'The waiter',
+    contains: 'Contains',
+    noAllergens: 'No allergens listed',
+    otherOptions: 'Other options',
+    otherOptionsHint: 'Show me different dishes',
+    otherOptionsQuestion: 'Can you suggest other options?',
+    selectDish: 'Select',
+    selectedCount: (count) => (count === 1 ? '1 dish selected' : `${count} dishes selected`),
+    total: 'Total',
+    orderNow: 'Order now',
+    clearSelection: 'Clear selection',
+    yourOrder: 'My order',
+    orderConfirmed: "Great choice! I've sent your order to the kitchen.",
+    orderNotice: 'If you have any allergy, please tell the staff before the kitchen starts.',
   },
   pt: {
     languageName: 'Português',
@@ -62,6 +90,21 @@ export const MESSAGES: Record<Language, Messages> = {
     serverError: 'Algo deu errado na cozinha:',
     degraded: 'O assistente não está totalmente pronto:',
     languageLabel: 'Idioma',
+    mascotLabel: 'O garçom',
+    contains: 'Contém',
+    noAllergens: 'Nenhum alérgeno listado',
+    otherOptions: 'Outras opções',
+    otherOptionsHint: 'Me mostre pratos diferentes',
+    otherOptionsQuestion: 'Pode sugerir outras opções?',
+    selectDish: 'Selecionar',
+    selectedCount: (count) =>
+      count === 1 ? '1 prato selecionado' : `${count} pratos selecionados`,
+    total: 'Total',
+    orderNow: 'Pedir agora',
+    clearSelection: 'Limpar seleção',
+    yourOrder: 'Meu pedido',
+    orderConfirmed: 'Ótima escolha! Já enviei seu pedido para a cozinha.',
+    orderNotice: 'Se você tem alguma alergia, avise a equipe antes de a cozinha começar.',
   },
   es: {
     languageName: 'Español',
@@ -81,5 +124,20 @@ export const MESSAGES: Record<Language, Messages> = {
     serverError: 'Algo salió mal en la cocina:',
     degraded: 'El asistente no está del todo listo:',
     languageLabel: 'Idioma',
+    mascotLabel: 'El camarero',
+    contains: 'Contiene',
+    noAllergens: 'Sin alérgenos indicados',
+    otherOptions: 'Otras opciones',
+    otherOptionsHint: 'Muéstrame platos diferentes',
+    otherOptionsQuestion: '¿Puedes sugerir otras opciones?',
+    selectDish: 'Seleccionar',
+    selectedCount: (count) =>
+      count === 1 ? '1 plato seleccionado' : `${count} platos seleccionados`,
+    total: 'Total',
+    orderNow: 'Pedir ahora',
+    clearSelection: 'Quitar selección',
+    yourOrder: 'Mi pedido',
+    orderConfirmed: '¡Buena elección! Ya envié tu pedido a la cocina.',
+    orderNotice: 'Si tienes alguna alergia, avisa al personal antes de que la cocina empiece.',
   },
 }

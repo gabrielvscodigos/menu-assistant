@@ -13,7 +13,7 @@ export type Block =
   | { type: 'paragraph'; lines: Inline[][] }
   | { type: 'list'; ordered: boolean; items: Inline[][] }
 
-const LIST_ITEM = /^\s*(?:[-*•]|(\d+)[.)])\s+(.*)$/
+const LIST_ITEM = /^\s*(?:[-*•●◦]|(\d+)[.)])\s+(.*)$/
 const INLINE = /\*\*(.+?)\*\*|\[([a-z0-9]+(?:-[a-z0-9]+)*)\]/g
 
 export function parseAnswer(text: string, dishes: readonly DishSource[]): Block[] {
@@ -42,6 +42,22 @@ export function parseAnswer(text: string, dishes: readonly DishSource[]): Block[
     }
   }
   return blocks.filter((block) => block.type === 'list' || block.lines.length > 0)
+}
+
+/**
+ * Drops list items that cite a dish already shown as a card, so the reply does not repeat
+ * them; lists left empty disappear. Prose (intro, closing words) is kept.
+ */
+export function withoutCardItems(blocks: readonly Block[], cardIds: ReadonlySet<string>): Block[] {
+  const citesCard = (item: Inline[]) =>
+    item.some((part) => part.type === 'dish' && cardIds.has(part.id))
+  return blocks.flatMap((block): Block[] => {
+    if (block.type !== 'list') {
+      return [block]
+    }
+    const items = block.items.filter((item) => !citesCard(item))
+    return items.length > 0 ? [{ ...block, items }] : []
+  })
 }
 
 export function parseInline(line: string, names: ReadonlyMap<string, string>): Inline[] {

@@ -104,6 +104,11 @@ export interface components {
             /** @description reply language chosen by the guest (en, pt, es); detected if omitted */
             language?: components["schemas"]["Language"] | null;
             /**
+             * Exclude Dishes
+             * @description dish ids not to suggest, e.g. ones already shown when asking for others
+             */
+            exclude_dishes?: string[];
+            /**
              * History
              * @description earlier turns, oldest first, for follow-up questions; restrictions stated in earlier questions keep applying
              */
@@ -161,6 +166,16 @@ export interface components {
          */
         DietaryFlag: "vegan" | "vegetarian" | "gluten_free" | "dairy_free" | "halal";
         /**
+         * DishPrice
+         * @description A price as an exact decimal string ("14.50") and an ISO 4217 currency code.
+         */
+        DishPrice: {
+            /** Amount */
+            amount: string;
+            /** Currency */
+            currency: string;
+        };
+        /**
          * DishSource
          * @description A dish the answer is based on, with the facts needed to display it.
          */
@@ -170,6 +185,11 @@ export interface components {
             /** Name */
             name: string;
             course: components["schemas"]["Course"];
+            /** Description */
+            description: string;
+            /** Ingredients */
+            ingredients: string[];
+            price: components["schemas"]["DishPrice"];
             /** Allergens */
             allergens: components["schemas"]["Allergen"][];
             /** Dietary Flags */

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { AskResponse } from '../api/client'
-import { type ChatEntry, carriedRestrictions, toHistory } from './useChat'
+import { type ChatEntry, carriedRestrictions, suggestedDishes, toHistory } from './useChat'
 
 function reply(
   text: string,
@@ -69,5 +69,32 @@ describe('carriedRestrictions', () => {
 
   it('is empty before the first answer', () => {
     expect(carriedRestrictions([{ id: 1, role: 'user', text: 'hi' }])).toEqual({})
+  })
+})
+
+describe('suggestedDishes', () => {
+  it('lists every cited dish once, oldest first', () => {
+    const withSources = (ids: string[]) => ({
+      ...reply('a'),
+      sources: ids.map((id) => ({
+        id,
+        name: id,
+        course: 'main' as const,
+        description: '',
+        ingredients: [],
+        price: { amount: '1.00', currency: 'USD' },
+        allergens: [],
+        dietary_flags: [],
+        score: 1,
+      })),
+    })
+    const entries: ChatEntry[] = [
+      { id: 1, role: 'user', text: 'q1' },
+      { id: 2, role: 'assistant', response: withSources(['ramen', 'gyoza']) },
+      { id: 3, role: 'user', text: 'q2' },
+      { id: 4, role: 'assistant', response: withSources(['gyoza', 'elote']) },
+    ]
+
+    expect(suggestedDishes(entries)).toEqual(['ramen', 'gyoza', 'elote'])
   })
 })

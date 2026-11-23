@@ -22,6 +22,9 @@ function answer(overrides: Partial<AskResponse> = {}): AskResponse {
         id: 'spicy-miso-ramen',
         name: 'Spicy Miso Ramen',
         course: 'main',
+        description: 'Rich pork broth with chili oil.',
+        ingredients: ['wheat noodles', 'pork bone broth', 'chili oil', 'soft-boiled egg'],
+        price: { amount: '16.50', currency: 'USD' },
         allergens: ['eggs'],
         dietary_flags: [],
         score: 0.9,
@@ -30,6 +33,9 @@ function answer(overrides: Partial<AskResponse> = {}): AskResponse {
         id: 'edamame',
         name: 'Salted Edamame',
         course: 'starter',
+        description: 'Steamed young soybeans with sea salt.',
+        ingredients: ['edamame (young soybeans)', 'sea salt'],
+        price: { amount: '5.50', currency: 'USD' },
         allergens: ['soy'],
         dietary_flags: ['vegan'],
         score: 0.8,
@@ -140,11 +146,112 @@ describe('App', () => {
     expect(askMock.mock.calls[1][0]).toMatchObject({ question: 'spicy noodles', history: [] })
   })
 
+  it('shows suggested dishes as compact cards below the reply', async () => {
+    const reply = answer()
+    askMock.mockResolvedValue({ ...reply, sources: reply.candidates })
+    render(<App />)
+
+    await ask_('something spicy')
+
+    const ramen = await screen.findByRole('button', { name: 'Select: Spicy Miso Ramen, $16.50' })
+    expect(ramen).toHaveTextContent('wheat noodles, pork bone broth, chili oil, soft-boiled egg')
+    expect(ramen).toHaveTextContent('⚠ eggs')
+    expect(ramen).toHaveAttribute('aria-pressed', 'false')
+    const edamame = screen.getByRole('button', { name: /Salted Edamame/ })
+    expect(edamame).toHaveTextContent('vegan')
+    expect(edamame).toHaveTextContent('$5.50')
+    // The cards come after the reply text, outside its bubble.
+    const replyText = screen.getByText(/Try the Spicy Miso Ramen/)
+    expect(replyText.compareDocumentPosition(ramen) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(replyText.closest('li')).not.toContainElement(ramen)
+    expect(screen.getByRole('button', { name: /Other options/ })).toBeInTheDocument()
+  })
+
+  it('orders the selected dishes with a total and a staff notice', async () => {
+    const reply = answer()
+    askMock.mockResolvedValue({ ...reply, sources: reply.candidates })
+    render(<App />)
+    const user = await ask_('something spicy')
+    const ramen = await screen.findByRole('button', { name: /Spicy Miso Ramen/ })
+    expect(screen.queryByRole('button', { name: 'Order now' })).not.toBeInTheDocument()
+
+    await user.click(ramen)
+    await user.click(screen.getByRole('button', { name: /Salted Edamame/ }))
+
+    expect(ramen).toHaveAttribute('aria-pressed', 'true')
+    const bar = screen.getByRole('region', { name: 'My order' })
+    expect(bar).toHaveTextContent('2 dishes selected')
+    expect(bar).toHaveTextContent('Total: $22.00')
+
+    await user.click(screen.getByRole('button', { name: 'Order now' }))
+
+    expect(
+      screen.getByText("Great choice! I've sent your order to the kitchen."),
+    ).toBeInTheDocument()
+    expect(screen.getAllByRole('note').at(-1)).toHaveTextContent(/tell the staff/)
+    expect(screen.queryByRole('region', { name: 'My order' })).not.toBeInTheDocument()
+    expect(ramen).toHaveAttribute('aria-pressed', 'false')
+    expect(askMock).toHaveBeenCalledTimes(1) // ordering does not ask the LLM
+  })
+
+  it('clears the selection without ordering', async () => {
+    const reply = answer()
+    askMock.mockResolvedValue({ ...reply, sources: reply.candidates })
+    render(<App />)
+    const user = await ask_('something spicy')
+    await user.click(await screen.findByRole('button', { name: /Salted Edamame/ }))
+
+    await user.click(screen.getByRole('button', { name: 'Clear selection' }))
+
+    expect(screen.queryByRole('button', { name: 'Order now' })).not.toBeInTheDocument()
+  })
+
+  it('asks for other dishes, excluding every dish already suggested', async () => {
+    const first = answer({ language: 'pt' })
+    askMock
+      .mockResolvedValueOnce({ ...first, sources: [first.candidates[0]] })
+      .mockResolvedValueOnce({ ...first, answer: 'Second.', sources: [first.candidates[1]] })
+      .mockResolvedValueOnce({ ...first, answer: 'Third.', sources: [] })
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'pt' }))
+    await ask_('algo apimentado')
+    await screen.findByRole('button', { name: /Spicy Miso Ramen/ })
+
+    await user.click(screen.getByRole('button', { name: /Outras opções/ }))
+    await screen.findByText('Second.')
+    await user.click(screen.getByRole('button', { name: /Outras opções/ }))
+    await screen.findByText('Third.')
+
+    expect(screen.getAllByText('Pode sugerir outras opções?')).toHaveLength(2)
+    expect(askMock.mock.calls[1][0]).toMatchObject({
+      question: 'Pode sugerir outras opções?',
+      language: 'pt',
+      exclude_dishes: ['spicy-miso-ramen'],
+    })
+    expect(askMock.mock.calls[2][0]).toMatchObject({
+      exclude_dishes: ['spicy-miso-ramen', 'edamame'],
+    })
+    // Only the newest answer offers more options, and it suggested no dish.
+    expect(screen.queryByRole('button', { name: /Outras opções/ })).not.toBeInTheDocument()
+  })
+
   it('warns when the API reports it is not ready', async () => {
     healthMock.mockResolvedValue({ status: 'degraded', detail: 'LLM unavailable: run ollama' })
     render(<App />)
 
     expect(await screen.findByRole('alert')).toHaveTextContent('LLM unavailable: run ollama')
+  })
+
+  it('shows the full waiter only before the first question', async () => {
+    askMock.mockResolvedValue(answer({ answer: 'Done.' }))
+    render(<App />)
+    expect(screen.getByTestId('welcome-waiter')).toBeInTheDocument()
+
+    await ask_('hi')
+
+    expect(screen.queryByTestId('welcome-waiter')).not.toBeInTheDocument()
+    await screen.findByText('Done.')
   })
 
   it('starts a new conversation', async () => {

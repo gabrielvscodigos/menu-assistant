@@ -18,7 +18,7 @@ export function LanguageSwitcher({ language, onChange }: LanguageSwitcherProps) 
           aria-pressed={option === language}
           title={MESSAGES[option].languageName}
           onClick={() => onChange(option)}
-          className="rounded-full px-2.5 py-1 uppercase text-stone-600 transition-colors hover:text-stone-900 aria-pressed:bg-amber-500 aria-pressed:text-white dark:text-stone-300"
+          className="rounded-full px-2.5 py-1 uppercase text-stone-600 transition-colors hover:text-stone-900 aria-pressed:bg-red-600 aria-pressed:text-white dark:text-stone-300"
         >
           {option}
         </button>

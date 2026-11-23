@@ -5,13 +5,17 @@ import {
   type AskResponse,
   ask,
   type ChatTurn,
+  type DishSource,
   isAbortError,
   type Language,
 } from '../api/client'
 
 export type ChatEntry =
-  | { id: number; role: 'user'; text: string }
+  // `otherOptions`: the guest asked for dishes other than the ones already suggested.
+  | { id: number; role: 'user'; text: string; otherOptions?: boolean }
   | { id: number; role: 'assistant'; response: AskResponse }
+  // An order placed from the dish cards; shown in the chat, never sent to the LLM.
+  | { id: number; role: 'order'; dishes: DishSource[]; language: Language }
 
 export type ChatStatus =
   | { state: 'idle' }
@@ -21,8 +25,9 @@ export type ChatStatus =
 export interface Chat {
   entries: ChatEntry[]
   status: ChatStatus
-  send: (question: string) => void
+  send: (question: string, options?: { otherOptions?: boolean }) => void
   retry: () => void
+  placeOrder: (dishes: readonly DishSource[]) => void
   reset: () => void
 }
 
@@ -37,14 +42,21 @@ export function useChat(language: Language): Chat {
   const inFlight = useRef<AbortController | null>(null)
 
   const request = useCallback(
-    async (question: string, earlier: readonly ChatEntry[]) => {
+    async (question: string, earlier: readonly ChatEntry[], otherOptions = false) => {
       inFlight.current?.abort()
       const controller = new AbortController()
       inFlight.current = controller
       setStatus({ state: 'thinking' })
       try {
+        const excluded = otherOptions ? suggestedDishes(earlier) : []
         const response = await ask(
-          { question, language, history: toHistory(earlier), ...carriedRestrictions(earlier) },
+          {
+            question,
+            language,
+            history: toHistory(earlier),
+            ...carriedRestrictions(earlier),
+            ...(excluded.length > 0 && { exclude_dishes: excluded }),
+          },
           controller.signal,
         )
         setEntries((current) => [...current, { id: nextId.current++, role: 'assistant', response }])
@@ -60,13 +72,17 @@ export function useChat(language: Language): Chat {
   )
 
   const send = useCallback(
-    (question: string) => {
+    (question: string, options: { otherOptions?: boolean } = {}) => {
       const text = question.trim()
       if (!text || status.state === 'thinking') {
         return
       }
-      setEntries((current) => [...current, { id: nextId.current++, role: 'user', text }])
-      void request(text, entries)
+      const { otherOptions = false } = options
+      setEntries((current) => [
+        ...current,
+        { id: nextId.current++, role: 'user', text, otherOptions },
+      ])
+      void request(text, entries, otherOptions)
     },
     [entries, request, status.state],
   )
@@ -74,9 +90,21 @@ export function useChat(language: Language): Chat {
   const retry = useCallback(() => {
     const last = entries.at(-1)
     if (status.state === 'error' && last?.role === 'user') {
-      void request(last.text, entries.slice(0, -1))
+      void request(last.text, entries.slice(0, -1), last.otherOptions)
     }
   }, [entries, request, status.state])
+
+  const placeOrder = useCallback(
+    (dishes: readonly DishSource[]) => {
+      if (dishes.length > 0) {
+        setEntries((current) => [
+          ...current,
+          { id: nextId.current++, role: 'order', dishes: [...dishes], language },
+        ])
+      }
+    },
+    [language],
+  )
 
   const reset = useCallback(() => {
     inFlight.current?.abort()
@@ -86,7 +114,15 @@ export function useChat(language: Language): Chat {
 
   useEffect(() => () => inFlight.current?.abort(), [])
 
-  return { entries, status, send, retry, reset }
+  return { entries, status, send, retry, placeOrder, reset }
+}
+
+/** Every dish the waiter has suggested (cited) so far, oldest first, without repeats. */
+export function suggestedDishes(entries: readonly ChatEntry[]): string[] {
+  const ids = entries.flatMap((entry) =>
+    entry.role === 'assistant' ? entry.response.sources.map((dish) => dish.id) : [],
+  )
+  return [...new Set(ids)]
 }
 
 /** Earlier turns for the API: only questions that got an answer, oldest first. */
