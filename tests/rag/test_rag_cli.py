@@ -1,19 +1,22 @@
 """Tests for the `ask` command-line entry point."""
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from pathlib import Path
 
 import pytest
+from chromadb.api.models.Collection import Collection
 
 import menu_assistant.rag.__main__ as cli
 from menu_assistant.ingest import load_menu
+from menu_assistant.ingest.indexer import index_menu
 from menu_assistant.llm import ChatMessage, LLMError
-from menu_assistant.models import Allergen, Course, DietaryFlag, Dish
+from menu_assistant.models import Allergen, Course, DietaryFlag, Dish, Menu
 from menu_assistant.rag.__main__ import format_answer, main
-from menu_assistant.rag.answer import SAFETY_NOTICES, Answer
+from menu_assistant.rag.answer import SAFETY_NOTICES, Answer, AnswerService
 from menu_assistant.rag.language import Language
 from menu_assistant.rag.restrictions import Restrictions
-from menu_assistant.retrieval.search import RetrievedDish
+from menu_assistant.retrieval.embeddings import Embedder
+from menu_assistant.retrieval.search import MenuRetriever, RetrievedDish
 
 
 class ReadyLLM:
@@ -101,3 +104,81 @@ def test_format_answer_shows_sources_restrictions_and_notice(sample_menu_dish: D
 @pytest.fixture
 def sample_menu_dish(sample_menu_path: Path) -> Dish:
     return next(d for d in load_menu(sample_menu_path).dishes if d.id == "edamame")
+
+
+# --- chat mode -------------------------------------------------------------------
+
+
+class RecordingLLM(ReadyLLM):
+    def __init__(self) -> None:
+        super().__init__()
+        self.conversations: list[list[ChatMessage]] = []
+
+    def generate(self, system: str, messages: Sequence[ChatMessage]) -> str:
+        self.conversations.append(list(messages))
+        return "Try Edamame [edamame]."
+
+
+@pytest.fixture
+def chat_service(
+    sample_menu: Menu, collection: Collection, fake_embedder: Embedder
+) -> tuple[AnswerService, RecordingLLM]:
+    index_menu(sample_menu, collection, fake_embedder)
+    llm = RecordingLLM()
+    return AnswerService(MenuRetriever(collection, fake_embedder), llm), llm
+
+
+def scripted_input(*lines: str) -> Callable[[str], str]:
+    remaining = list(lines)
+
+    def read(prompt: str) -> str:
+        if not remaining:
+            raise EOFError
+        return remaining.pop(0)
+
+    return read
+
+
+def test_chat_carries_history_and_restrictions_between_questions(
+    chat_service: tuple[AnswerService, RecordingLLM], capsys: pytest.CaptureFixture[str]
+) -> None:
+    service, llm = chat_service
+
+    cli.chat(
+        service,
+        Restrictions(),
+        None,
+        "I'm allergic to peanuts",
+        read=scripted_input("and a starter?", ""),
+    )
+
+    assert len(llm.conversations) == 2
+    second = llm.conversations[1]
+    assert [turn.role for turn in second] == ["user", "assistant", "user"]
+    assert second[0].content == "I'm allergic to peanuts"
+    assert "excludes peanuts" in second[-1].content
+    assert capsys.readouterr().out.count("Restrictions applied: excludes peanuts") == 2
+
+
+@pytest.mark.parametrize("ending", ["", "exit", "SAIR"])
+def test_chat_ends_on_empty_line_or_exit_word(
+    chat_service: tuple[AnswerService, RecordingLLM], ending: str
+) -> None:
+    service, llm = chat_service
+
+    cli.chat(service, Restrictions(), None, read=scripted_input("hi", ending, "never asked"))
+
+    assert len(llm.conversations) == 1
+
+
+def test_chat_ends_at_end_of_input(chat_service: tuple[AnswerService, RecordingLLM]) -> None:
+    service, llm = chat_service
+
+    cli.chat(service, Restrictions(), None, read=scripted_input())
+
+    assert llm.conversations == []
+
+
+def test_question_is_required_without_chat() -> None:
+    with pytest.raises(SystemExit):
+        main([])

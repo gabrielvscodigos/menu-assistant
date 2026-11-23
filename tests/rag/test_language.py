@@ -52,3 +52,8 @@ def test_unclear_questions_fall_back_to_english(question: str) -> None:
 def test_accents_and_case_do_not_matter() -> None:
     assert detect_language("VOCÊS TÊM ALGO SEM LACTOSE?") == Language.PT
     assert detect_language("voces tem algo sem lactose?") == Language.PT
+
+
+def test_default_is_used_only_when_there_is_no_clue() -> None:
+    assert detect_language("tacos?", default=Language.PT) == Language.PT
+    assert detect_language("I want tacos", default=Language.PT) == Language.EN

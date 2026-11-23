@@ -54,8 +54,8 @@ _WORD = re.compile(r"[a-z']+")
 _TIE_ORDER = (Language.EN, Language.PT, Language.ES)
 
 
-def detect_language(question: str) -> Language:
-    """Return the most likely language of `question`; English when unclear."""
+def detect_language(question: str, default: Language = Language.EN) -> Language:
+    """Return the most likely language of `question`; `default` when there is no clue."""
     scores = dict.fromkeys(_TIE_ORDER, 0)
     for language, letters in _LETTERS.items():
         if letters.search(question.lower()):
@@ -64,4 +64,6 @@ def detect_language(question: str) -> Language:
         for language, words in _WORDS.items():
             if word in words:
                 scores[language] += 1
+    if not any(scores.values()):
+        return default
     return max(_TIE_ORDER, key=lambda language: scores[language])

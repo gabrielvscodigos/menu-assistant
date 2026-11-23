@@ -354,3 +354,28 @@ dish with rice vinegar. Ingredients hidden inside a component the menu does not 
 for the staff notice. Explicit terms go through the same word list ("cebola" → `onion`);
 other words are matched as given, so they must be in English like the menu. Fetching the whole menu is fine for restaurant menus
 (dozens to a few hundred dishes), not for large catalogs.
+
+## 023 — Follow-up questions: stateless history, restrictions never lifted
+
+**Decision:** `/ask` accepts the earlier turns in `history` and the CLI has a `--chat`
+mode; the server stores nothing. For each question, restrictions detected in every
+earlier user turn are merged in, the retrieval query adds the last two user turns, and
+the last six turns go to the LLM before the message with the retrieved dishes. A prompt
+rule says earlier turns are context only. The course comes from the current question.
+
+**Why:** a stateless API keeps the server simple (no sessions, no storage, no expiry) and
+lets any client own the conversation. Keeping restrictions across turns is the safety
+point: a guest who said "I'm allergic to peanuts" should not have to repeat it.
+Restrictions are read only from user turns, so a model reply can never add or remove
+one. Adding earlier user turns to the query makes short follow-ups ("and without
+gluten?") search for the right thing without asking the LLM to rewrite the question,
+which would put an LLM call in front of retrieval. Citation checks already drop any dish
+that was not retrieved for the current question, including dishes from earlier replies.
+
+**Trade-off:** a restriction cannot be lifted by saying so ("actually, I can eat
+peanuts"); the guest starts a new conversation. The course is not carried over, because
+"no dessert this time" would otherwise keep the dessert filter; a follow-up that relies on
+an earlier course is only steered by the query text. The client can edit the history it
+sends, so restrictions are only as trustworthy as the client, as with explicit
+restrictions. "Tell me more about the second one" works only if that dish is retrieved
+again for the combined query.

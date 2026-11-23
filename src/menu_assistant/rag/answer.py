@@ -8,6 +8,12 @@ from pydantic import BaseModel, ConfigDict
 
 from menu_assistant.llm import ChatMessage, LLMClient
 from menu_assistant.models import Course, Dish
+from menu_assistant.rag.conversation import (
+    recent_turns,
+    restrictions_from_history,
+    retrieval_query,
+    user_turns,
+)
 from menu_assistant.rag.course import detect_course
 from menu_assistant.rag.language import Language, detect_language
 from menu_assistant.rag.prompt import SYSTEM_PROMPT, build_user_message
@@ -190,13 +196,22 @@ class AnswerService:
         question: str,
         explicit: Restrictions | None = None,
         course: Course | None = None,
+        history: Sequence[ChatMessage] = (),
     ) -> Answer:
-        """Answer `question`; an explicit `course` overrides the one detected in it."""
-        restrictions = (explicit or Restrictions()).merge(detect_restrictions(question))
+        """Answer `question`, a follow-up to the earlier turns in `history` if any.
+
+        Restrictions from earlier user turns keep applying (see `rag.conversation`). The
+        course comes from this question only; an explicit `course` overrides it.
+        """
+        restrictions = (
+            (explicit or Restrictions())
+            .merge(restrictions_from_history(history))
+            .merge(detect_restrictions(question))
+        )
         course = course or detect_course(question)
         retrieved = self._retriever.search(
             SearchRequest(
-                query=question,
+                query=retrieval_query(question, history),
                 exclude_allergens=restrictions.exclude_allergens,
                 require_flags=restrictions.require_flags,
                 exclude_ingredients=restrictions.exclude_ingredients,
@@ -204,7 +219,7 @@ class AnswerService:
                 k=self._k,
             )
         )
-        language = detect_language(question)
+        language = detect_language(question, default=detect_language(" ".join(user_turns(history))))
         needs_notice = bool(restrictions) or mentions_dietary_topic(question)
         notice = SAFETY_NOTICES[language] if needs_notice else None
 
@@ -224,10 +239,11 @@ class AnswerService:
         raw = self._llm.generate(
             SYSTEM_PROMPT,
             [
+                *recent_turns(history),
                 ChatMessage(
                     role="user",
                     content=build_user_message(question, retrieved, restrictions, course),
-                )
+                ),
             ],
         )
         text, cited, removed = clean_reply(raw, [item.dish for item in retrieved])

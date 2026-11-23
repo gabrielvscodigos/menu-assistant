@@ -137,6 +137,22 @@ cardápio não sustenta (por exemplo, "peça pimenta extra") ou inventa preços,
 cardápio não tem. A filtragem de segurança e de tipo de prato não é afetada, porque nunca
 depende do LLM. Modelos maiores (`qwen2.5:7b`) seguem melhor as regras.
 
+### Perguntas de continuação
+
+`--chat` mantém a conversa; uma linha vazia ou `sair` encerra. Restrições ditas uma vez
+continuam valendo nas perguntas seguintes:
+
+```text
+$ uv run menu-ask --chat "Tenho alergia a amendoim, tem algum macarrão apimentado?"
+...
+Restrictions applied: excludes peanuts
+
+> e uma sobremesa?
+...
+Restrictions applied: excludes peanuts
+Course: dessert
+```
+
 ## API HTTP
 
 ```bash
@@ -173,7 +189,21 @@ No PowerShell, use `curl.exe` e escape as aspas do JSON (`'{\"question\": \"...\
 use a página `/docs`.
 
 Um `course` opcional (`starter`, `main`, `side`, `dessert`) substitui o tipo de prato
-detectado na pergunta. Alérgenos, restrições ou tipos de prato desconhecidos são
+detectado na pergunta. Para uma pergunta de continuação, envie os turnos anteriores em
+`history` (do mais antigo ao mais novo, até 20); o servidor não guarda estado, e as
+restrições das perguntas anteriores continuam valendo:
+
+```json
+{
+  "question": "e uma sobremesa?",
+  "history": [
+    {"role": "user", "content": "Tenho alergia a amendoim, tem algum macarrão apimentado?"},
+    {"role": "assistant", "content": "... Spicy Miso Ramen [spicy-miso-ramen] ..."}
+  ]
+}
+```
+
+ Alérgenos, restrições ou tipos de prato desconhecidos são
 rejeitados com `422`. Se o Ollama estiver inacessível, `/ask` retorna `503` com o motivo.
 
 ## Configuração

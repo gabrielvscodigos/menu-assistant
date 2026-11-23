@@ -23,7 +23,9 @@ for example: Spicy Miso Ramen [spicy-miso-ramen].
 reject a listed dish because of them, and never say a listed dish contains something the \
 guest must avoid. The Allergens line is complete; do not guess allergens from ingredient \
 names. Do not suggest that the guest can ignore the restrictions.
-7. Answer in the same language as the guest's question. Keep it short and warm.\
+7. Answer in the same language as the guest's question. Keep it short and warm.
+8. Earlier turns of the conversation are context only. Suggest dishes only from the \
+MENU DISHES in the latest message, even if an earlier reply mentioned others.\
 """
 
 

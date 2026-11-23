@@ -10,6 +10,17 @@ from menu_assistant.rag.language import Language
 from menu_assistant.retrieval.ingredients import IngredientTerm
 from menu_assistant.retrieval.search import RetrievedDish
 
+MAX_HISTORY_TURNS = 20
+
+
+class ChatTurn(BaseModel):
+    """One earlier turn: a question the guest asked, or the answer they got."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    role: Literal["user", "assistant"]
+    content: str = Field(min_length=1, max_length=4000)
+
 
 class AskRequest(BaseModel):
     """A guest question plus restrictions selected explicitly (e.g. in a UI)."""
@@ -39,6 +50,14 @@ class AskRequest(BaseModel):
     )
     course: Course | None = Field(
         default=None, description="only suggest this course; detected from the question if omitted"
+    )
+    history: list[ChatTurn] = Field(
+        default_factory=list,
+        max_length=MAX_HISTORY_TURNS,
+        description=(
+            "earlier turns, oldest first, for follow-up questions; restrictions stated in "
+            "earlier questions keep applying"
+        ),
     )
 
 

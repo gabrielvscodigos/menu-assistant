@@ -302,3 +302,64 @@ def test_answer_drops_invented_dishes_and_records_them(retriever: MenuRetriever)
     assert answer.text == "1. Mango Sticky Rice [mango-sticky-rice] - vegan."
     assert answer.cited_dish_ids == ["mango-sticky-rice"]
     assert answer.removed_items == ["2. Coconut Ice Cream - also vegan."]
+
+
+# --- follow-up questions -------------------------------------------------------
+
+
+def test_follow_up_keeps_restrictions_from_earlier_questions(retriever: MenuRetriever) -> None:
+    history = [
+        ChatMessage(role="user", content="I'm allergic to peanuts, any spicy noodles?"),
+        ChatMessage(role="assistant", content="Try the Spicy Miso Ramen [spicy-miso-ramen]."),
+    ]
+
+    answer = service(retriever, FakeLLM("Try Edamame [edamame].")).answer(
+        "and a starter?", history=history
+    )
+
+    assert answer.restrictions.exclude_allergens == {Allergen.PEANUTS}
+    assert all(Allergen.PEANUTS not in item.dish.allergens for item in answer.retrieved)
+    assert answer.notice == SAFETY_NOTICES[Language.EN]
+
+
+def test_follow_up_sends_earlier_turns_before_the_menu_message(retriever: MenuRetriever) -> None:
+    history = [
+        ChatMessage(role="user", content="something spicy"),
+        ChatMessage(role="assistant", content="Try the Elote [elote]."),
+    ]
+    llm = FakeLLM("Try Edamame [edamame].")
+
+    service(retriever, llm).answer("anything lighter?", history=history)
+
+    messages = llm.calls[-1][1]
+    assert messages[:2] == history
+    assert messages[2].role == "user"
+    assert messages[2].content.endswith("GUEST QUESTION: anything lighter?")
+
+
+def test_short_follow_up_answers_in_the_conversation_language(retriever: MenuRetriever) -> None:
+    history = [
+        ChatMessage(role="user", content="Tenho alergia a amendoim, tem algo apimentado?"),
+        ChatMessage(role="assistant", content="Sugiro o Elote [elote]."),
+    ]
+
+    answer = service(retriever, FakeLLM("Sugiro o Edamame [edamame].")).answer(
+        "tacos?", history=history
+    )
+
+    assert answer.language == Language.PT
+    assert answer.notice == SAFETY_NOTICES[Language.PT]
+
+
+def test_course_is_not_carried_over_from_earlier_questions(retriever: MenuRetriever) -> None:
+    history = [
+        ChatMessage(role="user", content="a vegan dessert?"),
+        ChatMessage(role="assistant", content="Try the Mango Sticky Rice [mango-sticky-rice]."),
+    ]
+
+    answer = service(retriever, FakeLLM("Try Edamame [edamame].")).answer(
+        "and something salty?", history=history
+    )
+
+    assert answer.course is None
+    assert answer.restrictions.require_flags == {DietaryFlag.VEGAN}

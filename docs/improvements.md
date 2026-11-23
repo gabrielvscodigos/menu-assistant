@@ -11,7 +11,7 @@ longer note are recorded in [decisions.md](decisions.md).
 | 2   | [LLM readiness check](#2--llm-readiness-check)       | done    |
 | 3   | [Fixed texts in the question's language](#3--fixed-texts-in-the-questions-language) | done    |
 | 4   | [Ingredient dislikes](#4--ingredient-dislikes)       | done    |
-| 5   | [Follow-up questions](#5--follow-up-questions)       | planned |
+| 5   | [Follow-up questions](#5--follow-up-questions)       | done    |
 
 ## 1 — Short CLI commands
 
@@ -175,4 +175,28 @@ without gluten?" loses what was asked before.
 stateless). Restrictions are collected from every user turn, so once stated they keep
 applying, and the history is passed to the LLM through the existing `ChatMessage` list.
 
-**After:** to be filled in when implemented.
+**After:**
+
+- `POST /ask` accepts `history`: the earlier turns, oldest first (up to 20). The server
+  stays stateless; the client appends each question and answer it gets.
+- `menu-ask --chat` keeps a conversation in the terminal; an empty line or `exit`/`sair`
+  ends it.
+- `rag/conversation.py` decides what earlier turns contribute, all in code:
+  - **Restrictions** from every earlier user turn are merged in and never lifted.
+    Assistant turns are ignored, so a model reply can never add or remove one.
+  - **Retrieval** searches for the question preceded by the last two user turns, so
+    "and without gluten?" still looks for what was asked before.
+  - **The LLM** gets the last six turns before the message with the retrieved dishes,
+    and a new prompt rule says earlier turns are context only.
+  - **Language** falls back to the conversation's when the question alone gives no clue
+    ("tacos?" after Portuguese questions gets the Portuguese notice).
+  - **Course** comes from the current question only, so "no dessert this time" cannot
+    keep an old dessert filter.
+
+A real two-turn chat with `llama3.2` ("Tenho alergia a amendoim, tem algum macarrão
+apimentado?" then "e uma sobremesa?") kept `excludes peanuts` on the second turn, applied
+the dessert course, kept the Portuguese notice, and offered only peanut-free desserts.
+Tests cover the conversation rules, the order of messages sent to the LLM, the language
+fallback, the course not carrying over, the API field and its limits, and the chat loop
+(history, exit words, end of input). Trade-offs:
+[decision 023](decisions.md#023--follow-up-questions-stateless-history-restrictions-never-lifted).

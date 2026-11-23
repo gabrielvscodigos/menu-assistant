@@ -5,7 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from menu_assistant.api.schemas import AskRequest, AskResponse, HealthResponse
-from menu_assistant.llm import LLMError
+from menu_assistant.llm import ChatMessage, LLMError
 from menu_assistant.rag.answer import AnswerService
 from menu_assistant.rag.restrictions import Restrictions, ingredient_terms
 
@@ -55,7 +55,8 @@ def ask(
         exclude_ingredients=ingredient_terms(body.exclude_ingredients),
     )
     try:
-        answer = service.answer(body.question, explicit, body.course)
+        history = [ChatMessage(role=turn.role, content=turn.content) for turn in body.history]
+        answer = service.answer(body.question, explicit, body.course, history)
     except LLMError as error:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=f"LLM unavailable: {error}"

@@ -121,6 +121,22 @@ Known limitation of the default 3B model: it sometimes adds suggestions the menu
 not support (e.g. "ask for extra chili"). Safety and course filtering are unaffected,
 because they never depend on the LLM. Larger models (`qwen2.5:7b`) follow the rules better.
 
+### Follow-up questions
+
+`--chat` keeps the conversation going; an empty line or `exit` ends it. Restrictions stated
+once keep applying to every later question:
+
+```text
+$ uv run menu-ask --chat "I'm allergic to peanuts. Any spicy noodles?"
+...
+Restrictions applied: excludes peanuts
+
+> and a dessert?
+...
+Restrictions applied: excludes peanuts
+Course: dessert
+```
+
 ## HTTP API
 
 ```bash
@@ -154,7 +170,21 @@ curl -X POST http://127.0.0.1:8000/ask \
 ```
 
 An optional `course` (`starter`, `main`, `side`, `dessert`) overrides the course detected
-in the question. Unknown allergens, flags, or courses are rejected with `422`. If Ollama is unreachable, `/ask`
+in the question. For a follow-up question, send the earlier turns in `history` (oldest
+first, up to 20); the server keeps no state, and restrictions from earlier questions keep
+applying:
+
+```json
+{
+  "question": "and a dessert?",
+  "history": [
+    {"role": "user", "content": "I'm allergic to peanuts. Any spicy noodles?"},
+    {"role": "assistant", "content": "... Spicy Miso Ramen [spicy-miso-ramen] ..."}
+  ]
+}
+```
+
+ Unknown allergens, flags, or courses are rejected with `422`. If Ollama is unreachable, `/ask`
 returns `503` with the reason.
 
 ## Configuration

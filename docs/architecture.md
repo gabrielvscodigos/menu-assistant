@@ -96,6 +96,13 @@ Restrictions come from two sources and are merged:
 The result is a `Restrictions` value: allergens to exclude, flags to require, and
 ingredient terms to avoid.
 
+**Follow-up questions** (`rag/conversation.py`): callers send earlier turns as
+`history`; the server is stateless. Restrictions detected in every earlier *user* turn are
+merged in and never lifted. The retrieval query is the question preceded by the last two
+user turns, the last six turns go to the LLM as chat history, and the language falls back
+to the conversation's when the question alone gives no clue. The course comes from the
+current question only.
+
 The requested **course** is decided the same way (`rag/course.py`): an explicit
 `--course` / `course`, otherwise explicit course words in the question ("dessert",
 "sobremesa", "postre", "main course"). Several courses or a negation ("no dessert") mean
