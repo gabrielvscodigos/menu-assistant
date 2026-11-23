@@ -4,7 +4,20 @@ A chat interface for menu-assistant, where a mascot talks with the guest. It cal
 FastAPI backend (`POST /ask`) and keeps the conversation in the browser, since the API is
 stateless.
 
-> Work in progress: this is the project skeleton. The chat and the mascot come next.
+> Work in progress: the chat works with a placeholder avatar; the animated waiter mascot
+> comes next.
+
+## Features
+
+- Chat with the waiter in English, Portuguese, or Spanish. The EN / PT / ES buttons set
+  the language of the interface *and* of the replies (sent to the API as `language`);
+  English is the default, and the choice is remembered in the browser.
+- Follow-up questions: each question is sent with the earlier turns, plus the
+  restrictions the last answer applied, so "I'm allergic to peanuts" keeps applying.
+- Answers show the dishes they cite, what was avoided (allergens, diets, ingredients),
+  the course, and the staff-confirmation notice.
+- A banner explains when the API is not ready (no index, Ollama down); a failed question
+  can be retried.
 
 ## Stack
 
@@ -29,16 +42,27 @@ Why these: see [decision 024](../docs/decisions.md#024--front-end-react-vite-typ
 
 Run them inside `frontend/`:
 
-| Task                | Command          |
-| ------------------- | ---------------- |
-| Install             | `pnpm install`   |
-| Dev server          | `pnpm dev`       |
-| Lint + format check | `pnpm lint`      |
-| Fix lint + format   | `pnpm format`    |
-| Type check          | `pnpm typecheck` |
-| Tests               | `pnpm test`      |
-| Production build    | `pnpm build`     |
-| Regenerate API types | `pnpm gen:api`  |
+| Task                 | Command          |
+| -------------------- | ---------------- |
+| Install              | `pnpm install`   |
+| Dev server           | `pnpm dev`       |
+| Lint + format check  | `pnpm lint`      |
+| Fix lint + format    | `pnpm format`    |
+| Type check           | `pnpm typecheck` |
+| Tests                | `pnpm test`      |
+| Production build     | `pnpm build`     |
+| Regenerate API types | `pnpm gen:api`   |
+
+## Run it
+
+```bash
+# terminal 1, repository root: the API (needs the index and Ollama, see the main README)
+uv run uvicorn menu_assistant.api.main:app --reload
+
+# terminal 2, frontend/
+pnpm install
+pnpm dev        # then open http://localhost:5173
+```
 
 ## Talking to the API
 

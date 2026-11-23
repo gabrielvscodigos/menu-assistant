@@ -137,6 +137,19 @@ Restrictions applied: excludes peanuts
 Course: dessert
 ```
 
+## Chat front end
+
+A browser chat where a waiter mascot answers, in English, Portuguese, or Spanish (chosen
+with the EN / PT / ES buttons). With the API running:
+
+```bash
+cd frontend
+pnpm install
+pnpm dev        # http://localhost:5173
+```
+
+It is a React + TypeScript app; see [frontend/README.md](frontend/README.md).
+
 ## HTTP API
 
 ```bash
