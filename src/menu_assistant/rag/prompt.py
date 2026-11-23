@@ -3,6 +3,7 @@
 from collections.abc import Sequence
 
 from menu_assistant.models import Course, Dish
+from menu_assistant.rag.language import LANGUAGE_NAMES, Language
 from menu_assistant.rag.restrictions import Restrictions
 from menu_assistant.retrieval.search import RetrievedDish
 
@@ -23,7 +24,8 @@ for example: Spicy Miso Ramen [spicy-miso-ramen].
 reject a listed dish because of them, and never say a listed dish contains something the \
 guest must avoid. The Allergens line is complete; do not guess allergens from ingredient \
 names. Do not suggest that the guest can ignore the restrictions.
-7. Answer in the same language as the guest's question. Keep it short and warm.
+7. Answer in the REPLY LANGUAGE if one is given, otherwise in the same language as the \
+guest's question. Keep it short and warm.
 8. Earlier turns of the conversation are context only. Suggest dishes only from the \
 MENU DISHES in the latest message, even if an earlier reply mentioned others.\
 """
@@ -64,13 +66,23 @@ def build_user_message(
     retrieved: Sequence[RetrievedDish],
     restrictions: Restrictions,
     course: Course | None = None,
+    reply_language: Language | None = None,
 ) -> str:
-    """Combine the guest's question with the retrieved dishes, best match first."""
+    """Combine the guest's question with the retrieved dishes, best match first.
+
+    `reply_language` is set only when the guest chose a language (e.g. in the UI).
+    """
     dishes = "\n\n".join(format_dish(item.dish) for item in retrieved)
     course_line = f"COURSE REQUESTED: {course} (only this course is listed)\n\n" if course else ""
+    language_line = (
+        f"REPLY LANGUAGE: {LANGUAGE_NAMES[reply_language]} (chosen by the guest)\n\n"
+        if reply_language
+        else ""
+    )
     return (
         f"MENU DISHES (best matches first):\n\n{dishes}\n\n"
         f"HARD RESTRICTIONS ALREADY APPLIED: {format_restrictions(restrictions)}\n\n"
         f"{course_line}"
+        f"{language_line}"
         f"GUEST QUESTION: {question}"
     )

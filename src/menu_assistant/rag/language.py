@@ -21,6 +21,14 @@ class Language(StrEnum):
     ES = "es"
 
 
+# How each language is named to the LLM when the guest chose it explicitly.
+LANGUAGE_NAMES: dict[Language, str] = {
+    Language.EN: "English",
+    Language.PT: "Brazilian Portuguese",
+    Language.ES: "Spanish",
+}
+
+
 def _word_set(words: str) -> frozenset[str]:
     return frozenset(words.split())
 

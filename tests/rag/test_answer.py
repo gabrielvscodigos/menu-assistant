@@ -363,3 +363,38 @@ def test_course_is_not_carried_over_from_earlier_questions(retriever: MenuRetrie
 
     assert answer.course is None
     assert answer.restrictions.require_flags == {DietaryFlag.VEGAN}
+
+
+# --- language chosen by the guest ------------------------------------------------
+
+
+def test_chosen_language_overrides_detection(retriever: MenuRetriever) -> None:
+    llm = FakeLLM("Sugiro o Edamame [edamame].")
+
+    answer = service(retriever, llm).answer(
+        "I'm allergic to peanuts, anything light?", language=Language.PT
+    )
+
+    assert answer.language == Language.PT
+    assert answer.notice == SAFETY_NOTICES[Language.PT]
+    assert "REPLY LANGUAGE: Brazilian Portuguese (chosen by the guest)" in llm.last_prompt
+
+
+def test_chosen_language_is_used_for_the_no_match_reply(retriever: MenuRetriever) -> None:
+    explicit = Restrictions(
+        exclude_allergens=frozenset({Allergen.SESAME}), require_flags=frozenset({DietaryFlag.HALAL})
+    )
+
+    answer = service(retriever, FakeLLM("unused")).answer(
+        "vegan halal food", explicit, language=Language.ES
+    )
+
+    assert answer.text == NO_MATCH_TEXTS[Language.ES]
+
+
+def test_detected_language_adds_no_reply_language_line(retriever: MenuRetriever) -> None:
+    llm = FakeLLM("Try Edamame [edamame].")
+
+    service(retriever, llm).answer("something light")
+
+    assert "REPLY LANGUAGE" not in llm.last_prompt

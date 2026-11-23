@@ -51,6 +51,10 @@ class AskRequest(BaseModel):
     course: Course | None = Field(
         default=None, description="only suggest this course; detected from the question if omitted"
     )
+    language: Language | None = Field(
+        default=None,
+        description="reply language chosen by the guest (en, pt, es); detected if omitted",
+    )
     history: list[ChatTurn] = Field(
         default_factory=list,
         max_length=MAX_HISTORY_TURNS,
@@ -99,7 +103,9 @@ class AskResponse(BaseModel):
     sources: list[DishSource] = Field(description="dishes the answer cites")
     candidates: list[DishSource] = Field(description="all dishes the LLM was given")
     applied_restrictions: AppliedRestrictions
-    language: Language = Field(description="detected language of the question (en, pt, es)")
+    language: Language = Field(
+        description="language of the notice and reply: the chosen one, else detected (en, pt, es)"
+    )
     notice: str | None = Field(
         description="staff-confirmation notice, if required, in the question's language"
     )

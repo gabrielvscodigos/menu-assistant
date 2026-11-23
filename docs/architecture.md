@@ -152,6 +152,8 @@ signature matches the settings (`IndexNotReadyError` / `IndexMismatchError`).
 - Fixed texts (the notice and the "no match" reply) are written in English, Portuguese,
   and Spanish. `rag/language.py` picks one by counting words distinctive for each
   language, falling back to English; the LLM's own reply follows the question anyway.
+  A client can instead pass the guest's chosen `language`: it then sets the fixed texts,
+  and a `REPLY LANGUAGE` line tells the LLM which language to answer in.
 
 The returned `Answer` carries the text, cited dishes, all candidates, the restrictions
 actually enforced, and the notice, so every reply can be audited.

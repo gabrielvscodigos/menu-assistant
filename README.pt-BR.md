@@ -189,7 +189,8 @@ No PowerShell, use `curl.exe` e escape as aspas do JSON (`'{\"question\": \"...\
 use a página `/docs`.
 
 Um `course` opcional (`starter`, `main`, `side`, `dessert`) substitui o tipo de prato
-detectado na pergunta. Para uma pergunta de continuação, envie os turnos anteriores em
+detectado na pergunta, e um `language` opcional (`en`, `pt`, `es`) define o idioma da
+resposta e do aviso em vez de detectá-lo. Para uma pergunta de continuação, envie os turnos anteriores em
 `history` (do mais antigo ao mais novo, até 20); o servidor não guarda estado, e as
 restrições das perguntas anteriores continuam valendo:
 

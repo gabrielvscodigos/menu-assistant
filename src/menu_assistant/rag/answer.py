@@ -197,11 +197,14 @@ class AnswerService:
         explicit: Restrictions | None = None,
         course: Course | None = None,
         history: Sequence[ChatMessage] = (),
+        language: Language | None = None,
     ) -> Answer:
         """Answer `question`, a follow-up to the earlier turns in `history` if any.
 
         Restrictions from earlier user turns keep applying (see `rag.conversation`). The
-        course comes from this question only; an explicit `course` overrides it.
+        course comes from this question only; an explicit `course` overrides it. An
+        explicit `language` (chosen by the guest) overrides the detected one, for the fixed
+        texts and for the LLM's reply.
         """
         restrictions = (
             (explicit or Restrictions())
@@ -219,20 +222,22 @@ class AnswerService:
                 k=self._k,
             )
         )
-        language = detect_language(question, default=detect_language(" ".join(user_turns(history))))
+        reply_language = language or detect_language(
+            question, default=detect_language(" ".join(user_turns(history)))
+        )
         needs_notice = bool(restrictions) or mentions_dietary_topic(question)
-        notice = SAFETY_NOTICES[language] if needs_notice else None
+        notice = SAFETY_NOTICES[reply_language] if needs_notice else None
 
         if not retrieved:
             # Nothing passed the filters: answer deterministically, without the LLM.
             return Answer(
                 question=question,
-                text=NO_MATCH_TEXTS[language],
+                text=NO_MATCH_TEXTS[reply_language],
                 cited_dish_ids=[],
                 retrieved=[],
                 restrictions=restrictions,
                 course=course,
-                language=language,
+                language=reply_language,
                 notice=notice,
             )
 
@@ -242,7 +247,7 @@ class AnswerService:
                 *recent_turns(history),
                 ChatMessage(
                     role="user",
-                    content=build_user_message(question, retrieved, restrictions, course),
+                    content=build_user_message(question, retrieved, restrictions, course, language),
                 ),
             ],
         )
@@ -254,7 +259,7 @@ class AnswerService:
             retrieved=retrieved,
             restrictions=restrictions,
             course=course,
-            language=language,
+            language=reply_language,
             notice=notice,
             removed_items=removed,
         )

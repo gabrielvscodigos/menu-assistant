@@ -170,7 +170,8 @@ curl -X POST http://127.0.0.1:8000/ask \
 ```
 
 An optional `course` (`starter`, `main`, `side`, `dessert`) overrides the course detected
-in the question. For a follow-up question, send the earlier turns in `history` (oldest
+in the question, and an optional `language` (`en`, `pt`, `es`) sets the language of the
+reply and the notice instead of detecting it. For a follow-up question, send the earlier turns in `history` (oldest
 first, up to 20); the server keeps no state, and restrictions from earlier questions keep
 applying:
 
