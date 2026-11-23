@@ -20,11 +20,16 @@ class ScriptedLLM:
     def __init__(self, reply: str = "Try Edamame [edamame].", error: str | None = None) -> None:
         self.reply = reply
         self.error = error
+        self.check_error: str | None = None
 
     def generate(self, system: str, messages: Sequence[ChatMessage]) -> str:
         if self.error:
             raise LLMError(self.error)
         return self.reply
+
+    def check(self) -> None:
+        if self.check_error:
+            raise LLMError(self.check_error)
 
 
 @pytest.fixture
@@ -44,6 +49,15 @@ def client(
 
 def test_health_is_ok_when_service_is_ready(client: TestClient) -> None:
     assert client.get("/health").json() == {"status": "ok", "detail": None}
+
+
+def test_health_is_degraded_when_llm_is_unavailable(client: TestClient, llm: ScriptedLLM) -> None:
+    llm.check_error = "cannot reach Ollama at http://localhost:11434; is it running?"
+
+    assert client.get("/health").json() == {
+        "status": "degraded",
+        "detail": "LLM unavailable: cannot reach Ollama at http://localhost:11434; is it running?",
+    }
 
 
 def test_ask_returns_answer_with_cited_sources(client: TestClient) -> None:

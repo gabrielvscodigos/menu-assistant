@@ -16,6 +16,23 @@ class _ChatResponse(BaseModel):
     message: _ResponseMessage
 
 
+class _LocalModel(BaseModel):
+    name: str
+
+
+class _TagsResponse(BaseModel):
+    models: list[_LocalModel]
+
+
+# Readiness checks only list models, so they should answer fast or count as down.
+CHECK_TIMEOUT_SECONDS = 5.0
+
+
+def _has_model(names: set[str], model: str) -> bool:
+    """Ollama lists `llama3.2` as `llama3.2:latest`; accept either spelling."""
+    return model in names or (":" not in model and f"{model}:latest" in names)
+
+
 class OllamaClient:
     """Sends non-streaming chat requests to Ollama and returns the reply text."""
 
@@ -44,19 +61,41 @@ class OllamaClient:
             "stream": False,
             "options": {"temperature": self._temperature},
         }
-        response = self._post(payload)
+        response = self._send("POST", "/api/chat", json=payload)
         self._raise_for_status(response)
         return self._parse(response)
+
+    def check(self) -> None:
+        """List the local models (`/api/tags`) and confirm the configured one is pulled."""
+        response = self._send("GET", "/api/tags", timeout=CHECK_TIMEOUT_SECONDS)
+        self._raise_for_status(response)
+        try:
+            names = {
+                model.name for model in _TagsResponse.model_validate_json(response.content).models
+            }
+        except ValidationError as error:
+            raise LLMError(f"unexpected response from Ollama: {error}") from error
+        if not _has_model(names, self._model):
+            raise LLMError(
+                f"model '{self._model}' is not available in Ollama; run `ollama pull {self._model}`"
+            )
 
     def close(self) -> None:
         self._http.close()
 
-    def _post(self, payload: dict[str, object]) -> httpx.Response:
+    def _send(
+        self,
+        method: str,
+        path: str,
+        json: dict[str, object] | None = None,
+        timeout: float | None = None,
+    ) -> httpx.Response:
+        timeout = timeout or self._timeout_seconds
         try:
-            return self._http.post("/api/chat", json=payload)
+            return self._http.request(method, path, json=json, timeout=timeout)
         except httpx.TimeoutException as error:
             raise LLMError(
-                f"Ollama did not answer within {self._timeout_seconds:g}s; "
+                f"Ollama did not answer within {timeout:g}s; "
                 "try a smaller model or a longer timeout"
             ) from error
         except httpx.TransportError as error:

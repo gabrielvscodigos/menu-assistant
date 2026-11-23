@@ -158,6 +158,10 @@ class AnswerService:
         self._llm = llm
         self._k = k
 
+    def check_llm(self) -> None:
+        """Raise `LLMError` if the LLM cannot answer right now (see `LLMClient.check`)."""
+        self._llm.check()
+
     def answer(
         self,
         question: str,

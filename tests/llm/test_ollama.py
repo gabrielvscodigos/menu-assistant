@@ -110,3 +110,56 @@ def test_factory_builds_ollama_client_from_settings() -> None:
     client = llm_client_from_settings(Settings(llm_model="llama3.2"))
 
     assert isinstance(client, OllamaClient)
+
+
+def tags(*names: str) -> Handler:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"models": [{"name": name} for name in names]})
+
+    return handler
+
+
+def test_check_lists_local_models() -> None:
+    captured: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured.append(request)
+        return tags("test-model:latest")(request)
+
+    make_client(handler).check()
+
+    assert captured[0].method == "GET"
+    assert captured[0].url == "http://ollama.test/api/tags"
+
+
+@pytest.mark.parametrize(
+    ("model", "local"),
+    [("llama3.2", "llama3.2:latest"), ("llama3.2", "llama3.2"), ("qwen2.5:7b", "qwen2.5:7b")],
+)
+def test_check_accepts_pulled_model(model: str, local: str) -> None:
+    client = OllamaClient(
+        base_url="http://ollama.test", model=model, transport=httpx.MockTransport(tags(local))
+    )
+
+    client.check()
+
+
+def test_check_explains_how_to_pull_a_missing_model() -> None:
+    with pytest.raises(LLMError, match=r"run `ollama pull test-model`"):
+        make_client(tags("llama3.2:latest", "test-model:7b")).check()
+
+
+def test_check_explains_unreachable_server() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError("connection refused", request=request)
+
+    with pytest.raises(LLMError, match="cannot reach Ollama"):
+        make_client(handler).check()
+
+
+def test_check_rejects_malformed_model_list() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"unexpected": True})
+
+    with pytest.raises(LLMError, match="unexpected response"):
+        make_client(handler).check()

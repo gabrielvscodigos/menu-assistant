@@ -126,7 +126,7 @@ Interactive docs (Swagger UI) are at <http://127.0.0.1:8000/docs>.
 
 | Method | Path      | Description                                                  |
 | ------ | --------- | ------------------------------------------------------------ |
-| GET    | `/health` | `ok`, or `degraded` with a fix-it message if the index is not ready |
+| GET    | `/health` | `ok`, or `degraded` with a fix-it message if the index is not ready or the LLM is unavailable |
 | POST   | `/ask`    | Grounded suggestions for a question                          |
 
 ```bash

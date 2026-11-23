@@ -8,7 +8,7 @@ longer note are recorded in [decisions.md](decisions.md).
 | #   | Improvement                                         | Status  |
 | --- | --------------------------------------------------- | ------- |
 | 1   | [Short CLI commands](#1--short-cli-commands)         | done    |
-| 2   | [LLM readiness check](#2--llm-readiness-check)       | planned |
+| 2   | [LLM readiness check](#2--llm-readiness-check)       | done    |
 | 3   | [Fixed texts in the question's language](#3--fixed-texts-in-the-questions-language) | planned |
 | 4   | [Ingredient dislikes](#4--ingredient-dislikes)       | planned |
 | 5   | [Follow-up questions](#5--follow-up-questions)       | planned |
@@ -56,7 +56,26 @@ every `/ask` would return 503 is misleading.
 models and confirm the configured one is there). `/health` reports the LLM status, and the
 CLI checks it before loading the embedding model.
 
-**After:** to be filled in when implemented.
+**After:**
+
+- `LLMClient` gained a `check()` method. `OllamaClient.check()` calls `GET /api/tags`
+  (5-second timeout) and confirms the configured model is pulled; `llama3.2` matches
+  `llama3.2:latest`.
+- `/health` runs the check on every call, so starting Ollama or pulling the model is
+  picked up without restarting the API:
+
+  ```json
+  {"status": "degraded", "detail": "LLM unavailable: model 'llama3.2' is not available in Ollama; run `ollama pull llama3.2`"}
+  ```
+
+- `menu-ask` checks the LLM first and exits in milliseconds with the same message,
+  instead of loading the embedding model and searching the menu before failing.
+- The API still starts without the LLM, as it already did without an index.
+
+Tests cover the Ollama check (model present under both spellings, missing model,
+unreachable server, malformed response), `/health` with an unavailable LLM, and the CLI
+failing before it loads the index. Why the check is live rather than at startup:
+[decision 020](decisions.md#020--llm-readiness-is-checked-live-not-at-startup).
 
 ## 3 — Fixed texts in the question's language
 

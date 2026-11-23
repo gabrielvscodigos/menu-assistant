@@ -294,3 +294,19 @@ a translation model would add work for every menu or a heavy dependency.
 tag without an alias falls back to plain semantic search. Spanish is only covered where
 words coincide (`picante`). Like the boost weight, the aliases were checked on an eval
 set written by the same author.
+
+## 020 — LLM readiness is checked live, not at startup
+
+**Decision:** `LLMClient` has a `check()` method (for Ollama: `GET /api/tags` and look for
+the configured model, accepting `llama3.2` for `llama3.2:latest`). `/health` calls it on
+every request with a 5-second timeout and reports `degraded` with the fix. The API still
+starts when the LLM is down; the CLI calls `check()` before loading the embedding model.
+
+**Why:** "Ollama not running" and "model not pulled" are the most common setup mistakes,
+and before this `/health` said `ok` while every `/ask` failed. Checking at startup only
+would force an API restart after starting Ollama; checking live picks it up immediately.
+Listing models is cheap and does not load the model into memory, unlike a test prompt.
+
+**Trade-off:** `/health` now depends on Ollama's latency (up to 5 s when it hangs), and
+a probe hitting it often adds a small load on Ollama. The check proves the model is
+pulled, not that it can generate (e.g. out of memory still shows up only on `/ask`).

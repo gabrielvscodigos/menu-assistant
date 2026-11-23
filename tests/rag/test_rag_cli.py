@@ -1,10 +1,13 @@
 """Tests for the `ask` command-line entry point."""
 
+from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
 
+import menu_assistant.rag.__main__ as cli
 from menu_assistant.ingest import load_menu
+from menu_assistant.llm import ChatMessage, LLMError
 from menu_assistant.models import Allergen, Course, DietaryFlag, Dish
 from menu_assistant.rag.__main__ import format_answer, main
 from menu_assistant.rag.answer import SAFETY_NOTICE, Answer
@@ -12,13 +15,43 @@ from menu_assistant.rag.restrictions import Restrictions
 from menu_assistant.retrieval.search import RetrievedDish
 
 
+class ReadyLLM:
+    def __init__(self, check_error: str | None = None) -> None:
+        self.check_error = check_error
+
+    def generate(self, system: str, messages: Sequence[ChatMessage]) -> str:
+        raise AssertionError("not expected to be called")
+
+    def check(self) -> None:
+        if self.check_error:
+            raise LLMError(self.check_error)
+
+
+def use_llm(monkeypatch: pytest.MonkeyPatch, llm: ReadyLLM) -> None:
+    monkeypatch.setattr(cli, "llm_client_from_settings", lambda settings: llm)
+
+
 def test_missing_index_exits_with_error(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
+    use_llm(monkeypatch, ReadyLLM())
     monkeypatch.setenv("MENU_ASSISTANT_CHROMA_PATH", str(tmp_path / "empty-index"))
 
     assert main(["what is good?"]) == 1
     assert "is empty" in capsys.readouterr().err
+
+
+def test_unavailable_llm_fails_before_loading_the_index(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    def must_not_load(settings: object) -> None:
+        raise AssertionError("index and embedding model should not be loaded")
+
+    use_llm(monkeypatch, ReadyLLM(check_error="cannot reach Ollama; is it running?"))
+    monkeypatch.setattr(cli, "retriever_from_settings", must_not_load)
+
+    assert main(["what is good?"]) == 1
+    assert "cannot reach Ollama" in capsys.readouterr().err
 
 
 def test_unknown_course_option_is_rejected() -> None:

@@ -145,7 +145,10 @@ actually enforced, and the notice, so every reply can be audited.
 - `create_app(service_factory)` builds the `AnswerService` once in the FastAPI lifespan
   (loading the embedding model takes seconds) and stores it on `app.state`.
 - If the index is missing or mismatched, the app still starts: `/health` returns
-  `degraded` with the fix, and `/ask` returns `503`. An unreachable LLM also maps to `503`.
+  `degraded` with the fix, and `/ask` returns `503`. `/health` also checks the LLM on every
+  call (Ollama reachable, model pulled), and an unreachable LLM maps `/ask` to `503`.
+- The CLI checks the LLM before loading the embedding model, so a stopped Ollama is
+  reported in milliseconds instead of after a slow start.
 - `/ask` is a plain `def`, so FastAPI runs the blocking embedding and LLM calls in its
   thread pool instead of on the event loop.
 - Tests pass a factory that returns a service with a fake embedder and a scripted LLM.

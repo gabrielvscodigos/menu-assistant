@@ -32,6 +32,9 @@ class ScriptedLLM:
         self.calls += 1
         return self.reply
 
+    def check(self) -> None:
+        pass
+
 
 DATASET = AnswerDataset(
     cases=[

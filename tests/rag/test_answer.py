@@ -32,6 +32,9 @@ class FakeLLM:
         self.calls.append((system, list(messages)))
         return self.reply
 
+    def check(self) -> None:
+        pass
+
     @property
     def last_prompt(self) -> str:
         return self.calls[-1][1][-1].content

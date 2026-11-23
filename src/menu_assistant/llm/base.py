@@ -30,3 +30,11 @@ class LLMClient(Protocol):
     def generate(self, system: str, messages: Sequence[ChatMessage]) -> str:
         """Return the assistant's reply. Raises `LLMError` on any provider failure."""
         ...
+
+    def check(self) -> None:
+        """Confirm the provider is reachable and the model is available, cheaply.
+
+        Raises `LLMError` explaining how to fix the problem. Used by health checks and
+        by the CLI to fail fast, before loading the embedding model.
+        """
+        ...

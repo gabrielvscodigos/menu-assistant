@@ -142,7 +142,7 @@ A documentação interativa (Swagger UI) fica em <http://127.0.0.1:8000/docs>.
 
 | Método | Caminho   | Descrição                                                              |
 | ------ | --------- | ---------------------------------------------------------------------- |
-| GET    | `/health` | `ok`, ou `degraded` com uma mensagem de como corrigir se o índice não estiver pronto |
+| GET    | `/health` | `ok`, ou `degraded` com uma mensagem de como corrigir se o índice não estiver pronto ou o LLM estiver indisponível |
 | POST   | `/ask`    | Sugestões fundamentadas para uma pergunta                              |
 
 ```bash

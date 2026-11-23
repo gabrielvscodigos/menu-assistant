@@ -25,9 +25,18 @@ def get_answer_service(request: Request) -> AnswerService:
 
 @router.get("/health")
 def health(request: Request) -> HealthResponse:
-    """Liveness plus readiness: `degraded` means the index is missing or outdated."""
-    if request.app.state.answer_service is None:
+    """Liveness plus readiness: `degraded` means `/ask` would fail, and `detail` says why.
+
+    Checks the index (once, at startup) and the LLM (on every call, with a short
+    timeout), so starting Ollama or pulling the model is picked up without a restart.
+    """
+    service: AnswerService | None = request.app.state.answer_service
+    if service is None:
         return HealthResponse(status="degraded", detail=request.app.state.startup_error)
+    try:
+        service.check_llm()
+    except LLMError as error:
+        return HealthResponse(status="degraded", detail=f"LLM unavailable: {error}")
     return HealthResponse(status="ok")
 
 

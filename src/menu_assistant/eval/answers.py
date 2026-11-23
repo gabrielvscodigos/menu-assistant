@@ -49,6 +49,9 @@ class RecordingLLM:
         self.last_reply = self._inner.generate(system, messages)
         return self.last_reply
 
+    def check(self) -> None:
+        self._inner.check()
+
 
 class AnswerCaseResult(BaseModel):
     model_config = ConfigDict(frozen=True)

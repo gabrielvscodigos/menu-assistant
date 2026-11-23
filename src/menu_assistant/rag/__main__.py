@@ -72,9 +72,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
 
     try:
-        service = AnswerService(
-            retriever_from_settings(settings), llm_client_from_settings(settings)
-        )
+        llm = llm_client_from_settings(settings)
+        # Fail fast: checking the LLM takes milliseconds, loading the embedding model
+        # takes seconds.
+        llm.check()
+        service = AnswerService(retriever_from_settings(settings), llm)
         course = Course(args.course) if args.course else None
         answer = service.answer(args.question, explicit, course)
     except (IndexNotReadyError, LLMError) as error:
