@@ -25,7 +25,8 @@ alérgenos de cada prato.
 - **Filtros de segurança determinísticos.** A filtragem de alérgenos e de restrições
   alimentares é feita com filtros de metadados no código, nunca delegada ao LLM.
 - **Aviso para confirmar com a equipe.** Toda resposta que envolve alérgenos ou
-  restrições alimentares lembra o usuário de confirmar com a equipe do restaurante.
+  restrições alimentares lembra o usuário de confirmar com a equipe do restaurante, no
+  idioma da pergunta (inglês, português ou espanhol).
 - **Acesso ao LLM independente de provedor.** A aplicação depende apenas da interface
   `LLMClient`; o código específico de provedor (hoje, um cliente Ollama local) fica em
   `llm/`.
@@ -103,11 +104,11 @@ Sources:
 Restrictions applied: must be vegan
 Course: dessert
 
-Note: Allergen and dietary information comes from the menu and may be incomplete. Please confirm with the restaurant staff before ordering.
+Note: As informações sobre alérgenos e restrições alimentares vêm do cardápio e podem estar incompletas. Confirme com a equipe do restaurante antes de pedir.
 ```
 
-O modelo responde no idioma da pergunta. Os rótulos da saída e o aviso de segurança são
-fixos no código e estão em inglês.
+O modelo responde no idioma da pergunta, e o aviso de segurança e a resposta de "nenhum
+prato atende" também. Os rótulos da saída (`Sources`, `Note`) continuam em inglês.
 
 Como uma resposta é produzida:
 
@@ -158,7 +159,8 @@ curl -X POST http://127.0.0.1:8000/ask \
                "allergens": ["eggs", "gluten", "sesame", "soy"], "dietary_flags": [], "score": 0.91}],
   "candidates": ["... todos os pratos que o LLM recebeu ..."],
   "applied_restrictions": {"exclude_allergens": ["peanuts"], "require_flags": [], "course": null},
-  "notice": "Allergen and dietary information comes from the menu and may be incomplete. ..."
+  "language": "pt",
+  "notice": "As informações sobre alérgenos e restrições alimentares vêm do cardápio e podem estar incompletas. ..."
 }
 ```
 

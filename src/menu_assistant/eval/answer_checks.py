@@ -12,7 +12,7 @@ from pydantic import BaseModel, ConfigDict
 
 from menu_assistant.eval.answer_dataset import AnswerCase
 from menu_assistant.models import Dish
-from menu_assistant.rag.answer import NO_MATCH_TEXT, Answer
+from menu_assistant.rag.answer import NO_MATCH_TEXTS, Answer
 from menu_assistant.rag.restrictions import normalize
 
 MAX_RECOMMENDED = 3
@@ -114,7 +114,7 @@ def leaked_dishes(
 
 
 def acknowledges_unavailable(text: str) -> bool:
-    if text == NO_MATCH_TEXT:
+    if text in NO_MATCH_TEXTS.values():
         return True
     normalized = normalize(text)
     return any(marker in normalized for marker in UNAVAILABLE_MARKERS)

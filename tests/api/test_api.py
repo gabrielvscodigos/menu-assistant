@@ -10,7 +10,8 @@ from menu_assistant.api.main import create_app
 from menu_assistant.ingest.indexer import index_menu
 from menu_assistant.llm import ChatMessage, LLMError
 from menu_assistant.models import Menu
-from menu_assistant.rag.answer import SAFETY_NOTICE, AnswerService
+from menu_assistant.rag.answer import SAFETY_NOTICES, AnswerService
+from menu_assistant.rag.language import Language
 from menu_assistant.retrieval.embeddings import Embedder
 from menu_assistant.retrieval.search import MenuRetriever
 from menu_assistant.retrieval.vector_store import IndexNotReadyError
@@ -86,7 +87,15 @@ def test_ask_combines_explicit_and_detected_restrictions(client: TestClient) -> 
     }
     candidate_ids = {candidate["id"] for candidate in body["candidates"]}
     assert candidate_ids == {"chana-masala", "falafel-plate", "mango-sticky-rice"}
-    assert body["notice"] == SAFETY_NOTICE
+    assert body["language"] == "en"
+    assert body["notice"] == SAFETY_NOTICES[Language.EN]
+
+
+def test_ask_returns_notice_in_the_question_language(client: TestClient) -> None:
+    body = client.post("/ask", json={"question": "Tenho alergia a amendoim, tem algo?"}).json()
+
+    assert body["language"] == "pt"
+    assert body["notice"] == SAFETY_NOTICES[Language.PT]
 
 
 @pytest.mark.parametrize(

@@ -9,12 +9,13 @@ from menu_assistant.ingest.indexer import index_menu
 from menu_assistant.llm import ChatMessage
 from menu_assistant.models import Allergen, Course, DietaryFlag, Dish, Menu
 from menu_assistant.rag.answer import (
-    NO_MATCH_TEXT,
-    SAFETY_NOTICE,
+    NO_MATCH_TEXTS,
+    SAFETY_NOTICES,
     AnswerService,
     enforce_list_citations,
     verify_citations,
 )
+from menu_assistant.rag.language import Language
 from menu_assistant.rag.prompt import SYSTEM_PROMPT, build_user_message, format_dish
 from menu_assistant.rag.restrictions import Restrictions
 from menu_assistant.retrieval.embeddings import Embedder
@@ -133,7 +134,7 @@ def test_detected_allergy_filters_dishes_before_the_llm_sees_them(
     # The LLM ignored the rules and cited a filtered-out dish: the citation is removed.
     assert answer.cited_dish_ids == []
     assert "[dan-dan-noodles]" not in answer.text
-    assert answer.notice == SAFETY_NOTICE
+    assert answer.notice == SAFETY_NOTICES[Language.EN]
 
 
 def test_explicit_and_detected_restrictions_are_combined(retriever: MenuRetriever) -> None:
@@ -162,9 +163,9 @@ def test_no_matching_dish_answers_without_calling_the_llm(retriever: MenuRetriev
     answer = service(retriever, llm).answer("vegan halal food", explicit)
 
     assert llm.calls == []
-    assert answer.text == NO_MATCH_TEXT
+    assert answer.text == NO_MATCH_TEXTS[Language.EN]
     assert answer.retrieved == []
-    assert answer.notice == SAFETY_NOTICE
+    assert answer.notice == SAFETY_NOTICES[Language.EN]
 
 
 def test_question_about_allergens_gets_notice_even_without_restrictions(
@@ -173,7 +174,32 @@ def test_question_about_allergens_gets_notice_even_without_restrictions(
     answer = service(retriever, FakeLLM("It lists peanuts.")).answer("does the ramen have peanuts?")
 
     assert not answer.restrictions
-    assert answer.notice == SAFETY_NOTICE
+    assert answer.notice == SAFETY_NOTICES[Language.EN]
+
+
+def test_notice_follows_the_question_language(retriever: MenuRetriever) -> None:
+    answer = service(retriever, FakeLLM("Sugiro o Elote [elote].")).answer(
+        "Tenho alergia a amendoim, o que você sugere?"
+    )
+
+    assert answer.language == Language.PT
+    assert answer.notice == SAFETY_NOTICES[Language.PT]
+
+
+def test_no_match_text_follows_the_question_language(retriever: MenuRetriever) -> None:
+    explicit = Restrictions(
+        exclude_allergens=frozenset({Allergen.SESAME}), require_flags=frozenset({DietaryFlag.HALAL})
+    )
+
+    answer = service(retriever, FakeLLM("unused")).answer("quiero algo vegano y halal", explicit)
+
+    assert answer.language == Language.ES
+    assert answer.text == NO_MATCH_TEXTS[Language.ES]
+    assert answer.notice == SAFETY_NOTICES[Language.ES]
+
+
+def test_every_language_has_every_fixed_text() -> None:
+    assert set(SAFETY_NOTICES) == set(NO_MATCH_TEXTS) == set(Language)
 
 
 # --- course --------------------------------------------------------------------

@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict
 from menu_assistant.llm import ChatMessage, LLMClient
 from menu_assistant.models import Course, Dish
 from menu_assistant.rag.course import detect_course
+from menu_assistant.rag.language import Language, detect_language
 from menu_assistant.rag.prompt import SYSTEM_PROMPT, build_user_message
 from menu_assistant.rag.restrictions import (
     Restrictions,
@@ -19,14 +20,35 @@ from menu_assistant.retrieval.search import MenuRetriever, RetrievedDish, Search
 
 logger = logging.getLogger(__name__)
 
-SAFETY_NOTICE = (
-    "Allergen and dietary information comes from the menu and may be incomplete. "
-    "Please confirm with the restaurant staff before ordering."
-)
-NO_MATCH_TEXT = (
-    "Sorry, no dish on this menu matches your request and restrictions. "
-    "You may want to ask the staff about possible adjustments."
-)
+# Texts written in code, not by the LLM, in every language `detect_language` returns.
+SAFETY_NOTICES: dict[Language, str] = {
+    Language.EN: (
+        "Allergen and dietary information comes from the menu and may be incomplete. "
+        "Please confirm with the restaurant staff before ordering."
+    ),
+    Language.PT: (
+        "As informações sobre alérgenos e restrições alimentares vêm do cardápio e podem "
+        "estar incompletas. Confirme com a equipe do restaurante antes de pedir."
+    ),
+    Language.ES: (
+        "La información sobre alérgenos y dietas proviene de la carta y puede estar "
+        "incompleta. Confirma con el personal del restaurante antes de pedir."
+    ),
+}
+NO_MATCH_TEXTS: dict[Language, str] = {
+    Language.EN: (
+        "Sorry, no dish on this menu matches your request and restrictions. "
+        "You may want to ask the staff about possible adjustments."
+    ),
+    Language.PT: (
+        "Desculpe, nenhum prato deste cardápio atende ao seu pedido e às suas restrições. "
+        "Vale perguntar à equipe sobre possíveis adaptações."
+    ),
+    Language.ES: (
+        "Lo siento, ningún plato de esta carta coincide con tu pedido y tus restricciones. "
+        "Puedes preguntar al personal por posibles adaptaciones."
+    ),
+}
 
 # Anything in square brackets on one line: a dish id, or a dish name small models
 # sometimes write instead ("[Mango Sticky Rice]").
@@ -45,6 +67,7 @@ class Answer(BaseModel):
     retrieved: list[RetrievedDish]
     restrictions: Restrictions
     course: Course | None = None
+    language: Language = Language.EN
     notice: str | None
     removed_items: list[str] = []
 
@@ -180,18 +203,20 @@ class AnswerService:
                 k=self._k,
             )
         )
+        language = detect_language(question)
         needs_notice = bool(restrictions) or mentions_dietary_topic(question)
-        notice = SAFETY_NOTICE if needs_notice else None
+        notice = SAFETY_NOTICES[language] if needs_notice else None
 
         if not retrieved:
             # Nothing passed the filters: answer deterministically, without the LLM.
             return Answer(
                 question=question,
-                text=NO_MATCH_TEXT,
+                text=NO_MATCH_TEXTS[language],
                 cited_dish_ids=[],
                 retrieved=[],
                 restrictions=restrictions,
                 course=course,
+                language=language,
                 notice=notice,
             )
 
@@ -212,6 +237,7 @@ class AnswerService:
             retrieved=retrieved,
             restrictions=restrictions,
             course=course,
+            language=language,
             notice=notice,
             removed_items=removed,
         )

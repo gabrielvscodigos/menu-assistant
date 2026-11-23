@@ -21,7 +21,8 @@ grounded in each dish's ingredients, preparation, dietary flags, and allergens.
 - **Deterministic safety filters.** Allergen and dietary filtering is done with metadata
   filters in code, never delegated to the LLM.
 - **Staff confirmation notice.** Every answer involving allergens or dietary restrictions
-  reminds the user to confirm with restaurant staff.
+  reminds the user to confirm with restaurant staff, in the language of the question
+  (English, Portuguese, or Spanish).
 - **Provider-agnostic LLM access.** The app depends only on an `LLMClient` interface;
   provider-specific code (currently a local Ollama client) lives in `llm/`.
 
@@ -142,6 +143,7 @@ curl -X POST http://127.0.0.1:8000/ask \
                "allergens": ["eggs", "gluten", "sesame", "soy"], "dietary_flags": [], "score": 0.91}],
   "candidates": ["... every dish the LLM was given ..."],
   "applied_restrictions": {"exclude_allergens": ["peanuts"], "require_flags": [], "course": null},
+  "language": "en",
   "notice": "Allergen and dietary information comes from the menu and may be incomplete. ..."
 }
 ```

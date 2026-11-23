@@ -136,6 +136,9 @@ signature matches the settings (`IndexNotReadyError` / `IndexMismatchError`).
   carry no brackets at all.
 - The staff-confirmation notice is attached in code whenever restrictions were applied or
   the question mentions allergens or diets. It never depends on the LLM's wording.
+- Fixed texts (the notice and the "no match" reply) are written in English, Portuguese,
+  and Spanish. `rag/language.py` picks one by counting words distinctive for each
+  language, falling back to English; the LLM's own reply follows the question anyway.
 
 The returned `Answer` carries the text, cited dishes, all candidates, the restrictions
 actually enforced, and the notice, so every reply can be audited.

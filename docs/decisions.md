@@ -310,3 +310,23 @@ Listing models is cheap and does not load the model into memory, unlike a test p
 **Trade-off:** `/health` now depends on Ollama's latency (up to 5 s when it hangs), and
 a probe hitting it often adds a small load on Ollama. The check proves the model is
 pulled, not that it can generate (e.g. out of memory still shows up only on `/ask`).
+
+## 021 — Fixed texts follow the question's language, detected by word lists
+
+**Decision:** the staff-confirmation notice and the "no match" reply exist in English,
+Portuguese, and Spanish. `rag/language.py` picks the language by counting common words
+distinctive for each one (`voce`, `quero`, `uma` / `quiero`, `una`, `los` / `the`,
+`want`, ...) plus letters only one language uses (`ã`, `ç` / `ñ`, `¿`), falling back to
+English. The detected language is returned in `Answer.language` and the API response.
+
+**Why:** the notice is a safety rule, so it must be readable by the guest, and it is
+written in code precisely so it never depends on the LLM. Detection follows the same
+pattern as restriction and course detection: small, deterministic, and testable. A
+language-detection library would be a new dependency and is unreliable on the very short
+texts guests type.
+
+**Trade-off:** keyword-only queries with no function words ("fideos picantes",
+"cordeiro grelhado") fall back to English; the LLM's reply is still in the guest's
+language, so only the notice is affected. Adding a language means a word list plus a
+translation of each fixed text (a test checks every language has every text). CLI labels
+(`Sources`, `Note`) stay in English.

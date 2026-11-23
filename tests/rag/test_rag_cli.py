@@ -10,7 +10,8 @@ from menu_assistant.ingest import load_menu
 from menu_assistant.llm import ChatMessage, LLMError
 from menu_assistant.models import Allergen, Course, DietaryFlag, Dish
 from menu_assistant.rag.__main__ import format_answer, main
-from menu_assistant.rag.answer import SAFETY_NOTICE, Answer
+from menu_assistant.rag.answer import SAFETY_NOTICES, Answer
+from menu_assistant.rag.language import Language
 from menu_assistant.rag.restrictions import Restrictions
 from menu_assistant.retrieval.search import RetrievedDish
 
@@ -76,14 +77,14 @@ def test_format_answer_shows_sources_restrictions_and_notice(sample_menu_dish: D
             require_flags=frozenset({DietaryFlag.VEGAN}),
         ),
         course=Course.STARTER,
-        notice=SAFETY_NOTICE,
+        notice=SAFETY_NOTICES[Language.EN],
     )
 
     output = format_answer(answer)
 
     assert "Sources:\n  - Salted Edamame [edamame]" in output
     assert "Restrictions applied: excludes milk; must be vegan\nCourse: starter" in output
-    assert output.endswith(f"Note: {SAFETY_NOTICE}")
+    assert output.endswith(f"Note: {SAFETY_NOTICES[Language.EN]}")
 
 
 @pytest.fixture

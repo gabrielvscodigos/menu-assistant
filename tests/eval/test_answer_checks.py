@@ -18,7 +18,8 @@ from menu_assistant.eval.answer_dataset import (
     load_answer_dataset,
 )
 from menu_assistant.models import Course, Dish, Menu
-from menu_assistant.rag.answer import NO_MATCH_TEXT, SAFETY_NOTICE, Answer
+from menu_assistant.rag.answer import NO_MATCH_TEXTS, SAFETY_NOTICES, Answer
+from menu_assistant.rag.language import Language
 from menu_assistant.rag.restrictions import Restrictions
 from menu_assistant.retrieval.search import RetrievedDish
 
@@ -84,7 +85,7 @@ def test_leaked_dishes_ignores_dishes_the_guest_named(sample_menu: Menu) -> None
         "Infelizmente não temos feijoada.",
         "Lo siento, no tenemos sushi.",
         "The menu doesn't include prices.",
-        NO_MATCH_TEXT,
+        NO_MATCH_TEXTS[Language.EN],
     ],
 )
 def test_acknowledges_unavailable(text: str) -> None:
@@ -152,8 +153,8 @@ def test_off_menu_case_checks_acknowledgement_not_citations(sample_menu: Menu) -
 
 
 def test_deterministic_no_match_reply_passes_off_menu_case(sample_menu: Menu) -> None:
-    answer = make_answer(sample_menu, NO_MATCH_TEXT, [], []).model_copy(
-        update={"notice": SAFETY_NOTICE}
+    answer = make_answer(sample_menu, NO_MATCH_TEXTS[Language.EN], [], []).model_copy(
+        update={"notice": SAFETY_NOTICES[Language.EN]}
     )
     off_menu = case(category="off_menu", relevant=[], expect_notice=True, expect_unavailable=True)
 

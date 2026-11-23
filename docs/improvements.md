@@ -9,7 +9,7 @@ longer note are recorded in [decisions.md](decisions.md).
 | --- | --------------------------------------------------- | ------- |
 | 1   | [Short CLI commands](#1--short-cli-commands)         | done    |
 | 2   | [LLM readiness check](#2--llm-readiness-check)       | done    |
-| 3   | [Fixed texts in the question's language](#3--fixed-texts-in-the-questions-language) | planned |
+| 3   | [Fixed texts in the question's language](#3--fixed-texts-in-the-questions-language) | done    |
 | 4   | [Ingredient dislikes](#4--ingredient-dislikes)       | planned |
 | 5   | [Follow-up questions](#5--follow-up-questions)       | planned |
 
@@ -90,7 +90,30 @@ be as clear as the answer itself.
 **Change:** detect the question's language deterministically (English, Portuguese,
 Spanish; English as fallback) and pick the fixed texts from a small translation table.
 
-**After:** to be filled in when implemented.
+**After:**
+
+- `rag/language.py` detects the language by counting words distinctive for each language
+  and letters only one of them uses (`ã`, `ç`, `ñ`, `¿`). Unclear questions fall back to
+  English.
+- `SAFETY_NOTICES` and `NO_MATCH_TEXTS` in `rag/answer.py` hold each text in the three
+  languages; the answer service picks the one for the detected language.
+- `Answer.language` and the API response's new `language` field (`en`, `pt`, `es`) show
+  which language was detected, so a UI can label its own text to match.
+
+```text
+$ uv run menu-ask "Tenho alergia a amendoim, tem algum macarrão apimentado?"
+...
+Note: As informações sobre alérgenos e restrições alimentares vêm do cardápio e podem
+estar incompletas. Confirme com a equipe do restaurante antes de pedir.
+```
+
+Checked against all 72 questions in the two evaluation datasets: every full-sentence
+question is detected correctly. Three short keyword queries without function words
+("fideos picantes", "cordeiro grelhado", "comida mexicana apimentada") fall back to
+English, which only affects the notice, since the LLM still answers in the guest's
+language. Tests cover each language, the fallback, accents and case, the notice and the
+"no match" reply per language, the API field, and that every language has every text.
+Trade-offs: [decision 021](decisions.md#021--fixed-texts-follow-the-questions-language-detected-by-word-lists).
 
 ## 4 — Ingredient dislikes
 

@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from menu_assistant.models import Allergen, Course, DietaryFlag
 from menu_assistant.rag.answer import Answer
+from menu_assistant.rag.language import Language
 from menu_assistant.retrieval.search import RetrievedDish
 
 
@@ -71,7 +72,10 @@ class AskResponse(BaseModel):
     sources: list[DishSource] = Field(description="dishes the answer cites")
     candidates: list[DishSource] = Field(description="all dishes the LLM was given")
     applied_restrictions: AppliedRestrictions
-    notice: str | None = Field(description="staff-confirmation notice, if required")
+    language: Language = Field(description="detected language of the question (en, pt, es)")
+    notice: str | None = Field(
+        description="staff-confirmation notice, if required, in the question's language"
+    )
 
     @classmethod
     def from_answer(cls, answer: Answer) -> "AskResponse":
@@ -84,6 +88,7 @@ class AskResponse(BaseModel):
                 require_flags=sorted(answer.restrictions.require_flags),
                 course=answer.course,
             ),
+            language=answer.language,
             notice=answer.notice,
         )
 
