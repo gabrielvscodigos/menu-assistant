@@ -327,6 +327,7 @@ src/menu_assistant/
 data/         dados de cardápio de exemplo (fictícios)
 tests/        espelha a estrutura de src/
 docs/         notas de arquitetura e decisões (em inglês)
+frontend/     front end do chat com o mascote (React + TypeScript, veja frontend/README.md)
 ```
 
 As decisões de design e seus trade-offs estão registrados em

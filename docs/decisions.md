@@ -379,3 +379,24 @@ an earlier course is only steered by the query text. The client can edit the his
 sends, so restrictions are only as trustworthy as the client, as with explicit
 restrictions. "Tell me more about the second one" works only if that dish is retrieved
 again for the combined query.
+
+## 024 — Front end: React, Vite, TypeScript, Tailwind, Biome
+
+**Decision:** the chat front end lives in `frontend/` as a React 19 single-page app built
+with Vite, written in strict TypeScript, styled with Tailwind CSS, and animated with SVG
+and Motion for the mascot. Biome lints and formats, Vitest with Testing Library tests,
+and pnpm manages packages. In development, Vite proxies `/api/*` to the FastAPI server.
+
+**Why:** the backend already does all the work behind one stateless endpoint, so the front
+end only needs to render a conversation; a single-page app served as static files is
+enough, and a framework with its own server (Next.js) would add a second backend. React
+has the largest ecosystem and is what most readers of a portfolio know. Tailwind keeps
+styling consistent without a separate CSS architecture. Drawing the mascot as SVG and
+animating its moods in code needs no design tool and keeps every state testable. Biome is
+one fast tool for lint and format, the same role ruff plays on the Python side. The dev
+proxy gives the browser one origin, so the API needs no CORS settings.
+
+**Trade-off:** two toolchains (uv and pnpm) in one repository, and a second CI job. The
+current jsdom major (30+) needs Node 22.22 or newer, so jsdom is pinned to 29 to support
+the Node 22.13 used locally; moving to a newer Node lifts that pin. A static single-page
+app has no server-side rendering, which a chat behind an interactive UI does not need.

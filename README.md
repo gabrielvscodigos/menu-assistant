@@ -304,6 +304,7 @@ src/menu_assistant/
 data/         sample (fictional) menu data
 tests/        mirrors src/ structure
 docs/         architecture notes and decisions
+frontend/     chat front end with the mascot (React + TypeScript, see frontend/README.md)
 ```
 
 Design decisions and their trade-offs are recorded in
