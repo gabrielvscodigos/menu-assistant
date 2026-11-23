@@ -330,3 +330,27 @@ texts guests type.
 language, so only the notice is affected. Adding a language means a word list plus a
 translation of each fixed text (a test checks every language has every text). CLI labels
 (`Sources`, `Note`) stay in English.
+
+## 022 — Disliked ingredients are filtered in code, after the vector search
+
+**Decision:** guests can exclude ingredients explicitly (`exclude_ingredients`,
+`--without`) or in the question ("no cilantro", "sem cebola", "no me gustan los
+tomates"). Detection uses a fixed English/Portuguese/Spanish word list mapped to English
+terms, with the same cue rules as allergens. A term excludes a dish when it appears as
+whole words, singular or plural, in any of its ingredients. The filter runs in
+`MenuRetriever` against the dish data; when it is active the whole menu is fetched, and
+the restriction triggers the staff notice like allergens do.
+
+**Why:** the project rule is that restrictions are enforced in code, never by the LLM
+alone, and small models are unreliable at skipping a dish they were handed. Ingredients
+are free text, so unlike allergens they cannot become boolean metadata keys; matching
+words in code keeps the filter exact and testable. Fetching the whole menu guarantees `k`
+results even when most of the nearest dishes are excluded (a test proves the top-`k` pool
+alone would not be enough).
+
+**Trade-off:** matching is deliberately broad within whole words: "rice" also excludes a
+dish with rice vinegar. Ingredients hidden inside a component the menu does not break down
+(an onion in a sauce listed as "tomato sauce") cannot be caught, which is one more reason
+for the staff notice. Explicit terms go through the same word list ("cebola" → `onion`);
+other words are matched as given, so they must be in English like the menu. Fetching the whole menu is fine for restaurant menus
+(dozens to a few hundred dishes), not for large catalogs.

@@ -19,7 +19,8 @@ grounded in each dish's ingredients, preparation, dietary flags, and allergens.
 - **Grounded answers only.** The LLM answers exclusively from retrieved menu data and
   cites the dishes it used. If something is not on the menu, it says so.
 - **Deterministic safety filters.** Allergen and dietary filtering is done with metadata
-  filters in code, never delegated to the LLM.
+  filters in code, never delegated to the LLM. Disliked ingredients ("no cilantro",
+  "sem cebola") are filtered in code too, against each dish's ingredient list.
 - **Staff confirmation notice.** Every answer involving allergens or dietary restrictions
   reminds the user to confirm with restaurant staff, in the language of the question
   (English, Portuguese, or Spanish).
@@ -82,7 +83,9 @@ With the menu indexed and Ollama running:
 uv run menu-ask "I like spicy ramen, what else here would I enjoy?"
 uv run menu-ask "I'm allergic to peanuts. Any spicy noodles?"
 uv run menu-ask "something light" --exclude soy --diet vegan
+uv run menu-ask "a hearty curry" --without onion --without garlic
 uv run menu-ask "Quero uma sobremesa vegana"   # course: dessert
+uv run menu-ask "tacos sem coentro"            # avoids cilantro and coriander
 ```
 
 Example output:
@@ -100,9 +103,10 @@ Restrictions applied: none
 
 How an answer is produced:
 
-1. **Restrictions are decided in code.** `--exclude` / `--diet` options are combined with
-   restrictions detected in the question ("allergic to peanuts", "sou vegano",
-   "sin gluten"), using deterministic patterns in English, Portuguese, and Spanish.
+1. **Restrictions are decided in code.** `--exclude` / `--diet` / `--without` options are
+   combined with restrictions detected in the question ("allergic to peanuts", "sou
+   vegano", "sin gluten", "no onions"), using deterministic patterns in English,
+   Portuguese, and Spanish.
    A requested course ("a vegan dessert", "um prato principal") is detected the same way,
    or set with `--course`.
 2. **Retrieval applies them as exact filters**, so excluded dishes never reach the LLM.
@@ -142,7 +146,8 @@ curl -X POST http://127.0.0.1:8000/ask \
   "sources": [{"id": "spicy-miso-ramen", "name": "Spicy Miso Ramen", "course": "main",
                "allergens": ["eggs", "gluten", "sesame", "soy"], "dietary_flags": [], "score": 0.91}],
   "candidates": ["... every dish the LLM was given ..."],
-  "applied_restrictions": {"exclude_allergens": ["peanuts"], "require_flags": [], "course": null},
+  "applied_restrictions": {"exclude_allergens": ["peanuts"], "require_flags": [],
+                           "exclude_ingredients": [], "course": null},
   "language": "en",
   "notice": "Allergen and dietary information comes from the menu and may be incomplete. ..."
 }
@@ -200,15 +205,16 @@ Any other Ollama model works by setting `MENU_ASSISTANT_LLM_MODEL` (larger model
 
 ## Evaluation
 
-Retrieval is measured on 44 hand-labeled queries (taste preferences, allergen/diet
-filters, Brazilian Portuguese and Spanish questions) with recall@5, MRR, and a filter-violation
+Retrieval is measured on 49 hand-labeled queries (taste preferences, allergen, diet, and
+ingredient filters, Brazilian Portuguese and Spanish questions) with recall@5, MRR, and a filter-violation
 count that must stay at zero.
 
 | Configuration                                   | recall@5  | MRR       | violations |
 | ----------------------------------------------- | --------: | --------: | ---------: |
 | Baseline (MiniLM-L12, pure vector search)       |     0.750 |     0.783 |          0 |
 | multilingual-e5-base + tag boost (34 cases)     |     0.956 |     0.934 |          0 |
-| **Current** (+ Portuguese tag aliases, 44 cases) | **0.989** | **0.966** |          0 |
+| + Portuguese tag aliases (44 cases)             |     0.989 |     0.966 |          0 |
+| **Current** (+ 5 ingredient-dislike cases, 49)  | **0.990** | **0.969** |          0 |
 
 Generated answers are checked separately on 28 questions (with Ollama running) using
 deterministic rules, not an LLM judge:

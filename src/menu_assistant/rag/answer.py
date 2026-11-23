@@ -199,6 +199,7 @@ class AnswerService:
                 query=question,
                 exclude_allergens=restrictions.exclude_allergens,
                 require_flags=restrictions.require_flags,
+                exclude_ingredients=restrictions.exclude_ingredients,
                 course=course,
                 k=self._k,
             )

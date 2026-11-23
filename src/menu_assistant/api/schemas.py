@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from menu_assistant.models import Allergen, Course, DietaryFlag
 from menu_assistant.rag.answer import Answer
 from menu_assistant.rag.language import Language
+from menu_assistant.retrieval.ingredients import IngredientTerm
 from menu_assistant.retrieval.search import RetrievedDish
 
 
@@ -21,6 +22,7 @@ class AskRequest(BaseModel):
                     "question": "I like spicy ramen, what else here would I enjoy?",
                     "exclude_allergens": ["peanuts"],
                     "require_flags": [],
+                    "exclude_ingredients": ["cilantro"],
                     "course": None,
                 }
             ]
@@ -30,6 +32,11 @@ class AskRequest(BaseModel):
     question: str = Field(min_length=1, max_length=500)
     exclude_allergens: list[Allergen] = Field(default_factory=list)
     require_flags: list[DietaryFlag] = Field(default_factory=list)
+    exclude_ingredients: list[IngredientTerm] = Field(
+        default_factory=list,
+        max_length=10,
+        description="ingredients to avoid, e.g. onion, cilantro (common pt/es words are mapped)",
+    )
     course: Course | None = Field(
         default=None, description="only suggest this course; detected from the question if omitted"
     )
@@ -62,6 +69,7 @@ class AppliedRestrictions(BaseModel):
 
     exclude_allergens: list[Allergen]
     require_flags: list[DietaryFlag]
+    exclude_ingredients: list[str]
     course: Course | None = None
 
 
@@ -86,6 +94,7 @@ class AskResponse(BaseModel):
             applied_restrictions=AppliedRestrictions(
                 exclude_allergens=sorted(answer.restrictions.exclude_allergens),
                 require_flags=sorted(answer.restrictions.require_flags),
+                exclude_ingredients=sorted(answer.restrictions.exclude_ingredients),
                 course=answer.course,
             ),
             language=answer.language,

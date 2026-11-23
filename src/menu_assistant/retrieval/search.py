@@ -4,6 +4,9 @@ Filtering happens twice, both in code and never by the LLM:
 1. as an exact metadata filter inside the vector store query, and
 2. as a final check against the full dish data, so a stale or malformed index entry
    can never leak a dish that breaks the user's restrictions.
+
+Disliked ingredients are free text, so they cannot be a metadata filter: they are only
+checked against the dish data, and the whole menu is searched so enough dishes remain.
 """
 
 import logging
@@ -14,6 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from menu_assistant.models import Allergen, Course, DietaryFlag, Dish, NonEmptyStr
 from menu_assistant.retrieval.embeddings import Embedder
+from menu_assistant.retrieval.ingredients import IngredientTerm, disliked_ingredients
 from menu_assistant.retrieval.metadata import COURSE_KEY, DISH_JSON_KEY, allergen_key, diet_key
 from menu_assistant.retrieval.ranking import matched_tags
 
@@ -32,6 +36,7 @@ class SearchRequest(BaseModel):
     query: NonEmptyStr
     exclude_allergens: frozenset[Allergen] = frozenset()
     require_flags: frozenset[DietaryFlag] = frozenset()
+    exclude_ingredients: frozenset[IngredientTerm] = Field(default=frozenset(), max_length=10)
     course: Course | None = None
     k: int = Field(default=5, ge=1, le=MAX_RESULTS)
 
@@ -68,7 +73,14 @@ def build_where(request: SearchRequest) -> Where | None:
 
 
 def satisfies(dish: Dish, request: SearchRequest) -> bool:
-    """Check the request's restrictions against the dish data itself."""
+    """Check every restriction of the request against the dish data itself."""
+    return _passes_metadata_filter(dish, request) and not disliked_ingredients(
+        dish, request.exclude_ingredients
+    )
+
+
+def _passes_metadata_filter(dish: Dish, request: SearchRequest) -> bool:
+    """The restrictions `build_where` also applies inside the vector store."""
     return (
         not (dish.allergens & request.exclude_allergens)
         and request.require_flags <= dish.dietary_flags
@@ -88,6 +100,9 @@ class MenuRetriever:
 
     def search(self, request: SearchRequest) -> list[RetrievedDish]:
         pool_size = max(request.k, RERANK_POOL_SIZE) if self._tag_boost else request.k
+        if request.exclude_ingredients:
+            # Any number of the closest dishes may be dropped below; menus are small.
+            pool_size = max(pool_size, self._collection.count())
         candidates = self._query(request, pool_size)
         ranked = sorted(candidates, key=lambda candidate: candidate.score, reverse=True)
         return ranked[: request.k]
@@ -110,10 +125,12 @@ class MenuRetriever:
             if not isinstance(dish_json, str):
                 raise RuntimeError(f"indexed entry is missing '{DISH_JSON_KEY}'; re-run ingestion")
             dish = Dish.model_validate_json(dish_json)
-            if not satisfies(dish, request):
+            if not _passes_metadata_filter(dish, request):
                 logger.warning(
                     "dropped dish '%s': index metadata disagrees with dish data", dish.id
                 )
+                continue
+            if disliked_ingredients(dish, request.exclude_ingredients):
                 continue
             candidates.append(self._score(dish, 1.0 - distance, request.query))
         return candidates

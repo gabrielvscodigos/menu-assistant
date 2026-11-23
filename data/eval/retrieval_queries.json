@@ -29,6 +29,11 @@
     {"id": "filt-seafood-no-shellfish", "category": "filtered", "query": "seafood", "exclude_allergens": ["crustaceans", "molluscs"], "relevant": ["grilled-salmon", "fish-tacos"]},
     {"id": "filt-noodles-no-egg-milk", "category": "filtered", "query": "noodles", "exclude_allergens": ["eggs", "milk"], "relevant": ["dan-dan-noodles", "mushroom-shoyu-ramen"]},
     {"id": "filt-japanese-no-sesame", "category": "filtered", "query": "Japanese food", "exclude_allergens": ["sesame"], "relevant": ["mushroom-shoyu-ramen", "edamame"]},
+    {"id": "filt-curry-no-onion", "category": "filtered", "query": "a hearty curry", "exclude_ingredients": ["onion"], "relevant": ["chicken-tikka-masala", "tofu-green-curry"]},
+    {"id": "filt-noodles-no-pork", "category": "filtered", "query": "noodles", "exclude_ingredients": ["pork"], "relevant": ["mushroom-shoyu-ramen"]},
+    {"id": "filt-pasta-no-pork", "category": "filtered", "query": "Italian pasta", "exclude_ingredients": ["pork"], "relevant": ["walnut-pesto-gnocchi"]},
+    {"id": "filt-tacos-sem-coentro", "category": "filtered", "query": "tacos sem coentro", "exclude_ingredients": ["cilantro", "coriander"], "relevant": ["fish-tacos"]},
+    {"id": "filt-tacos-sin-cebolla", "category": "filtered", "query": "tacos sin cebolla", "exclude_ingredients": ["onion"], "relevant": ["fish-tacos"]},
 
     {"id": "multi-pt-coconut-sweet", "category": "multilingual", "query": "algo doce com coco", "relevant": ["mango-sticky-rice"]},
     {"id": "multi-pt-vegan-spicy", "category": "multilingual", "query": "quero um prato vegano e picante", "relevant": ["tofu-green-curry", "chana-masala"]},

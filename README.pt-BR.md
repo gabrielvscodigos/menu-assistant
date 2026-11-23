@@ -24,6 +24,8 @@ alérgenos de cada prato.
   diz isso.
 - **Filtros de segurança determinísticos.** A filtragem de alérgenos e de restrições
   alimentares é feita com filtros de metadados no código, nunca delegada ao LLM.
+  Ingredientes que a pessoa não quer ("sem cebola", "no cilantro") também são filtrados no
+  código, pela lista de ingredientes de cada prato.
 - **Aviso para confirmar com a equipe.** Toda resposta que envolve alérgenos ou
   restrições alimentares lembra o usuário de confirmar com a equipe do restaurante, no
   idioma da pergunta (inglês, português ou espanhol).
@@ -90,6 +92,8 @@ Com o cardápio indexado e o Ollama rodando:
 uv run menu-ask "Quero uma sobremesa vegana"   # prato: sobremesa
 uv run menu-ask "Tenho alergia a amendoim. Tem algum macarrão apimentado?"
 uv run menu-ask "algo leve" --exclude soy --diet vegan
+uv run menu-ask "tacos sem coentro"            # evita coentro (cilantro e coriander)
+uv run menu-ask "um curry encorpado" --without onion --without garlic
 uv run menu-ask "I like spicy ramen, what else here would I enjoy?"
 ```
 
@@ -112,9 +116,9 @@ prato atende" também. Os rótulos da saída (`Sources`, `Note`) continuam em in
 
 Como uma resposta é produzida:
 
-1. **As restrições são decididas no código.** As opções `--exclude` / `--diet` são
-   combinadas com restrições detectadas na pergunta ("sou alérgico a amendoim",
-   "sou vegano", "sem glúten"), usando padrões determinísticos em inglês, português e
+1. **As restrições são decididas no código.** As opções `--exclude` / `--diet` /
+   `--without` são combinadas com restrições detectadas na pergunta ("sou alérgico a
+   amendoim", "sou vegano", "sem glúten", "sem cebola"), usando padrões determinísticos em inglês, português e
    espanhol. Um tipo de prato pedido ("uma sobremesa vegana", "um prato principal") é
    detectado da mesma forma, ou definido com `--course`.
 2. **A busca aplica as restrições como filtros exatos**, então pratos excluídos nunca
@@ -158,7 +162,8 @@ curl -X POST http://127.0.0.1:8000/ask \
   "sources": [{"id": "spicy-miso-ramen", "name": "Spicy Miso Ramen", "course": "main",
                "allergens": ["eggs", "gluten", "sesame", "soy"], "dietary_flags": [], "score": 0.91}],
   "candidates": ["... todos os pratos que o LLM recebeu ..."],
-  "applied_restrictions": {"exclude_allergens": ["peanuts"], "require_flags": [], "course": null},
+  "applied_restrictions": {"exclude_allergens": ["peanuts"], "require_flags": [],
+                           "exclude_ingredients": [], "course": null},
   "language": "pt",
   "notice": "As informações sobre alérgenos e restrições alimentares vêm do cardápio e podem estar incompletas. ..."
 }
@@ -220,15 +225,16 @@ maiores, como `qwen2.5:7b`, seguem as instruções de fundamentação com mais c
 
 ## Avaliação
 
-A busca é medida em 44 consultas rotuladas à mão (preferências de sabor, filtros de
-alérgenos e dietas, perguntas em português do Brasil e espanhol) com recall@5, MRR e uma
+A busca é medida em 49 consultas rotuladas à mão (preferências de sabor, filtros de
+alérgenos, dietas e ingredientes, perguntas em português do Brasil e espanhol) com recall@5, MRR e uma
 contagem de violações de filtro que precisa continuar em zero.
 
 | Configuração                                       | recall@5  | MRR       | violações |
 | -------------------------------------------------- | --------: | --------: | --------: |
 | Base (MiniLM-L12, busca vetorial pura)             |     0.750 |     0.783 |         0 |
 | multilingual-e5-base + bônus por tag (34 casos)    |     0.956 |     0.934 |         0 |
-| **Atual** (+ aliases de tags em português, 44 casos) | **0.989** | **0.966** |       0 |
+| + aliases de tags em português (44 casos)          |     0.989 |     0.966 |         0 |
+| **Atual** (+ 5 casos de ingredientes evitados, 49) | **0.990** | **0.969** |         0 |
 
 Os aliases em português (`apimentado` → `spicy`, `macarrão` → `noodles`) elevaram o
 recall@5 das consultas multilíngues de 0.765 para 1.000.

@@ -6,6 +6,7 @@ from menu_assistant.models import Allergen, DietaryFlag
 from menu_assistant.rag.restrictions import (
     Restrictions,
     detect_restrictions,
+    ingredient_terms,
     mentions_dietary_topic,
 )
 
@@ -103,3 +104,65 @@ def test_restrictions_merge_and_truthiness() -> None:
 )
 def test_mentions_dietary_topic(question: str, expected: bool) -> None:
     assert mentions_dietary_topic(question) is expected
+
+
+@pytest.mark.parametrize(
+    ("question", "ingredients"),
+    [
+        ("something spicy, no cilantro please", {"cilantro"}),
+        ("I hate onions", {"onion"}),
+        ("I don't like mushrooms or garlic", {"mushroom", "shiitake", "garlic"}),
+        ("tacos, hold the onion", {"onion"}),
+        ("onion-free curry?", {"onion"}),
+        ("algo sem cebola e sem alho", {"onion", "garlic"}),
+        ("não gosto de coentro", {"cilantro", "coriander"}),
+        ("odeio cogumelos, tem massa?", {"mushroom", "shiitake"}),
+        ("tem algo sem carne de porco?", {"pork"}),
+        ("tacos sin cebolla ni cilantro", {"onion", "cilantro"}),
+        ("no me gustan los tomates", {"tomato"}),
+    ],
+)
+def test_detects_ingredients_to_avoid(question: str, ingredients: set[str]) -> None:
+    assert detect_restrictions(question).exclude_ingredients == ingredients
+
+
+@pytest.mark.parametrize(
+    "question",
+    [
+        "I love onions and garlic",
+        "Do you have chicken?",
+        "tem frango com cogumelos?",
+        "quiero algo con tomate",
+    ],
+)
+def test_ignores_ingredients_mentioned_without_a_cue(question: str) -> None:
+    assert detect_restrictions(question).exclude_ingredients == set()
+
+
+def test_ingredient_cue_does_not_cross_into_the_next_clause() -> None:
+    restrictions = detect_restrictions("No onions, please. Do you have chicken?")
+
+    assert restrictions.exclude_ingredients == {"onion"}
+
+
+def test_disliked_ingredients_make_restrictions_truthy_and_merge() -> None:
+    explicit = Restrictions(exclude_ingredients=frozenset({"onion"}))
+    detected = Restrictions(exclude_ingredients=frozenset({"garlic"}))
+
+    merged = explicit.merge(detected)
+
+    assert merged.exclude_ingredients == {"onion", "garlic"}
+    assert explicit
+
+
+@pytest.mark.parametrize(
+    ("words", "terms"),
+    [
+        (["cebola"], {"onion"}),
+        (["Cebolas", "coentro"], {"onion", "cilantro", "coriander"}),
+        (["onion"], {"onion"}),
+        (["fish sauce"], {"fish sauce"}),  # not in the word list: kept as given
+    ],
+)
+def test_ingredient_terms_maps_known_words(words: list[str], terms: set[str]) -> None:
+    assert ingredient_terms(words) == terms

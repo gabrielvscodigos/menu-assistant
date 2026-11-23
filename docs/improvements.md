@@ -10,7 +10,7 @@ longer note are recorded in [decisions.md](decisions.md).
 | 1   | [Short CLI commands](#1--short-cli-commands)         | done    |
 | 2   | [LLM readiness check](#2--llm-readiness-check)       | done    |
 | 3   | [Fixed texts in the question's language](#3--fixed-texts-in-the-questions-language) | done    |
-| 4   | [Ingredient dislikes](#4--ingredient-dislikes)       | planned |
+| 4   | [Ingredient dislikes](#4--ingredient-dislikes)       | done    |
 | 5   | [Follow-up questions](#5--follow-up-questions)       | planned |
 
 ## 1 — Short CLI commands
@@ -131,7 +131,37 @@ onion dish has a worse experience, and the LLM is unreliable at this.
 Open question for implementation: ingredients are written in English, so Portuguese and
 Spanish words need a mapping, as the tag aliases do.
 
-**After:** to be filled in when implemented.
+**After:**
+
+- **Matching** (`retrieval/ingredients.py`): a term excludes a dish when it appears as
+  whole words, singular or plural, in any ingredient: `onion` matches "white onion" and
+  "sumac onions", `chili` matches "ancho chilies", `pork` matches "guanciale (cured pork
+  cheek)", but `pea` does not match "chickpeas".
+- **Filtering** (`MenuRetriever`): ingredients are free text, so they cannot be a
+  ChromaDB metadata filter. Dishes are checked against their ingredient list after the
+  vector search, and the whole menu is fetched when exclusions are present, so `k`
+  results are still returned when most of the nearest dishes are excluded.
+- **Detection** (`rag/restrictions.py`): a fixed English/Portuguese/Spanish word list
+  maps common dislikes to English terms ("cebola" → `onion`, "coentro" → `cilantro` +
+  `coriander`, "cogumelo" → `mushroom` + `shiitake`). It reuses the allergen cue rules
+  and adds dislike cues ("não gosto de", "odeio", "hate", "hold the"). "I love onions"
+  excludes nothing.
+- **Explicit input:** `exclude_ingredients` in `POST /ask` and `--without` in the CLI.
+  Known Portuguese/Spanish words go through the same list (`--without cebola` → `onion`).
+- **Transparency and safety:** the terms appear in `applied_restrictions` and in the
+  prompt ("without garlic, onion"), and, like allergens, they trigger the staff notice.
+
+```bash
+uv run menu-ask "tacos sem coentro"
+uv run menu-ask "a hearty curry" --without onion --without garlic
+```
+
+Five labeled retrieval cases were added (`filt-curry-no-onion`, `filt-tacos-sem-coentro`,
+...). They score recall@5 = 1.0 and MRR = 1.0 with 0 violations; the full set of 49 cases
+went from 0.989 / 0.966 to 0.990 / 0.969. Tests cover matching (plurals, parentheses,
+accents, whole words), filtering (including a test that fails if only the top `k` are
+fetched), detection in the three languages, the API and CLI inputs, and the prompt.
+Trade-offs: [decision 022](decisions.md#022--disliked-ingredients-are-filtered-in-code-after-the-vector-search).
 
 ## 5 — Follow-up questions
 

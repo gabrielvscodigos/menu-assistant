@@ -10,6 +10,7 @@ from menu_assistant.ingest.documents import dish_to_document, dish_to_metadata
 from menu_assistant.ingest.indexer import index_menu
 from menu_assistant.models import Allergen, Course, DietaryFlag, Dish, Menu
 from menu_assistant.retrieval.embeddings import Embedder
+from menu_assistant.retrieval.ingredients import disliked_ingredients
 from menu_assistant.retrieval.metadata import allergen_key
 from menu_assistant.retrieval.search import (
     MenuRetriever,
@@ -214,3 +215,45 @@ def test_without_boost_score_equals_similarity(retriever: MenuRetriever) -> None
 def test_negative_tag_boost_is_rejected(collection: Collection, fake_embedder: Embedder) -> None:
     with pytest.raises(ValueError):
         MenuRetriever(collection, fake_embedder, tag_boost=-0.1)
+
+
+# --- disliked ingredients ------------------------------------------------------
+
+
+def test_disliked_ingredient_removes_even_the_nearest_dish(
+    sample_menu: Menu, retriever: MenuRetriever
+) -> None:
+    request = query_for(sample_menu, "chana-masala", exclude_ingredients=frozenset({"onion"}))
+
+    results = retriever.search(request)
+
+    assert "chana-masala" not in {r.dish.id for r in results}
+    assert all(not disliked_ingredients(r.dish, {"onion"}) for r in results)
+
+
+def test_disliked_ingredients_still_fill_k_results(
+    sample_menu: Menu, retriever: MenuRetriever
+) -> None:
+    # These remove most of the menu, so the nearest k dishes alone would not be enough.
+    disliked = frozenset({"wheat", "egg", "garlic"})
+    remaining = [d for d in sample_menu.dishes if not disliked_ingredients(d, disliked)]
+
+    results = retriever.search(SearchRequest(query="noodles", exclude_ingredients=disliked, k=5))
+
+    assert len(results) == min(5, len(remaining))
+    assert all(not disliked_ingredients(r.dish, disliked) for r in results)
+
+
+def test_satisfies_checks_disliked_ingredients(sample_menu: Menu) -> None:
+    dish = get_dish(sample_menu, "chana-masala")
+
+    assert not satisfies(dish, SearchRequest(query="x", exclude_ingredients=frozenset({"onion"})))
+    assert satisfies(dish, SearchRequest(query="x", exclude_ingredients=frozenset({"pork"})))
+
+
+def test_ingredient_terms_are_normalized_and_validated() -> None:
+    request = SearchRequest(query="x", exclude_ingredients=frozenset({"  Onion "}))
+
+    assert request.exclude_ingredients == {"onion"}
+    with pytest.raises(ValidationError):
+        SearchRequest(query="x", exclude_ingredients=frozenset({"x"}))

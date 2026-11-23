@@ -9,17 +9,17 @@ How search quality is measured, and the results so far.
 
 ## Method
 
-[`data/eval/retrieval_queries.json`](../data/eval/retrieval_queries.json) holds 44
-hand-labeled queries against the sample menu (34 original cases plus 10 Brazilian
-Portuguese cases added in the pt-BR experiment below). Each case has a query, optional hard
-restrictions (allergens to exclude, required dietary flags, course), and the set of dishes
-a reasonable server would suggest.
+[`data/eval/retrieval_queries.json`](../data/eval/retrieval_queries.json) holds 49
+hand-labeled queries against the sample menu (34 original cases, 10 Brazilian Portuguese
+cases added in the pt-BR experiment below, and 5 ingredient-dislike cases). Each case has a
+query, optional hard restrictions (allergens to exclude, required dietary flags, ingredients
+to avoid, course), and the set of dishes a reasonable server would suggest.
 
 | Category       | Cases | What it tests                                                   |
 | -------------- | ----: | --------------------------------------------------------------- |
 | `preference`   |    16 | Taste-based requests ("I like spicy ramen", "creamy and mild")  |
-| `filtered`     |    11 | Requests with allergen, diet, or course restrictions            |
-| `multilingual` |     7 | Portuguese and Spanish queries against the English menu         |
+| `filtered`     |    16 | Requests with allergen, diet, ingredient, or course restrictions |
+| `multilingual` |    17 | Portuguese and Spanish queries against the English menu         |
 
 Labels are validated before every run: a relevant dish must exist on the menu and must
 satisfy the case's own restrictions.
@@ -46,7 +46,8 @@ uv run menu-eval --cases    # plus every query, hits marked with *
 | 2026-11-16 | Baseline: `paraphrase-multilingual-MiniLM-L12-v2`, cosine |    0.750 | 0.783 |          0 |
 | 2026-11-16 | `multilingual-e5-base` + tag boost 0.05 (34 cases)        |    0.956 | 0.934 |          0 |
 | 2026-11-16 | Same, 44 cases (10 pt-BR added)                          |    0.898 | 0.843 |          0 |
-| 2026-11-16 | **Current default:** + Portuguese tag aliases (44 cases) | **0.989** | **0.966** |      0 |
+| 2026-11-16 | + Portuguese tag aliases (44 cases)                      |    0.989 | 0.966 |          0 |
+| 2026-11-23 | **Current default:** same, 49 cases (5 ingredient dislikes) | **0.990** | **0.969** |   0 |
 
 See [Experiment: embedding model × tag boost](#experiment-embedding-model--tag-boost)
 for how the default was chosen.

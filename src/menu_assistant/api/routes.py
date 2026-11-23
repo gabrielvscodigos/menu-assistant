@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from menu_assistant.api.schemas import AskRequest, AskResponse, HealthResponse
 from menu_assistant.llm import LLMError
 from menu_assistant.rag.answer import AnswerService
-from menu_assistant.rag.restrictions import Restrictions
+from menu_assistant.rag.restrictions import Restrictions, ingredient_terms
 
 router = APIRouter()
 
@@ -52,6 +52,7 @@ def ask(
     explicit = Restrictions(
         exclude_allergens=frozenset(body.exclude_allergens),
         require_flags=frozenset(body.require_flags),
+        exclude_ingredients=ingredient_terms(body.exclude_ingredients),
     )
     try:
         answer = service.answer(body.question, explicit, body.course)

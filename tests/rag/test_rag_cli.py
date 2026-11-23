@@ -60,6 +60,17 @@ def test_unknown_course_option_is_rejected() -> None:
         main(["q", "--course", "brunch"])
 
 
+def test_too_short_ingredient_option_is_rejected() -> None:
+    with pytest.raises(SystemExit):
+        main(["q", "--without", "x"])
+
+
+def test_ingredient_option_is_normalized() -> None:
+    args = cli.build_parser().parse_args(["q", "--without", " Onion ", "--without", "garlic"])
+
+    assert args.without == ["onion", "garlic"]
+
+
 def test_unknown_allergen_option_is_rejected() -> None:
     with pytest.raises(SystemExit):
         main(["q", "--exclude", "glutten"])

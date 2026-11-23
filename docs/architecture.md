@@ -84,14 +84,17 @@ Entry points: `menu-ask "<question>"` and `POST /ask`. Both call
 
 Restrictions come from two sources and are merged:
 
-- **Explicit:** `--exclude` / `--diet` on the CLI, `exclude_allergens` / `require_flags`
-  in the API. This is the reliable path for a UI.
+- **Explicit:** `--exclude` / `--diet` / `--without` on the CLI, `exclude_allergens` /
+  `require_flags` / `exclude_ingredients` in the API. This is the reliable path for a UI.
 - **Detected:** deterministic patterns over the normalized question in English,
   Portuguese and Spanish ("allergic to peanuts", "sem glúten", "soy vegano"). An allergen
   word only counts next to a cue word in the same clause, so "I love peanuts" does not
-  exclude peanut dishes.
+  exclude peanut dishes. Disliked ingredients work the same way, from a fixed word list
+  mapped to English terms ("sem cebola" → `onion`, "coentro" → `cilantro`, `coriander`),
+  with dislike cues added ("não gosto de", "hate", "hold the").
 
-The result is a `Restrictions` value: allergens to exclude and flags to require.
+The result is a `Restrictions` value: allergens to exclude, flags to require, and
+ingredient terms to avoid.
 
 The requested **course** is decided the same way (`rag/course.py`): an explicit
 `--course` / `course`, otherwise explicit course words in the question ("dessert",
@@ -107,7 +110,10 @@ preference, not a safety rule: it filters retrieval but does not trigger the not
 2. Query ChromaDB with an exact `where` filter built from the restrictions and course
    (`build_where`), so only allowed dishes are ever candidates. A pool of 20 is fetched.
 3. Re-check every candidate against the full dish data (`satisfies`). A stale index entry
-   that disagrees is dropped and logged; it can never reach the LLM.
+   that disagrees is dropped and logged; it can never reach the LLM. Dishes with a
+   disliked ingredient are dropped here too (`retrieval/ingredients.py`: whole words,
+   singular or plural); since that filter cannot run inside ChromaDB, the whole menu is
+   fetched when there are ingredient exclusions.
 4. Re-rank: score = cosine similarity + `0.05` per dish tag named in the query, in
    English or through a Portuguese alias (`apimentado` → `spicy`).
 5. Return the top `k` as `RetrievedDish` (dish, similarity, matched tags, score).
@@ -117,7 +123,7 @@ signature matches the settings (`IndexNotReadyError` / `IndexMismatchError`).
 
 ### 3. Generation (`rag/prompt.py`, `llm/`)
 
-- If no dish passed the filters, a fixed `NO_MATCH_TEXT` is returned and the LLM is
+- If no dish passed the filters, a fixed "no match" text is returned and the LLM is
   **not** called.
 - Otherwise the user message contains the question, the applied restrictions and the
   retrieved dishes with every fact the model may use. The system prompt tells the model to

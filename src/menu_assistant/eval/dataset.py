@@ -6,6 +6,7 @@ from typing import Literal, Self
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from menu_assistant.models import Allergen, Course, DietaryFlag, DishId, Menu, NonEmptyStr
+from menu_assistant.retrieval.ingredients import IngredientTerm
 from menu_assistant.retrieval.search import SearchRequest, satisfies
 
 Category = Literal["preference", "filtered", "multilingual"]
@@ -21,6 +22,7 @@ class EvalCase(BaseModel):
     query: NonEmptyStr
     exclude_allergens: frozenset[Allergen] = frozenset()
     require_flags: frozenset[DietaryFlag] = frozenset()
+    exclude_ingredients: frozenset[IngredientTerm] = frozenset()
     course: Course | None = None
     relevant: frozenset[DishId] = Field(min_length=1)
 
@@ -29,6 +31,7 @@ class EvalCase(BaseModel):
             query=self.query,
             exclude_allergens=self.exclude_allergens,
             require_flags=self.require_flags,
+            exclude_ingredients=self.exclude_ingredients,
             course=self.course,
             k=k,
         )

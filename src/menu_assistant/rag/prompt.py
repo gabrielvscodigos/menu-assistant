@@ -52,6 +52,8 @@ def format_restrictions(restrictions: Restrictions) -> str:
         parts.append(f"excludes {', '.join(sorted(restrictions.exclude_allergens))}")
     if restrictions.require_flags:
         parts.append(f"must be {', '.join(sorted(restrictions.require_flags))}")
+    if restrictions.exclude_ingredients:
+        parts.append(f"without {', '.join(sorted(restrictions.exclude_ingredients))}")
     return "; ".join(parts)
 
 

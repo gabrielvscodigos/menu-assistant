@@ -83,6 +83,7 @@ def test_ask_combines_explicit_and_detected_restrictions(client: TestClient) -> 
     assert body["applied_restrictions"] == {
         "exclude_allergens": ["peanuts", "soy"],
         "require_flags": ["vegan"],
+        "exclude_ingredients": [],
         "course": None,
     }
     candidate_ids = {candidate["id"] for candidate in body["candidates"]}
@@ -105,12 +106,25 @@ def test_ask_returns_notice_in_the_question_language(client: TestClient) -> None
         {"question": "x" * 501},
         {"question": "ok", "exclude_allergens": ["glutten"]},
         {"question": "ok", "require_flags": ["keto"]},
+        {"question": "ok", "exclude_ingredients": ["x"]},
+        {"question": "ok", "exclude_ingredients": [f"item {n}" for n in range(11)]},
         {"question": "ok", "unexpected": True},
         {},
     ],
 )
 def test_invalid_requests_are_rejected(client: TestClient, payload: dict[str, object]) -> None:
     assert client.post("/ask", json=payload).status_code == 422
+
+
+def test_ask_excludes_explicit_and_detected_ingredients(client: TestClient) -> None:
+    body = client.post(
+        "/ask", json={"question": "any curry, no garlic?", "exclude_ingredients": ["cebola"]}
+    ).json()
+
+    assert body["applied_restrictions"]["exclude_ingredients"] == ["garlic", "onion"]
+    candidate_ids = {candidate["id"] for candidate in body["candidates"]}
+    assert candidate_ids.isdisjoint({"chana-masala", "chicken-tikka-masala", "lamb-kofta"})
+    assert body["notice"] == SAFETY_NOTICES[Language.EN]
 
 
 def test_llm_failure_returns_503(client: TestClient, llm: ScriptedLLM) -> None:

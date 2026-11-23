@@ -4,6 +4,8 @@ import argparse
 import sys
 from collections.abc import Sequence
 
+from pydantic import TypeAdapter, ValidationError
+
 from menu_assistant.config import Settings
 from menu_assistant.console import use_utf8_output
 from menu_assistant.llm import LLMError
@@ -11,9 +13,20 @@ from menu_assistant.llm.factory import llm_client_from_settings
 from menu_assistant.models import Allergen, Course, DietaryFlag
 from menu_assistant.rag.answer import Answer, AnswerService
 from menu_assistant.rag.prompt import format_restrictions
-from menu_assistant.rag.restrictions import Restrictions
+from menu_assistant.rag.restrictions import Restrictions, ingredient_terms
 from menu_assistant.retrieval.factory import retriever_from_settings
+from menu_assistant.retrieval.ingredients import IngredientTerm
 from menu_assistant.retrieval.vector_store import IndexNotReadyError
+
+_INGREDIENT_TERM: TypeAdapter[str] = TypeAdapter(IngredientTerm)
+
+
+def ingredient_term(value: str) -> str:
+    """argparse type: a valid `IngredientTerm`, so bad input is a usage error, not a crash."""
+    try:
+        return _INGREDIENT_TERM.validate_python(value)
+    except ValidationError as error:
+        raise argparse.ArgumentTypeError("expected 2 to 40 characters") from error
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -37,6 +50,14 @@ def build_parser() -> argparse.ArgumentParser:
         choices=[f.value for f in DietaryFlag],
         metavar="FLAG",
         help="required dietary flag; repeatable (e.g. --diet vegan)",
+    )
+    parser.add_argument(
+        "--without",
+        action="append",
+        default=[],
+        type=ingredient_term,
+        metavar="INGREDIENT",
+        help="ingredient to avoid; repeatable (e.g. --without onion --without cebola)",
     )
     parser.add_argument(
         "--course",
@@ -69,6 +90,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     explicit = Restrictions(
         exclude_allergens=frozenset(Allergen(a) for a in args.exclude),
         require_flags=frozenset(DietaryFlag(f) for f in args.diet),
+        exclude_ingredients=ingredient_terms(args.without),
     )
 
     try:

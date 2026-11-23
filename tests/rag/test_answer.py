@@ -105,6 +105,17 @@ def test_prompt_contains_dish_facts_restrictions_and_question(sample_menu: Menu)
     assert message.endswith("GUEST QUESTION: spicy please?")
 
 
+def test_disliked_ingredients_reach_retrieval_and_prompt(retriever: MenuRetriever) -> None:
+    llm = FakeLLM("Try Edamame [edamame].")
+
+    answer = service(retriever, llm).answer("sem cebola nem alho, o que você sugere?")
+
+    assert answer.restrictions.exclude_ingredients == {"onion", "garlic"}
+    assert "chana-masala" not in {item.dish.id for item in answer.retrieved}
+    assert "HARD RESTRICTIONS ALREADY APPLIED: without garlic, onion" in llm.last_prompt
+    assert answer.notice == SAFETY_NOTICES[Language.PT]
+
+
 # --- AnswerService -------------------------------------------------------------
 
 
