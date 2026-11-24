@@ -194,6 +194,45 @@ describe('App', () => {
     expect(askMock).toHaveBeenCalledTimes(1) // ordering does not ask the LLM
   })
 
+  it('orders the same dish more than once', async () => {
+    const reply = answer()
+    askMock.mockResolvedValue({ ...reply, sources: reply.candidates })
+    render(<App />)
+    const user = await ask_('something spicy')
+    expect(screen.queryByRole('button', { name: /Add one more/ })).not.toBeInTheDocument()
+
+    await user.click(await screen.findByRole('button', { name: /Select: Spicy Miso Ramen/ }))
+    const addRamen = screen.getByRole('button', { name: 'Add one more: Spicy Miso Ramen' })
+    await user.click(addRamen)
+    await user.click(addRamen)
+    await user.click(screen.getByRole('button', { name: 'Remove one: Spicy Miso Ramen' }))
+    await user.click(screen.getByRole('button', { name: /Select: Salted Edamame/ }))
+
+    expect(screen.getByRole('group', { name: 'Quantity: Spicy Miso Ramen' })).toHaveTextContent('2')
+    const bar = screen.getByRole('region', { name: 'My order' })
+    expect(bar).toHaveTextContent('3 dishes selected')
+    expect(bar).toHaveTextContent('Total: $38.50')
+
+    await user.click(screen.getByRole('button', { name: 'Order now' }))
+
+    const ramenLine = screen.getByText('Spicy Miso Ramen', { selector: 'li > span' }).closest('li')
+    expect(ramenLine).toHaveTextContent('2× Spicy Miso Ramen$33.00')
+  })
+
+  it('removes a dish when its quantity drops to zero', async () => {
+    const reply = answer()
+    askMock.mockResolvedValue({ ...reply, sources: reply.candidates })
+    render(<App />)
+    const user = await ask_('something spicy')
+    const edamame = await screen.findByRole('button', { name: /Select: Salted Edamame/ })
+
+    await user.click(edamame)
+    await user.click(screen.getByRole('button', { name: 'Remove one: Salted Edamame' }))
+
+    expect(edamame).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.queryByRole('region', { name: 'My order' })).not.toBeInTheDocument()
+  })
+
   it('clears the selection without ordering', async () => {
     const reply = answer()
     askMock.mockResolvedValue({ ...reply, sources: reply.candidates })

@@ -154,8 +154,10 @@ function ChatEntryView({ entry, selection, onOtherOptions }: ChatEntryViewProps)
                 <DishCards
                   dishes={entry.response.sources}
                   language={entry.response.language}
-                  selected={selection.ids}
+                  quantities={selection.quantities}
                   onToggle={selection.toggle}
+                  onAdd={selection.add}
+                  onRemove={selection.remove}
                   onOtherOptions={onOtherOptions}
                 />
               </div>

@@ -33,6 +33,9 @@ export interface Messages {
   total: string
   orderNow: string
   clearSelection: string
+  quantity: string
+  addOne: string
+  removeOne: string
   yourOrder: string
   orderConfirmed: string
   orderNotice: string
@@ -68,6 +71,9 @@ export const MESSAGES: Record<Language, Messages> = {
     total: 'Total',
     orderNow: 'Order now',
     clearSelection: 'Clear selection',
+    quantity: 'Quantity',
+    addOne: 'Add one more',
+    removeOne: 'Remove one',
     yourOrder: 'My order',
     orderConfirmed: "Great choice! I've sent your order to the kitchen.",
     orderNotice: 'If you have any allergy, please tell the staff before the kitchen starts.',
@@ -102,6 +108,9 @@ export const MESSAGES: Record<Language, Messages> = {
     total: 'Total',
     orderNow: 'Pedir agora',
     clearSelection: 'Limpar seleção',
+    quantity: 'Quantidade',
+    addOne: 'Adicionar mais um',
+    removeOne: 'Remover um',
     yourOrder: 'Meu pedido',
     orderConfirmed: 'Ótima escolha! Já enviei seu pedido para a cozinha.',
     orderNotice: 'Se você tem alguma alergia, avise a equipe antes de a cozinha começar.',
@@ -136,6 +145,9 @@ export const MESSAGES: Record<Language, Messages> = {
     total: 'Total',
     orderNow: 'Pedir ahora',
     clearSelection: 'Quitar selección',
+    quantity: 'Cantidad',
+    addOne: 'Añadir uno más',
+    removeOne: 'Quitar uno',
     yourOrder: 'Mi pedido',
     orderConfirmed: '¡Buena elección! Ya envié tu pedido a la cocina.',
     orderNotice: 'Si tienes alguna alergia, avisa al personal antes de que la cocina empiece.',

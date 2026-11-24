@@ -6,8 +6,11 @@ import { formatPrice } from '../i18n/price'
 interface DishCardsProps {
   dishes: readonly DishSource[]
   language: Language
-  selected: ReadonlySet<string>
+  /** How many of each dish (by id) the guest has selected. */
+  quantities: ReadonlyMap<string, number>
   onToggle: (dish: DishSource) => void
+  onAdd: (dish: DishSource) => void
+  onRemove: (dish: DishSource) => void
   /** Shows the "Other options" card when set (only on the newest answer). */
   onOtherOptions?: () => void
 }
@@ -16,21 +19,33 @@ interface DishCardsProps {
 export function DishCards({
   dishes,
   language,
-  selected,
+  quantities,
   onToggle,
+  onAdd,
+  onRemove,
   onOtherOptions,
 }: DishCardsProps) {
   const text = MESSAGES[language]
   return (
     <ul className="space-y-2">
       {dishes.map((dish) => (
-        <li key={dish.id}>
+        <li key={dish.id} className="relative">
           <DishCard
             dish={dish}
             language={language}
-            selected={selected.has(dish.id)}
+            quantity={quantities.get(dish.id) ?? 0}
             onToggle={() => onToggle(dish)}
           />
+          {quantities.has(dish.id) && (
+            // A sibling of the card (buttons cannot nest), placed over its bottom-right corner.
+            <QuantityStepper
+              dishName={dish.name}
+              quantity={quantities.get(dish.id) ?? 0}
+              language={language}
+              onAdd={() => onAdd(dish)}
+              onRemove={() => onRemove(dish)}
+            />
+          )}
         </li>
       ))}
       {onOtherOptions && (
@@ -70,11 +85,12 @@ const COURSE_ICONS: Record<Course, string> = {
 interface DishCardProps {
   dish: DishSource
   language: Language
-  selected: boolean
+  quantity: number
   onToggle: () => void
 }
 
-function DishCard({ dish, language, selected, onToggle }: DishCardProps) {
+function DishCard({ dish, language, quantity, onToggle }: DishCardProps) {
+  const selected = quantity > 0
   const text = MESSAGES[language]
   const labels = LABELS[language]
   const price = formatPrice(dish.price, language)
@@ -129,17 +145,57 @@ function DishCard({ dish, language, selected, onToggle }: DishCardProps) {
         <span className="font-semibold text-stone-900 tabular-nums dark:text-stone-100">
           {price}
         </span>
-        <span
-          aria-hidden="true"
-          className={`flex size-5 items-center justify-center rounded-full border text-xs ${
-            selected
-              ? 'border-red-600 bg-red-600 text-white'
-              : 'border-stone-300 text-transparent dark:border-stone-600'
-          }`}
-        >
-          ✓
-        </span>
+        {selected ? (
+          // Keeps room for the quantity stepper laid over this corner.
+          <span aria-hidden="true" className="h-7 w-[5.5rem]" />
+        ) : (
+          <span
+            aria-hidden="true"
+            className="flex size-5 items-center justify-center rounded-full border border-stone-300 text-xs text-transparent dark:border-stone-600"
+          >
+            ✓
+          </span>
+        )}
       </span>
     </button>
+  )
+}
+
+interface QuantityStepperProps {
+  dishName: string
+  quantity: number
+  language: Language
+  onAdd: () => void
+  onRemove: () => void
+}
+
+/** "− 2 +" control for ordering the same dish more than once. */
+function QuantityStepper({ dishName, quantity, language, onAdd, onRemove }: QuantityStepperProps) {
+  const text = MESSAGES[language]
+  const stepClass =
+    'flex size-7 items-center justify-center rounded-full text-base leading-none text-white hover:bg-red-700 active:scale-95'
+  return (
+    <fieldset
+      aria-label={`${text.quantity}: ${dishName}`}
+      className="absolute right-2.5 bottom-2.5 flex h-7 w-[5.5rem] items-center justify-between rounded-full bg-red-600 font-semibold text-white shadow-sm"
+    >
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label={`${text.removeOne}: ${dishName}`}
+        className={stepClass}
+      >
+        −
+      </button>
+      <span className="text-sm tabular-nums">{quantity}</span>
+      <button
+        type="button"
+        onClick={onAdd}
+        aria-label={`${text.addOne}: ${dishName}`}
+        className={stepClass}
+      >
+        +
+      </button>
+    </fieldset>
   )
 }
