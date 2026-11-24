@@ -430,3 +430,44 @@ def test_filters_use_canonical_ingredients_in_any_language(retriever: MenuRetrie
 
     retrieved = {item.dish.id for item in answer.retrieved}
     assert {"chana-masala", "lamb-kofta", "beef-birria-tacos"}.isdisjoint(retrieved)
+
+
+# --- new restrictions ----------------------------------------------------------
+
+
+def test_restriction_stated_in_this_question_is_flagged_as_new(retriever: MenuRetriever) -> None:
+    history = [
+        ChatMessage(role="user", content="Quero um macarrão"),
+        ChatMessage(role="assistant", content="Que tal o Spicy Miso Ramen [spicy-miso-ramen]?"),
+    ]
+    llm = FakeLLM("Certo! Que tal Edamame [edamame]?")
+
+    service(retriever, llm).answer("Sou alérgico a ovos", history=history)
+
+    assert "NEW RESTRICTION: excludes eggs" in llm.last_prompt
+
+
+def test_restriction_from_an_earlier_question_is_not_new(retriever: MenuRetriever) -> None:
+    history = [
+        ChatMessage(role="user", content="I'm allergic to eggs, any noodles?"),
+        ChatMessage(role="assistant", content="Try the Dan Dan Noodles [dan-dan-noodles]."),
+    ]
+    llm = FakeLLM("Try Edamame [edamame].")
+
+    service(retriever, llm).answer("I'm allergic to eggs, and a starter?", history=history)
+
+    assert "HARD RESTRICTIONS ALREADY APPLIED: excludes eggs" in llm.last_prompt
+    assert "NEW RESTRICTION" not in llm.last_prompt
+
+
+def test_explicit_restriction_is_not_new(retriever: MenuRetriever) -> None:
+    llm = FakeLLM("Try Edamame [edamame].")
+    explicit = Restrictions(exclude_allergens=frozenset({Allergen.EGGS}))
+
+    service(retriever, llm).answer("no eggs please, a starter?", explicit=explicit)
+
+    assert "NEW RESTRICTION" not in llm.last_prompt
+
+
+def test_system_prompt_warns_that_removed_dishes_may_exist() -> None:
+    assert "they may still be on the menu" in " ".join(SYSTEM_PROMPT.split())

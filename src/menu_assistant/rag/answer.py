@@ -208,11 +208,11 @@ class AnswerService:
         texts and for the LLM's reply. `exclude_dishes` are never retrieved (e.g. dishes
         already suggested when the guest asks for other options).
         """
-        restrictions = (
-            (explicit or Restrictions())
-            .merge(restrictions_from_history(history))
-            .merge(detect_restrictions(question))
-        )
+        earlier = (explicit or Restrictions()).merge(restrictions_from_history(history))
+        detected = detect_restrictions(question)
+        restrictions = earlier.merge(detected)
+        # Only restrictions first stated in this question are acknowledged in the reply.
+        new_restrictions = detected.without(earlier)
         course = course or detect_course(question)
         retrieved = self._retriever.search(
             SearchRequest(
@@ -256,7 +256,9 @@ class AnswerService:
                 *recent_turns(history),
                 ChatMessage(
                     role="user",
-                    content=build_user_message(question, retrieved, restrictions, course, language),
+                    content=build_user_message(
+                        question, retrieved, restrictions, course, language, new_restrictions
+                    ),
                 ),
             ],
         )

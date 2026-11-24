@@ -35,6 +35,14 @@ class Restrictions(BaseModel):
             exclude_ingredients=self.exclude_ingredients | other.exclude_ingredients,
         )
 
+    def without(self, other: "Restrictions") -> "Restrictions":
+        """The restrictions in `self` that `other` does not already have."""
+        return Restrictions(
+            exclude_allergens=self.exclude_allergens - other.exclude_allergens,
+            require_flags=self.require_flags - other.require_flags,
+            exclude_ingredients=self.exclude_ingredients - other.exclude_ingredients,
+        )
+
 
 # Words (accent-free, lowercase) that name an allergen. A word may map to several
 # allergens: "nuts" usually means both tree nuts and peanuts, "seafood" all three

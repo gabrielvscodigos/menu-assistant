@@ -24,9 +24,15 @@ for example: Spicy Miso Ramen [spicy-miso-ramen].
 reject a listed dish because of them, and never say a listed dish contains something the \
 guest must avoid. The Allergens line is complete; do not guess allergens from ingredient \
 names. Do not suggest that the guest can ignore the restrictions.
-7. Answer in the REPLY LANGUAGE if one is given, otherwise in the same language as the \
+7. Dishes that break the restrictions were removed from MENU DISHES, but they may still \
+be on the menu, and an earlier reply may have suggested one. Never say the menu has no \
+dishes with something the guest avoids, and never say earlier suggestions were safe.
+8. If NEW RESTRICTION is given, the guest just told you about it: start your reply by \
+acknowledging it and saying that from now on you will only suggest dishes that respect \
+it, for example "Got it! From now on I'll only suggest dishes without eggs."
+9. Answer in the REPLY LANGUAGE if one is given, otherwise in the same language as the \
 guest's question. Keep it short and warm.
-8. Earlier turns of the conversation are context only. Suggest dishes only from the \
+10. Earlier turns of the conversation are context only. Suggest dishes only from the \
 MENU DISHES in the latest message, even if an earlier reply mentioned others.\
 """
 
@@ -68,10 +74,12 @@ def build_user_message(
     restrictions: Restrictions,
     course: Course | None = None,
     reply_language: Language | None = None,
+    new_restrictions: Restrictions | None = None,
 ) -> str:
     """Combine the guest's question with the retrieved dishes, best match first.
 
     `reply_language` is set only when the guest chose a language (e.g. in the UI).
+    `new_restrictions` are the ones the guest stated for the first time in `question`.
     """
     dishes = "\n\n".join(format_dish(item.dish) for item in retrieved)
     course_line = f"COURSE REQUESTED: {course} (only this course is listed)\n\n" if course else ""
@@ -80,9 +88,16 @@ def build_user_message(
         if reply_language
         else ""
     )
+    new_line = (
+        f"NEW RESTRICTION: {format_restrictions(new_restrictions)} "
+        "(stated in this question; acknowledge it first)\n\n"
+        if new_restrictions
+        else ""
+    )
     return (
         f"MENU DISHES (best matches first):\n\n{dishes}\n\n"
         f"HARD RESTRICTIONS ALREADY APPLIED: {format_restrictions(restrictions)}\n\n"
+        f"{new_line}"
         f"{course_line}"
         f"{language_line}"
         f"GUEST QUESTION: {question}"

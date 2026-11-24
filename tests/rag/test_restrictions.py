@@ -166,3 +166,17 @@ def test_disliked_ingredients_make_restrictions_truthy_and_merge() -> None:
 )
 def test_ingredient_terms_maps_known_words(words: list[str], terms: set[str]) -> None:
     assert ingredient_terms(words) == terms
+
+
+def test_without_keeps_only_restrictions_the_other_lacks() -> None:
+    current = Restrictions(
+        exclude_allergens=frozenset({Allergen.EGGS, Allergen.MILK}),
+        require_flags=frozenset({DietaryFlag.VEGAN}),
+    )
+    earlier = Restrictions(exclude_allergens=frozenset({Allergen.MILK}))
+
+    assert current.without(earlier) == Restrictions(
+        exclude_allergens=frozenset({Allergen.EGGS}),
+        require_flags=frozenset({DietaryFlag.VEGAN}),
+    )
+    assert not earlier.without(current)

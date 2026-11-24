@@ -476,3 +476,23 @@ text, which the multilingual model handles well (see the pt-BR retrieval results
 Portuguese-only words in a translated name are not indexed. The index format version
 went to 3, so local indexes need one rebuild. Orders mixing languages show one total per
 currency instead of adding R$ and US$ together.
+
+## 029 — A newly stated restriction is acknowledged, and filtered dishes are not denied
+
+**Decision:** the answer service works out, in code, which restrictions the guest stated
+for the first time in the current question (detected now, not in earlier turns or the
+explicit UI selection). Those are sent to the LLM as a `NEW RESTRICTION` line, and the
+system prompt asks it to open by acknowledging them ("Got it! From now on I'll only
+suggest dishes without eggs."). The prompt also says that filtered-out dishes may still be
+on the menu, so the LLM must never claim the menu has none or that earlier suggestions
+were safe.
+
+**Why:** after "I'm allergic to eggs", the LLM only saw egg-free dishes and concluded that
+"none of our dishes have eggs", right after it had suggested Spaghetti Carbonara. That
+is wrong and confusing for a guest with an allergy. Deciding what is new stays
+deterministic, like the rest of the restriction handling; only the wording is the LLM's.
+
+**Trade-off:** the acknowledgement is a prompt instruction, so a small local model may
+phrase it loosely or occasionally skip it. A fixed acknowledgement written in code would
+be guaranteed, but it needs translated restriction names in every language and reads
+less naturally next to the LLM's reply.
