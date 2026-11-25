@@ -42,7 +42,7 @@ export function OrderBar({ dishes, language, onOrder, onClear }: OrderBarProps) 
       <button
         type="button"
         onClick={onOrder}
-        className="h-10 rounded-xl bg-red-600 px-4 font-semibold text-white transition-colors hover:bg-red-700 active:scale-[0.98]"
+        className="h-10 rounded-full bg-red-600 px-5 font-semibold text-white transition-colors hover:bg-red-700 active:scale-[0.98]"
       >
         {text.orderNow}
       </button>

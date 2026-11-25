@@ -61,12 +61,12 @@ export function AssistantAnswer({ response, language }: AssistantAnswerProps) {
       {(avoiding.length > 0 || restrictions.course) && (
         <div className="flex flex-wrap gap-1.5 text-xs">
           {avoiding.length > 0 && (
-            <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
+            <span className="rounded-full bg-white/20 px-2 py-0.5 text-white">
               {text.avoiding}: {avoiding.join(', ')}
             </span>
           )}
           {restrictions.course && (
-            <span className="rounded-full bg-sky-50 px-2 py-0.5 text-sky-800 dark:bg-sky-950 dark:text-sky-200">
+            <span className="rounded-full bg-white/20 px-2 py-0.5 text-white">
               {text.course}: {labels.courses[restrictions.course]}
             </span>
           )}
@@ -76,7 +76,7 @@ export function AssistantAnswer({ response, language }: AssistantAnswerProps) {
       {response.notice && (
         <p
           role="note"
-          className="rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-sm text-orange-900 dark:border-orange-800 dark:bg-orange-950 dark:text-orange-100"
+          className="rounded-xl bg-white px-3 py-2 text-sm font-normal text-stone-700 dark:bg-stone-900 dark:text-stone-200"
         >
           <strong>{text.notice}:</strong> {response.notice}
         </p>
@@ -99,14 +99,12 @@ function InlinePart({ part }: { part: Inline }) {
     case 'dish':
       // A dish named in the text gets a small marker; a bare citation shows the name.
       return part.named ? (
-        <span title={part.name} className="text-red-700" aria-hidden="true">
+        <span title={part.name} className="text-white/70" aria-hidden="true">
           {' '}
           ●
         </span>
       ) : (
-        <span className="rounded-md bg-red-100 px-1.5 py-0.5 font-medium text-red-900 dark:bg-red-900 dark:text-red-100">
-          {part.name}
-        </span>
+        <span className="rounded-md bg-white/20 px-1.5 py-0.5 text-white">{part.name}</span>
       )
   }
 }

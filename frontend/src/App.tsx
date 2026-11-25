@@ -38,15 +38,19 @@ export function App() {
   }
 
   return (
-    <div className="flex h-svh flex-col bg-stone-50 text-stone-800 dark:bg-stone-900 dark:text-stone-100">
-      <header className="border-b border-red-100 bg-white/90 backdrop-blur dark:border-stone-700 dark:bg-stone-900/90">
+    <div className="flex h-svh flex-col bg-white font-sans text-sm text-stone-800 dark:bg-stone-900 dark:text-stone-100">
+      <header className="border-b border-stone-200 bg-white/90 backdrop-blur dark:border-stone-700 dark:bg-stone-900/90">
         <div className="mx-auto flex max-w-3xl items-center gap-2.5 px-3 py-2 sm:gap-3 sm:px-4 sm:py-3">
-          <Mascot size={44} label={text.mascotLabel} className="sm:size-14" />
+          <Mascot
+            size={44}
+            label={text.mascotLabel}
+            className="ring-2 ring-red-600 ring-offset-2 sm:size-12 dark:ring-offset-stone-900"
+          />
           <div className="min-w-0 flex-1">
-            <h1 className="truncate text-base font-semibold sm:text-lg">{text.title}</h1>
-            <p className="truncate text-xs text-stone-500 sm:text-sm dark:text-stone-400">
-              {text.subtitle}
-            </p>
+            <h1 className="truncate text-base font-bold text-stone-900 sm:text-lg dark:text-stone-100">
+              {text.title}
+            </h1>
+            <OnlineStatus label={text.subtitle} />
           </div>
           <LanguageSwitcher language={language} onChange={setLanguage} />
           <button
@@ -94,7 +98,7 @@ export function App() {
           ))}
           {thinking && (
             <AssistantBubble>
-              <p className="text-stone-500 italic dark:text-stone-400">{text.thinking}</p>
+              <p className="text-white/85 italic">{text.thinking}</p>
             </AssistantBubble>
           )}
           {chat.status.state === 'error' && (
@@ -106,7 +110,7 @@ export function App() {
         <div ref={endOfChat} />
       </main>
 
-      <footer className="border-t border-red-100 bg-white/90 backdrop-blur dark:border-stone-700 dark:bg-stone-900/90">
+      <footer className="border-t border-stone-200 bg-white/90 backdrop-blur dark:border-stone-700 dark:bg-stone-900/90">
         <div className="mx-auto max-w-3xl space-y-2 px-3 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] sm:px-4 sm:py-3">
           <OrderBar
             dishes={selection.dishes}
@@ -149,8 +153,8 @@ function ChatEntryView({ entry, selection, onOtherOptions }: ChatEntryViewProps)
           </AssistantBubble>
           {entry.response.sources.length > 0 && (
             // Cards sit under the reply, aligned with the bubble, not inside it.
-            <li className="pl-11">
-              <div className="max-w-md">
+            <li>
+              <div className="max-w-xl">
                 <DishCards
                   dishes={entry.response.sources}
                   language={entry.response.language}
@@ -179,12 +183,25 @@ function ChatEntryView({ entry, selection, onOtherOptions }: ChatEntryViewProps)
   }
 }
 
-/** A message from the waiter, with his avatar beside it. */
+/** Status under the title, with a green "online" dot. */
+function OnlineStatus({ label }: { label: string }) {
+  return (
+    <p className="flex items-center gap-1.5 text-xs leading-4 text-stone-500 dark:text-stone-400">
+      {/* Nudged 1px down to line up with the lowercase letters, not the line box. */}
+      <span
+        aria-hidden="true"
+        className="size-2 shrink-0 translate-y-px rounded-full bg-emerald-500"
+      />
+      <span className="truncate">{label}</span>
+    </p>
+  )
+}
+
+/** A message from the waiter: a red bubble on the left. */
 function AssistantBubble({ children }: { children: ReactNode }) {
   return (
-    <li className="flex items-start gap-2">
-      <Mascot size={36} />
-      <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-white px-3.5 py-2.5 shadow-sm ring-1 ring-red-100 sm:px-4 sm:py-3 dark:bg-stone-800 dark:ring-stone-700">
+    <li className="flex justify-start">
+      <div className="max-w-[92%] rounded-2xl rounded-tl-md bg-red-600 px-4 py-3 text-white">
         {children}
       </div>
     </li>
@@ -194,7 +211,7 @@ function AssistantBubble({ children }: { children: ReactNode }) {
 function UserBubble({ children }: { children: ReactNode }) {
   return (
     <li className="flex justify-end">
-      <div className="max-w-[85%] rounded-2xl rounded-br-sm bg-red-600 px-3.5 py-2.5 text-white shadow-sm sm:px-4">
+      <div className="max-w-[85%] rounded-2xl rounded-br-md bg-stone-900 px-4 py-3 text-white dark:bg-stone-700">
         {children}
       </div>
     </li>
@@ -207,7 +224,7 @@ function OrderConfirmation({ text }: { text: Messages }) {
       <p>{text.orderConfirmed}</p>
       <p
         role="note"
-        className="rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-sm text-orange-900 dark:border-orange-800 dark:bg-orange-950 dark:text-orange-100"
+        className="rounded-xl bg-white px-3 py-2 text-sm font-normal text-stone-700 dark:bg-stone-900 dark:text-stone-200"
       >
         {text.orderNotice}
       </p>
@@ -230,11 +247,11 @@ function ErrorMessage({
       : `${text.serverError} ${status.error.message}`
   return (
     <div className="space-y-2">
-      <p className="text-red-700 dark:text-red-300">{message}</p>
+      <p>{message}</p>
       <button
         type="button"
         onClick={onRetry}
-        className="rounded-full bg-stone-800 px-3 py-1 text-sm font-medium text-white hover:bg-stone-700 dark:bg-stone-200 dark:text-stone-900"
+        className="rounded-full bg-white px-3 py-1 text-sm font-semibold text-red-700 hover:bg-red-50"
       >
         {text.retry}
       </button>

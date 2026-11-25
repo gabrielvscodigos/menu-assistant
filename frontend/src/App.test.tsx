@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from './App'
@@ -155,7 +155,7 @@ describe('App', () => {
 
     const ramen = await screen.findByRole('button', { name: 'Select: Spicy Miso Ramen, $16.50' })
     expect(ramen).toHaveTextContent('wheat noodles, pork bone broth, chili oil, soft-boiled egg')
-    expect(ramen).toHaveTextContent('⚠ eggs')
+    expect(within(ramen).getByTitle('Contains')).toHaveTextContent('eggs')
     expect(ramen).toHaveAttribute('aria-pressed', 'false')
     const edamame = screen.getByRole('button', { name: /Salted Edamame/ })
     expect(edamame).toHaveTextContent('vegan')

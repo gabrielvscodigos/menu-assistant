@@ -30,7 +30,7 @@ export function Mascot({ size = 64, variant = 'bust', label, className = '' }: M
       height={size}
       data-variant={variant}
       draggable={false}
-      className={`shrink-0 select-none ${full ? '' : 'rounded-xl bg-red-50'} ${className}`}
+      className={`shrink-0 select-none ${full ? '' : 'rounded-full bg-red-50'} ${className}`}
     />
   )
 }
