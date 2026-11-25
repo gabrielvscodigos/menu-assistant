@@ -44,7 +44,7 @@ export interface Messages {
 export const MESSAGES: Record<Language, Messages> = {
   en: {
     languageName: 'English',
-    title: 'Menu Assistant',
+    title: 'Menu AIssistant',
     subtitle: 'online now',
     greeting:
       "Hi! I'm your waiter today. Tell me what you feel like eating, or anything you need to avoid, and I'll suggest something from our menu.",
@@ -80,7 +80,7 @@ export const MESSAGES: Record<Language, Messages> = {
   },
   pt: {
     languageName: 'Português',
-    title: 'Assistente do Cardápio',
+    title: 'Menu AIssistant',
     subtitle: 'online agora',
     greeting:
       'Olá! Sou seu garçom hoje. Me conte o que você está com vontade de comer, ou o que precisa evitar, e eu sugiro algo do nosso cardápio.',
@@ -117,7 +117,7 @@ export const MESSAGES: Record<Language, Messages> = {
   },
   es: {
     languageName: 'Español',
-    title: 'Asistente de la Carta',
+    title: 'Menu AIssistant',
     subtitle: 'en línea ahora',
     greeting:
       '¡Hola! Hoy soy tu camarero. Cuéntame qué te apetece comer, o qué necesitas evitar, y te sugiero algo de nuestra carta.',

@@ -1,4 +1,4 @@
-# menu-assistant
+# Menu AIssistant
 
 [English](README.md) | **Português (Brasil)**
 

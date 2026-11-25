@@ -1,6 +1,6 @@
-# menu-assistant front end
+# Menu AIssistant front end
 
-A chat interface for menu-assistant, where a mascot talks with the guest. It calls the
+A chat interface for Menu AIssistant, where a mascot talks with the guest. It calls the
 FastAPI backend (`POST /ask`) and keeps the conversation in the browser, since the API is
 stateless.
 
